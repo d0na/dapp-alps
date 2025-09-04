@@ -22,6 +22,12 @@
 }
 
 @mixin placeholder() {
+  &::-moz-placeholder {@content; } // Firefox
+  &:-ms-input-placeholder {@content; } // Internet Explorer 10+
+  &::-webkit-input-placeholder  {@content; } // Safari and Chrome
+}
+
+@mixin placeholder-global() {
   ::-moz-placeholder {@content; } // Firefox
   :-ms-input-placeholder {@content; } // Internet Explorer 10+
   ::-webkit-input-placeholder  {@content; } // Safari and Chrome
