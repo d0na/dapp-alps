@@ -2,7 +2,7 @@ import React from "react";
 import MUIDataTable, { ExpandButton } from "mui-datatables";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
-import { MuiThemeProvider, createTheme } from "@material-ui/core/styles";
+import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import LicenseTableExtension from "./LicenseTableExpansion";
 // import ActiveLicenseExpansion from "components/table/ActiveLicenseExpansion";
 
@@ -105,7 +105,7 @@ class ActiveLicensesTable extends React.Component {
       //   console.log(curExpanded, allExpanded, rowsExpanded),
     };
 
-    const theme = createTheme({
+    const theme = createMuiTheme({
       overrides: {
         MUIDataTableSelectCell: {
           expandDisabled: {

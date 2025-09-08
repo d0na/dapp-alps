@@ -542,7 +542,12 @@ const RequiredField = ({ children, isRequired = true }) => (
 );
 
 // Validation status component
-const ValidationStatus = ({ isValid, warnings, requiredFields, mode }) => {
+const ValidationStatus = ({ isValid, warnings, requiredFields, mode, showValidationErrors }) => {
+  // Don't show validation status unless explicitly requested
+  if (!showValidationErrors) {
+    return null;
+  }
+
   if (mode === 'ai') {
     return (
       <Alert color={isValid ? "success" : "warning"} style={{ marginBottom: '20px' }}>
@@ -1110,90 +1115,110 @@ const RulesConfiguration = ({ rules, setRules }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors }) => {
   const updateManualData = (field, value) => {
     setManualData({ ...manualData, [field]: value });
   };
 
-  // Function to populate with sample data
-  const populateSampleData = () => {
-    const sampleData = {
-      name: "Advanced IoT Device License",
-      licensor: "0x2345678901234567890123456789012345678901",
-      licensee: "0x3456789012345678901234567890123456789012",
-      territory: "Worldwide",
-      duration: "5Y 10M 2D",
-      ips: "IoT device firmware, cloud management platform, mobile application, and related intellectual property rights for smart home automation systems.",
-      rules: [
-        {
-          id: Date.now(),
-          name: "Standard Manufacturing Rule",
-          validityStart: "2024-01-01",
-          validityEnd: "2029-01-01",
-          evaluationInterval: {
-            duration: "1Y 0M 0D"
-          },
-          royaltyBase: [
-            { id: Date.now(), oracleAddress: "0x1234567890123456789012345678901234567890", propertyName: "getManufacturedCount", displayName: "RB01" },
-            { id: Date.now() + 1, oracleAddress: "0x2345678901234567890123456789012345678901", propertyName: "getSoldCount", displayName: "RB02" },
-            { id: Date.now() + 2, oracleAddress: "0x3456789012345678901234567890123456789012", propertyName: "getActivatedCount", displayName: "RB03" }
-          ],
-          royaltyRate: {
-            type: "proportional",
-            proportionalValue: "15.5",
-            proportionalRB: "RB02",
-            customFunc: "sum",
-            customInputs: [],
-            stepStructure: {
-              xAxis: "RB02",
-              steps: [
-                { id: Date.now(), x: 100, y: 10.0 },
-                { id: Date.now() + 1, x: 500, y: 12.5 },
-                { id: Date.now() + 2, x: 1000, y: 15.5 }
-              ],
-              infiniteValue: "20.0"
-            },
-            min: "5",
-            max: "25"
-          }
-        }
-      ],
-    };
+  // Function to handle JSON file upload and populate form
+  const handleJsonUpload = (event) => {
+    const file = event.target.files[0];
     
-    setManualData(sampleData);
+    if (file && file.type === 'application/json') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const jsonData = JSON.parse(e.target.result);
+          
+          // Validate and process the JSON data
+          if (jsonData.name && jsonData.licensor && jsonData.licensee) {
+            // Ensure rules have proper IDs if missing
+            const processedRules = jsonData.rules?.map((rule, index) => ({
+              ...rule,
+              id: rule.id || Date.now() + index,
+              royaltyBase: rule.royaltyBase?.map((rb, rbIndex) => ({
+                ...rb,
+                id: rb.id || Date.now() + index * 100 + rbIndex
+              })) || [],
+              royaltyRate: {
+                ...rule.royaltyRate,
+                customInputs: rule.royaltyRate?.customInputs || [],
+                stepStructure: {
+                  ...rule.royaltyRate?.stepStructure,
+                  steps: rule.royaltyRate?.stepStructure?.steps?.map((step, stepIndex) => ({
+                    ...step,
+                    id: step.id || Date.now() + index * 1000 + stepIndex
+                  })) || []
+                }
+              }
+            })) || [];
+            
+            const processedData = {
+              ...jsonData,
+              rules: processedRules
+            };
+            
+            setManualData(processedData);
+            alert('✅ License data loaded successfully! All fields have been populated.');
+          } else {
+            alert('❌ Invalid JSON format. Please ensure the file contains required fields: name, licensor, licensee');
+          }
+        } catch (error) {
+          alert('❌ Error parsing JSON file: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      alert('❌ Please select a valid JSON file');
+    }
+    
+    // Reset the input value to allow re-uploading the same file
+    event.target.value = '';
   };
+
 
   return (
     <div>
-      {/* Sample Data Button */}
-      <Row style={{ marginBottom: '20px' }}>
+      {/* JSON Upload Section - Compact */}
+      <Row style={{ marginBottom: '15px' }}>
         <Col md="12">
           <div style={{ 
-            textAlign: 'center', 
-            padding: '15px', 
-            backgroundColor: '#e3f2fd', 
-            borderRadius: '8px',
-            border: '1px solid #bbdefb'
+            padding: '12px 16px', 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: '4px',
+            border: '1px solid #dee2e6',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}>
-            <h6 style={{ color: '#1976d2', marginBottom: '10px' }}>
-              Quick Start with Sample Data
-            </h6>
-            <p style={{ color: '#424242', marginBottom: '15px' }}>
-              Click the button below to populate all fields with realistic sample data for an IoT device license
-            </p>
-            <Button
-              color="info"
-              size="lg"
-              onClick={populateSampleData}
-              style={{ 
-                fontWeight: 'bold',
-                padding: '12px 30px',
-                borderRadius: '25px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-              }}
-            >
-              Load License Data
-            </Button>
+            <div>
+              <span style={{ color: '#495057', fontSize: '14px', fontWeight: '500' }}>
+                Load from JSON file
+              </span>
+              <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                Upload to populate all fields automatically
+              </small>
+            </div>
+            <div>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleJsonUpload}
+                style={{ display: 'none' }}
+                id="json-upload"
+              />
+              <Button
+                color="outline-primary"
+                size="sm"
+                onClick={() => document.getElementById('json-upload').click()}
+                style={{ 
+                  fontSize: '12px',
+                  padding: '6px 12px'
+                }}
+              >
+                Choose File
+              </Button>
+            </div>
           </div>
         </Col>
       </Row>
@@ -1203,6 +1228,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation }) => {
         warnings={validation.warnings} 
         requiredFields={validation.requiredFields}
         mode="manual"
+        showValidationErrors={showValidationErrors}
       />
       
       <Row>
@@ -1346,7 +1372,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation }) => {
 };
 
 // AI Configuration Form
-const AIConfigurationForm = ({ aiText, setAiText, validation }) => {
+const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErrors, setShowValidationErrors }) => {
   const classes = useBuildSmartLicenseStyles();
 
   const handleFileUpload = (event) => {
@@ -1366,6 +1392,7 @@ const AIConfigurationForm = ({ aiText, setAiText, validation }) => {
         isValid={validation.isValid} 
         warnings={validation.warnings} 
         mode="ai"
+        showValidationErrors={showValidationErrors}
       />
       
       <Row>
@@ -1427,7 +1454,9 @@ const StepConfiguration = ({
   aiText, 
   setAiText, 
   handleNext, 
-  handleBack 
+  handleBack,
+  showValidationErrors,
+  setShowValidationErrors
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -1494,12 +1523,16 @@ const StepConfiguration = ({
             manualData={manualData}
             setManualData={setManualData}
             validation={validation}
+            showValidationErrors={showValidationErrors}
+            setShowValidationErrors={setShowValidationErrors}
           />
         ) : (
           <AIConfigurationForm 
             aiText={aiText}
             setAiText={setAiText}
             validation={validation}
+            showValidationErrors={showValidationErrors}
+            setShowValidationErrors={setShowValidationErrors}
           />
         )}
         
@@ -1537,12 +1570,15 @@ ValidationStatus.propTypes = {
   warnings: PropTypes.array,
   requiredFields: PropTypes.object,
   mode: PropTypes.string,
+  showValidationErrors: PropTypes.bool,
 };
 
 ManualConfigurationForm.propTypes = {
   manualData: PropTypes.object.isRequired,
   setManualData: PropTypes.func.isRequired,
   validation: PropTypes.object.isRequired,
+  showValidationErrors: PropTypes.bool,
+  setShowValidationErrors: PropTypes.func,
 };
 
 RulesConfiguration.propTypes = {
@@ -1583,6 +1619,8 @@ AIConfigurationForm.propTypes = {
   aiText: PropTypes.string.isRequired,
   setAiText: PropTypes.func.isRequired,
   validation: PropTypes.object.isRequired,
+  showValidationErrors: PropTypes.bool,
+  setShowValidationErrors: PropTypes.func,
 };
 
 StepConfiguration.propTypes = {
@@ -1593,6 +1631,8 @@ StepConfiguration.propTypes = {
   setAiText: PropTypes.func.isRequired,
   handleNext: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
+  showValidationErrors: PropTypes.bool,
+  setShowValidationErrors: PropTypes.func,
 };
 
 export default StepConfiguration;

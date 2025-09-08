@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardBody,
@@ -13,7 +13,6 @@ import {
 import {
   StepModeSelection,
   StepConfiguration,
-  StepReviewGenerate,
   StepFinalOutput,
   generateSmartLicenseJson
 } from './index';
@@ -25,15 +24,19 @@ const BuildSmartLicense = () => {
   const [aiText, setAiText] = useState('');
   const [generatedJson, setGeneratedJson] = useState('');
   const [generatedSmartContract, setGeneratedSmartContract] = useState('');
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const steps = [
     'Mode Selection',
     'Configuration',
-    'Review & Generate',
-    'Final Output'
+    'Review & Generate'
   ];
 
   const handleNext = () => {
+    if (currentStep === 1) {
+      // Show validation errors when trying to proceed from Configuration step
+      setShowValidationErrors(true);
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -58,6 +61,13 @@ const BuildSmartLicense = () => {
     const smartContract = generateMockSmartContract(json);
     setGeneratedSmartContract(smartContract);
   };
+
+  // Auto-generate JSON when reaching the final step
+  useEffect(() => {
+    if (currentStep === 2 && !generatedJson) {
+      generateJson();
+    }
+  }, [currentStep, mode, manualData, aiText]);
 
   const generateMockSmartContract = (jsonData) => {
     const data = JSON.parse(jsonData);
@@ -214,19 +224,11 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             setAiText={setAiText}
             handleNext={handleNext}
             handleBack={handleBack}
+            showValidationErrors={showValidationErrors}
+            setShowValidationErrors={setShowValidationErrors}
           />
         );
       case 2:
-        return (
-          <StepReviewGenerate
-            generatedJson={generatedJson}
-            generateJson={generateJson}
-            handleBack={handleBack}
-            handleNext={handleNext}
-            onCreateLicense={handleCreateLicense}
-          />
-        );
-      case 3:
         return (
           <StepFinalOutput
             generatedJson={generatedJson}

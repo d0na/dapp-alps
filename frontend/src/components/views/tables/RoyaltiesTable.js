@@ -1,7 +1,7 @@
 import React from "react";
 import MUIDataTable, { ExpandButton } from "mui-datatables";
 
-import { MuiThemeProvider, createTheme } from "@material-ui/core/styles";
+import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 
 class RoyaltiesTable extends React.Component {
   constructor(props) {
@@ -90,7 +90,7 @@ class RoyaltiesTable extends React.Component {
       selectableRows: "none",
     };
 
-    const theme = createTheme({
+    const theme = createMuiTheme({
       overrides: {
         MUIDataTableSelectCell: {
           expandDisabled: {

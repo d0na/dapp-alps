@@ -9,82 +9,59 @@ export const generateSmartLicenseJson = (mode, manualData, aiText) => {
   let jsonData;
   
   if (mode === 'manual') {
+    // Generate JSON in the same format as the upload system
     jsonData = {
-      smartLicense: {
-        id: `SL_${Date.now()}`,
-        title: manualData.name || manualData.title,
-        licensor: manualData.licensor,
-        licensee: manualData.licensee || "TBD", // To be determined when license is executed
-        intellectualProperty: {
-          description: manualData.ips || manualData.ipDescription,
-          type: "Patent/Copyright/Trademark", // Could be expanded
-        },
-        terms: {
-          licenseType: manualData.type || "Standard",
-          duration: {
-            months: parseInt(manualData.duration) || 0,
-            startDate: "TBD",
-            endDate: "TBD"
-          },
-          territory: manualData.territory,
-          royaltyRate: parseFloat(manualData.royaltyRate) || 0,
-          restrictions: manualData.restrictions || "Standard restrictions apply"
-        },
-        status: "draft",
-        createdAt: new Date().toISOString(),
-        blockchain: {
-          network: "ethereum",
-          contractAddress: "TBD",
-          deploymentTx: "TBD"
-        },
-        metadata: {
-          creationMode: "manual",
-          version: "1.0.0"
-        }
-      }
+      name: manualData.name || "Smart License",
+      licensor: manualData.licensor || "0x0000000000000000000000000000000000000000",
+      licensee: manualData.licensee || "0x0000000000000000000000000000000000000000",
+      territory: manualData.territory || "Worldwide",
+      duration: manualData.duration || "1Y 0M 0D",
+      ips: manualData.ips || "Intellectual property description",
+      rules: manualData.rules || []
     };
   } else {
-    // AI mode - simulate AI processing
+    // AI mode - generate from AI text
     jsonData = {
-      smartLicense: {
-        id: `SL_AI_${Date.now()}`,
-        title: "AI Generated License",
-        licensor: "Extracted from text",
-        licensee: "TBD",
-        intellectualProperty: {
-          description: "AI analyzed intellectual property from provided text",
-          type: "AI Determined",
-        },
-        terms: {
-          licenseType: "AI Analyzed",
-          duration: {
-            months: 12, // Default AI suggestion
-            startDate: "TBD",
-            endDate: "TBD"
+      name: "AI Generated Smart License",
+      licensor: "0x0000000000000000000000000000000000000000",
+      licensee: "0x0000000000000000000000000000000000000000",
+      territory: "Worldwide",
+      duration: "1Y 0M 0D",
+      ips: aiText || "AI generated intellectual property description",
+      rules: [
+        {
+          id: Date.now(),
+          name: "AI Generated Rule",
+          validityStart: new Date().toISOString().split('T')[0],
+          validityEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          evaluationInterval: {
+            duration: "1Y 0M 0D"
           },
-          territory: "AI Determined Territory",
-          royaltyRate: 5.0, // Default AI suggestion
-          restrictions: "AI extracted restrictions from text"
-        },
-        aiAnalysis: {
-          inputText: aiText.substring(0, 200) + "...", // Truncated for display
-          confidence: 0.85,
-          extractedEntities: ["Licensor", "Territory", "Duration", "Royalty"],
-          suggestedImprovements: ["Clarify payment terms", "Define territory boundaries"],
-          processingTimestamp: new Date().toISOString()
-        },
-        status: "draft",
-        createdAt: new Date().toISOString(),
-        blockchain: {
-          network: "ethereum",
-          contractAddress: "TBD",
-          deploymentTx: "TBD"
-        },
-        metadata: {
-          creationMode: "ai",
-          version: "1.0.0"
+          royaltyBase: [
+            {
+              id: Date.now() + 1,
+              oracleAddress: "0x0000000000000000000000000000000000000000",
+              propertyName: "getCount",
+              displayName: "RB01"
+            }
+          ],
+          royaltyRate: {
+            type: "lumpsum",
+            lumpsumValue: "10.0",
+            proportionalValue: "",
+            proportionalRB: "",
+            customFunc: "sum",
+            customInputs: [],
+            stepStructure: {
+              xAxis: "",
+              steps: [],
+              infiniteValue: ""
+            },
+            min: "0",
+            max: "100"
+          }
         }
-      }
+      ]
     };
   }
 
