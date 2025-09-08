@@ -20,6 +20,7 @@ import Royalties from "components/views/Royalties";
 import { Redirect } from "react-router-dom";
 import { Route, Switch } from "react-router-dom";
 import ActiveLicenses from "components/views/ActiveLicenses";
+import BuildSmartLicense from "components/build-smart-license/BuildSmartLicense";
 
 var ps;
 export class Dapp extends React.Component {
@@ -312,6 +313,14 @@ export class Dapp extends React.Component {
                   managerData={this.state.managerData}
                   entity={this.entity}
                   key={2}
+                />
+              
+            </Route>
+            <Route
+              path={"/create-smart-license"} >
+                <BuildSmartLicense
+                  {...this.props}
+                  key={3}
                 />
               
             </Route>

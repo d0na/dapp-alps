@@ -110,6 +110,16 @@ class Sidebar extends React.Component {
               <p>Smart Licenses</p>
             </NavLink>
             </li>
+            <li className={this.activeRoute + ""} key={4}>
+            <NavLink
+              to="/create-smart-license"
+              className="nav-link"
+              activeClassName="active"
+            >
+              <i className="nc-icon nc-simple-add"/>
+              <p>Create License</p>
+            </NavLink>
+            </li>
           </Nav>
           <Box mt={18} px={1}>
             <Row>
