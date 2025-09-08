@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Environment Variables Test</title>
+</head>
+<body>
+    <h1>Environment Variables Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        // This won't work in a regular HTML file, but shows what we expect
+        console.log('Testing environment variables...');
+        
+        // In React, these would be available as process.env.REACT_APP_*
+        const expectedVars = [
+            'REACT_APP_DEFAULT_NETWORK',
+            'REACT_APP_DEV_RPC_URL',
+            'REACT_APP_DEV_ENTITY_ADDRESS',
+            'REACT_APP_ALPS_ENTITY_ADDRESS'
+        ];
+        
+        const output = document.getElementById('output');
+        output.innerHTML = '<p>This is just a reference. Check the browser console for actual values.</p>';
+        
+        expectedVars.forEach(varName => {
+            console.log(`${varName}: should be available in React`);
+        });
+    </script>
+</body>
+</html>
+

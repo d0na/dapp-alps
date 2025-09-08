@@ -12,8 +12,13 @@ import Dialog from "@material-ui/core/Dialog";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import { setNetworkConfig, NETWORK_CONFIG, getContractAddress } from "../../config/network";
 
-const options = ["Development", "ALPS", "Custom Configuration"];
+const options = [
+  { value: "development", label: "Development (localhost:8545)" },
+  { value: "alps", label: "ALPS Network" },
+  { value: "custom", label: "Custom Configuration" }
+];
 
 function ConfirmationDialogRaw(props) {
   const { onClose, value: valueProp, open, ...other } = props;
@@ -71,13 +76,42 @@ function ConfirmationDialogRaw(props) {
         >
           {options.map((option) => (
             <FormControlLabel
-              value={option}
-              key={option}
+              value={option.value}
+              key={option.value}
               control={<Radio />}
-              label={option}
+              label={
+                <div>
+                  <div>{option.label}</div>
+                  {option.value === 'development' && (
+                    <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
+                      Contract addresses will be loaded automatically after deployment
+                    </div>
+                  )}
+                  {option.value === 'alps' && (
+                    <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
+                      Using pre-configured ALPS network addresses
+                    </div>
+                  )}
+                  {option.value === 'custom' && (
+                    <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
+                      Configure via environment variables
+                    </div>
+                  )}
+                </div>
+              }
             />
           ))}
         </RadioGroup>
+        
+        {/* Show current contract addresses if available */}
+        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Current Contract Addresses:</h4>
+          <div style={{ fontSize: '12px' }}>
+            <div><strong>Entity:</strong> {getContractAddress('entity') || 'Not set'}</div>
+            <div><strong>Token:</strong> {getContractAddress('token') || 'Not set'}</div>
+            <div><strong>Manager:</strong> {getContractAddress('manager') || 'Not set'}</div>
+          </div>
+        </div>
       </DialogContent>
       <DialogActions>
         <Button autoFocus onClick={handleCancel} color="primary">
@@ -112,7 +146,7 @@ const useStyles = makeStyles((theme) => ({
 export default function BlockchainConfigDialog() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("Development");
+  const [value, setValue] = React.useState("development");
 
   const handleClickListItem = () => {
     setOpen(true);
@@ -123,6 +157,11 @@ export default function BlockchainConfigDialog() {
 
     if (newValue) {
       setValue(newValue);
+      // Update network configuration
+      const config = setNetworkConfig(newValue);
+      console.log("Network configuration updated:", config);
+      // Reload the page to apply new configuration
+      window.location.reload();
     }
   };
 
@@ -139,7 +178,10 @@ export default function BlockchainConfigDialog() {
           onClick={handleClickListItem}
           role="listitem"
         >
-          <ListItemText primary="Select Blockchain Network" secondary={value} />
+          <ListItemText 
+            primary="Select Blockchain Network" 
+            secondary={options.find(opt => opt.value === value)?.label || value} 
+          />
         </ListItem>
 
         <ConfirmationDialogRaw
