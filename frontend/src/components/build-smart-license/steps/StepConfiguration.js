@@ -674,13 +674,39 @@ const RulesConfiguration = ({ rules, setRules }) => {
     
     switch (royaltyRate.type) {
       case 'lumpsum':
-        return `Lumpsum: ${royaltyRate.lumpsumValue || '0'} $`;
+        return `Lumpsum: $${royaltyRate.lumpsumValue || '0'} (Fixed amount)`;
+      
       case 'proportional':
-        return `Proportional: ${royaltyRate.proportionalValue || '0'} $ per ${royaltyRate.proportionalRB || 'unit'}`;
-      case 'custom':
-        return `Custom: ${royaltyRate.customFunc || 'sum'} function`;
+        return `Proportional: $${royaltyRate.proportionalValue || '0'} × ${royaltyRate.proportionalRB || 'RB'} (Multiply by Royalty Base)`;
+      
+      case 'custom': {
+        const inputCount = royaltyRate.customInputs?.length || 0;
+        if (inputCount === 0) {
+          return `Custom: ${royaltyRate.customFunc || 'sum'} function (No inputs configured)`;
+        }
+        
+        // Analyze custom inputs to create a detailed description
+        const inputDescriptions = royaltyRate.customInputs.map((input, index) => {
+          switch (input.type) {
+            case 'constant':
+              return `const(${input.value || '0'})`;
+            case 'rb':
+              return `RB(${input.rb || 'none'})`;
+            case 'func': {
+              const nestedInputCount = input.inputs?.length || 0;
+              return `func(${input.func || 'sum'})[${nestedInputCount} inputs]`;
+            }
+            default:
+              return 'unknown';
+          }
+        });
+        
+        const inputsDesc = inputDescriptions.join(' + ');
+        return `Custom: ${royaltyRate.customFunc || 'sum'}(${inputsDesc}) (${inputCount} inputs)`;
+      }
+      
       default:
-        return 'No configuration';
+        return 'No royalty rate configured';
     }
   };
 
@@ -731,6 +757,346 @@ const RulesConfiguration = ({ rules, setRules }) => {
       rb.id === rbId ? { ...rb, [field]: value } : rb
     );
     updateRuleNested(ruleId, 'royaltyBase', newRB);
+  };
+
+  // Custom function management with tree structure
+  const addCustomInput = (ruleId, parentPath = '') => {
+    const rule = rules.find(r => r.id === ruleId);
+    const newInput = {
+      id: Date.now(),
+      type: 'constant', // constant, func, rb
+      value: '',
+      func: 'sum',
+      rb: '',
+      inputs: [] // For nested functions
+    };
+    
+    if (parentPath) {
+      // Add to nested function
+      const pathParts = parentPath.split('.');
+      const newInputs = [...rule.royaltyRate.customInputs];
+      let current = newInputs;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        current = current[parseInt(pathParts[i])].inputs;
+      }
+      // Ensure the parent input has inputs array
+      const parentIndex = parseInt(pathParts[pathParts.length - 1]);
+      if (!current[parentIndex].inputs) {
+        current[parentIndex].inputs = [];
+      }
+      current[parentIndex].inputs.push(newInput);
+      updateRuleNested(ruleId, 'royaltyRate.customInputs', newInputs);
+    } else {
+      // Add to main level
+      updateRuleNested(ruleId, 'royaltyRate.customInputs', [...rule.royaltyRate.customInputs, newInput]);
+    }
+  };
+
+  const removeCustomInput = (ruleId, inputIndex, parentPath = '') => {
+    const rule = rules.find(r => r.id === ruleId);
+    let newInputs = [...rule.royaltyRate.customInputs];
+    
+    if (parentPath) {
+      // Remove from nested function
+      const pathParts = parentPath.split('.');
+      let current = newInputs;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        current = current[parseInt(pathParts[i])].inputs;
+      }
+      current.splice(parseInt(pathParts[pathParts.length - 1]), 1);
+    } else {
+      // Remove from main level
+      newInputs.splice(inputIndex, 1);
+    }
+    
+    updateRuleNested(ruleId, 'royaltyRate.customInputs', newInputs);
+  };
+
+  const updateCustomInput = (ruleId, inputIndex, field, value, parentPath = '') => {
+    const rule = rules.find(r => r.id === ruleId);
+    let newInputs = [...rule.royaltyRate.customInputs];
+    
+    if (parentPath) {
+      // Update nested function
+      const pathParts = parentPath.split('.');
+      let current = newInputs;
+      
+      // Navigate to the parent level
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const pathIndex = parseInt(pathParts[i]);
+        if (current[pathIndex] && current[pathIndex].inputs) {
+          current = current[pathIndex].inputs;
+        } else {
+          console.error('Invalid path:', parentPath);
+          return;
+        }
+      }
+      
+      // Update the target input
+      const targetIndex = parseInt(pathParts[pathParts.length - 1]);
+      if (current[targetIndex]) {
+        current[targetIndex] = { 
+          ...current[targetIndex], 
+          [field]: value 
+        };
+      } else {
+        console.error('Target input not found:', targetIndex);
+        return;
+      }
+    } else {
+      // Update main level
+      if (newInputs[inputIndex]) {
+        newInputs[inputIndex] = { ...newInputs[inputIndex], [field]: value };
+      } else {
+        console.error('Main level input not found:', inputIndex);
+        return;
+      }
+    }
+    
+    updateRuleNested(ruleId, 'royaltyRate.customInputs', newInputs);
+  };
+
+  const getOperationInputs = (operation) => {
+    switch (operation) {
+      case 'sum': return 2;
+      case 'multiply': return 2;
+      case 'divide': return 2;
+      case 'subtract': return 2;
+      case 'max': return 2;
+      case 'min': return 2;
+      default: return 2;
+    }
+  };
+
+  const renderCustomInputs = (rule, inputs, parentPath = '') => {
+    const depth = parentPath ? parentPath.split('.').length : 0;
+    const indentLevel = depth * 20;
+    
+    return inputs.map((input, idx) => (
+      <div key={input.id} style={{ 
+        border: '1px solid #ddd', 
+        padding: '15px', 
+        margin: '10px 0', 
+        borderRadius: '4px',
+        backgroundColor: '#f8f9fa',
+        marginLeft: `${indentLevel}px`,
+        borderLeft: depth > 0 ? '3px solid #007bff' : '1px solid #ddd'
+      }}>
+        {/* Level indicator */}
+        {depth > 0 && (
+          <div style={{ 
+            marginBottom: '10px', 
+            fontSize: '12px', 
+            color: '#6c757d',
+            fontWeight: 'bold'
+          }}>
+            ↳ Level {depth} - Input {idx + 1}
+          </div>
+        )}
+        
+        <Row>
+          <Col md="4">
+            <FormGroup>
+              <Label>Input {idx + 1} Type</Label>
+              <Input
+                type="select"
+                value={input.type}
+                onChange={(e) => {
+                  const newType = e.target.value;
+                  updateCustomInput(rule.id, idx, 'type', newType, parentPath);
+                  
+                  // If selecting "Function", automatically create the required inputs
+                  if (newType === 'func') {
+                    // Update func and inputs in a single operation to avoid race conditions
+                    const inputsNeeded = getOperationInputs('sum'); // Default to sum function
+                    const newInputs = [];
+                    for (let i = 0; i < inputsNeeded; i++) {
+                      newInputs.push({ 
+                        id: Date.now() + i, 
+                        type: 'constant', 
+                        value: '', 
+                        func: 'sum', 
+                        rb: '',
+                        inputs: []
+                      });
+                    }
+                    
+                    // Update both func and inputs at once
+                    const currentRule = rules.find(r => r.id === rule.id);
+                    let newInputsArray = [...currentRule.royaltyRate.customInputs];
+                    
+                    if (parentPath) {
+                      // Update nested function
+                      const pathParts = parentPath.split('.');
+                      let current = newInputsArray;
+                      for (let i = 0; i < pathParts.length - 1; i++) {
+                        current = current[parseInt(pathParts[i])].inputs;
+                      }
+                      const targetIndex = parseInt(pathParts[pathParts.length - 1]);
+                      current[targetIndex] = { 
+                        ...current[targetIndex], 
+                        func: 'sum',
+                        inputs: newInputs
+                      };
+                    } else {
+                      // Update main level
+                      newInputsArray[idx] = { 
+                        ...newInputsArray[idx], 
+                        func: 'sum',
+                        inputs: newInputs
+                      };
+                    }
+                    
+                    updateRuleNested(currentRule.id, 'royaltyRate.customInputs', newInputsArray);
+                  }
+                }}
+              >
+                <option value="constant">Constant</option>
+                <option value="func">Function</option>
+                <option value="rb">Royalty Base</option>
+              </Input>
+            </FormGroup>
+          </Col>
+          <Col md="6">
+            {input.type === 'constant' && (
+              <FormGroup>
+                <Label>Constant Value</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={input.value}
+                  onChange={(e) => updateCustomInput(rule.id, idx, 'value', e.target.value, parentPath)}
+                  placeholder="Enter constant value"
+                />
+              </FormGroup>
+            )}
+            {input.type === 'func' && (
+              <FormGroup>
+                <Label>Function</Label>
+                <Input
+                  type="select"
+                  value={input.func || 'sum'}
+                  onChange={(e) => {
+                    updateCustomInput(rule.id, idx, 'func', e.target.value, parentPath);
+                    const inputsNeeded = getOperationInputs(e.target.value);
+                    const currentInputs = input.inputs ? input.inputs.length : 0;
+                    if (currentInputs < inputsNeeded) {
+                      // Add missing inputs
+                      const newInputs = [...(input.inputs || [])];
+                      for (let i = currentInputs; i < inputsNeeded; i++) {
+                        newInputs.push({ 
+                          id: Date.now() + i, 
+                          type: 'constant', 
+                          value: '', 
+                          func: 'sum', 
+                          rb: '',
+                          inputs: []
+                        });
+                      }
+                      updateCustomInput(rule.id, idx, 'inputs', newInputs, parentPath);
+                    } else if (currentInputs > inputsNeeded) {
+                      // Remove excess inputs
+                      updateCustomInput(rule.id, idx, 'inputs', (input.inputs || []).slice(0, inputsNeeded), parentPath);
+                    }
+                  }}
+                >
+                  <option value="sum">Sum</option>
+                  <option value="multiply">Multiply</option>
+                  <option value="divide">Divide</option>
+                  <option value="subtract">Subtract</option>
+                  <option value="max">Max</option>
+                  <option value="min">Min</option>
+                </Input>
+              </FormGroup>
+            )}
+            {input.type === 'rb' && (
+              <FormGroup>
+                <Label>Royalty Base</Label>
+                <Input
+                  type="select"
+                  value={input.rb}
+                  onChange={(e) => {
+                    try {
+                      updateCustomInput(rule.id, idx, 'rb', e.target.value, parentPath);
+                    } catch (error) {
+                      console.error('Error updating Royalty Base:', error);
+                      // Fallback: update the input directly without path navigation
+                      const currentRule = rules.find(r => r.id === rule.id);
+                      if (currentRule && currentRule.royaltyRate && currentRule.royaltyRate.customInputs) {
+                        const newInputs = [...currentRule.royaltyRate.customInputs];
+                        if (parentPath) {
+                          // Simple fallback for nested inputs
+                          const pathParts = parentPath.split('.');
+                          let current = newInputs;
+                          for (let i = 0; i < pathParts.length - 1; i++) {
+                            const pathIndex = parseInt(pathParts[i]);
+                            if (current[pathIndex] && current[pathIndex].inputs) {
+                              current = current[pathIndex].inputs;
+                            }
+                          }
+                          const targetIndex = parseInt(pathParts[pathParts.length - 1]);
+                          if (current[targetIndex]) {
+                            current[targetIndex].rb = e.target.value;
+                            updateRuleNested(currentRule.id, 'royaltyRate.customInputs', newInputs);
+                          }
+                        } else {
+                          // Main level fallback
+                          if (newInputs[idx]) {
+                            newInputs[idx].rb = e.target.value;
+                            updateRuleNested(currentRule.id, 'royaltyRate.customInputs', newInputs);
+                          }
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <option value="">Select RB</option>
+                  {rule.royaltyBase.map((rb, rbIdx) => (
+                    <option key={rbIdx} value={rb.displayName}>{rb.displayName}</option>
+                  ))}
+                </Input>
+              </FormGroup>
+            )}
+          </Col>
+          <Col md="2">
+            <Button
+              color="danger"
+              size="sm"
+              onClick={() => removeCustomInput(rule.id, idx, parentPath)}
+              style={{ marginTop: '30px' }}
+            >
+              Remove
+            </Button>
+          </Col>
+        </Row>
+        
+        {/* Render nested inputs for functions */}
+        {input.type === 'func' && input.inputs && input.inputs.length > 0 && (
+          <div style={{ marginTop: '15px' }}>
+            <div style={{ 
+              padding: '10px', 
+              backgroundColor: '#e3f2fd', 
+              borderRadius: '4px', 
+              marginBottom: '10px',
+              border: '1px solid #bbdefb'
+            }}>
+              <Label style={{ fontWeight: 'bold', color: '#1976d2' }}>
+                ↳ Nested Function: {input.func} (Level {depth + 1})
+              </Label>
+            </div>
+            {renderCustomInputs(rule, input.inputs, parentPath ? `${parentPath}.${idx}` : `${idx}`)}
+            <Button
+              color="info"
+              size="sm"
+              onClick={() => addCustomInput(rule.id, parentPath ? `${parentPath}.${idx}` : `${idx}`)}
+              style={{ marginTop: '10px' }}
+            >
+              Add Nested Input
+            </Button>
+          </div>
+        )}
+      </div>
+    ));
   };
 
   const renderRoyaltyRateSection = (rule) => {
@@ -825,6 +1191,66 @@ const RulesConfiguration = ({ rules, setRules }) => {
           royaltyRate={royaltyRate}
           updateRuleNested={updateRuleNested}
         />
+
+        {/* Custom function editor - shown only when type is custom */}
+        {royaltyRate.type === 'custom' && (
+          <div style={{ marginTop: '20px' }}>
+            <Row>
+              <Col md="6">
+                <FormGroup>
+                  <Label>Function</Label>
+                  <Input
+                    type="select"
+                    value={royaltyRate.customFunc}
+                    onChange={(e) => {
+                      updateRuleNested(rule.id, 'royaltyRate.customFunc', e.target.value);
+                      const inputsNeeded = getOperationInputs(e.target.value);
+                      const currentInputs = royaltyRate.customInputs.length;
+                      if (currentInputs < inputsNeeded) {
+                        // Add missing inputs
+                        const newInputs = [...royaltyRate.customInputs];
+                        for (let i = currentInputs; i < inputsNeeded; i++) {
+                          newInputs.push({ 
+                            id: Date.now() + i, 
+                            type: 'constant', 
+                            value: '', 
+                            func: 'sum', 
+                            rb: '',
+                            inputs: []
+                          });
+                        }
+                        updateRuleNested(rule.id, 'royaltyRate.customInputs', newInputs);
+                      } else if (currentInputs > inputsNeeded) {
+                        // Remove excess inputs
+                        updateRuleNested(rule.id, 'royaltyRate.customInputs', royaltyRate.customInputs.slice(0, inputsNeeded));
+                      }
+                    }}
+                  >
+                    <option value="sum">Sum</option>
+                    <option value="multiply">Multiply</option>
+                    <option value="divide">Divide</option>
+                    <option value="subtract">Subtract</option>
+                    <option value="max">Max</option>
+                    <option value="min">Min</option>
+                  </Input>
+                </FormGroup>
+              </Col>
+            </Row>
+
+            <div style={{ marginTop: '20px' }}>
+              <Label>Function Inputs</Label>
+              {renderCustomInputs(rule, royaltyRate.customInputs)}
+              <Button
+                color="info"
+                size="sm"
+                onClick={() => addCustomInput(rule.id)}
+                style={{ marginTop: '10px' }}
+              >
+                Add Input
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

@@ -1,0 +1,314 @@
+{
+  "name": "Smartphone Components License - Camera & GPS",
+  "licensor": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+  "licensee": "0x8ba1f109551bD432803012645Hac136c4c4c4c4c4",
+  "territory": "Global",
+  "duration": "3Y 0M 0D",
+  "ips": "Proprietary smartphone component integration technology including advanced camera sensor algorithms, GPS positioning optimization, accelerometer calibration, gyroscope stabilization, and biometric sensor processing. This intellectual property covers hardware-software integration protocols, power management systems, and real-time data processing algorithms for mobile device components.",
+  "rules": [
+    {
+      "id": 1703123456789,
+      "name": "Camera Usage Royalty",
+      "validityStart": "2024-01-01",
+      "validityEnd": "2026-12-31",
+      "evaluationInterval": {
+        "duration": "1M 0D"
+      },
+      "royaltyBase": [
+        {
+          "id": 1703123456790,
+          "oracleAddress": "0x1234567890123456789012345678901234567890",
+          "propertyName": "getCameraActivations",
+          "displayName": "Camera Activations per Month"
+        },
+        {
+          "id": 1703123456791,
+          "oracleAddress": "0x2345678901234567890123456789012345678901",
+          "propertyName": "getPhotoCount",
+          "displayName": "Photos Taken"
+        }
+      ],
+      "royaltyRate": {
+        "type": "proportional",
+        "lumpsumValue": "",
+        "proportionalValue": "0.15",
+        "proportionalRB": "Photos Taken",
+        "customFunc": "sum",
+        "customInputs": [],
+        "stepStructure": {
+          "xAxis": "Photos Taken",
+          "steps": [
+            {
+              "id": 1703123456792,
+              "threshold": "1000",
+              "rate": "0.05",
+              "description": "Basic rate for up to 1000 photos/month"
+            },
+            {
+              "id": 1703123456793,
+              "threshold": "5000",
+              "rate": "0.15",
+              "description": "Standard rate for 1000-5000 photos/month"
+            },
+            {
+              "id": 1703123456794,
+              "threshold": "10000",
+              "rate": "0.25",
+              "description": "Premium rate for 5000-10000 photos/month"
+            }
+          ],
+          "infiniteValue": "0.35"
+        },
+        "min": "5",
+        "max": "1000"
+      }
+    },
+    {
+      "id": 1703123456795,
+      "name": "GPS Navigation Royalty",
+      "validityStart": "2024-01-01",
+      "validityEnd": "2026-12-31",
+      "evaluationInterval": {
+        "duration": "1M 0D"
+      },
+      "royaltyBase": [
+        {
+          "id": 1703123456796,
+          "oracleAddress": "0x3456789012345678901234567890123456789012",
+          "propertyName": "getGPSDistance",
+          "displayName": "GPS Navigation Distance (km)"
+        },
+        {
+          "id": 1703123456797,
+          "oracleAddress": "0x4567890123456789012345678901234567890123",
+          "propertyName": "getLocationRequests",
+          "displayName": "Location API Calls"
+        }
+      ],
+      "royaltyRate": {
+        "type": "proportional",
+        "lumpsumValue": "",
+        "proportionalValue": "0.02",
+        "proportionalRB": "GPS Navigation Distance (km)",
+        "customFunc": "sum",
+        "customInputs": [],
+        "stepStructure": {
+          "xAxis": "GPS Navigation Distance (km)",
+          "steps": [
+            {
+              "id": 1703123456798,
+              "threshold": "100",
+              "rate": "0.01",
+              "description": "Basic rate for up to 100km/month"
+            },
+            {
+              "id": 1703123456799,
+              "threshold": "500",
+              "rate": "0.02",
+              "description": "Standard rate for 100-500km/month"
+            },
+            {
+              "id": 1703123456800,
+              "threshold": "1000",
+              "rate": "0.03",
+              "description": "Premium rate for 500-1000km/month"
+            }
+          ],
+          "infiniteValue": "0.05"
+        },
+        "min": "1",
+        "max": "500"
+      }
+    },
+    {
+      "id": 1703123456801,
+      "name": "Sensor Suite License",
+      "validityStart": "2024-01-01",
+      "validityEnd": "2026-12-31",
+      "evaluationInterval": {
+        "duration": "1M 0D"
+      },
+      "royaltyBase": [
+        {
+          "id": 1703123456802,
+          "oracleAddress": "0x5678901234567890123456789012345678901234",
+          "propertyName": "getSensorDataPoints",
+          "displayName": "Sensor Data Points Processed"
+        },
+        {
+          "id": 1703123456803,
+          "oracleAddress": "0x6789012345678901234567890123456789012345",
+          "propertyName": "getBiometricScans",
+          "displayName": "Biometric Authentication Scans"
+        }
+      ],
+      "royaltyRate": {
+        "type": "lumpsum",
+        "lumpsumValue": "50.0",
+        "proportionalValue": "",
+        "proportionalRB": "",
+        "customFunc": "average",
+        "customInputs": [],
+        "stepStructure": {
+          "xAxis": "",
+          "steps": [],
+          "infiniteValue": ""
+        },
+        "min": "25",
+        "max": "200"
+      }
+    },
+    {
+      "id": 1703123456804,
+      "name": "Power Management Optimization",
+      "validityStart": "2024-01-01",
+      "validityEnd": "2026-12-31",
+      "evaluationInterval": {
+        "duration": "3M 0D"
+      },
+      "royaltyBase": [
+        {
+          "id": 1703123456805,
+          "oracleAddress": "0x7890123456789012345678901234567890123456",
+          "propertyName": "getBatteryEfficiency",
+          "displayName": "Battery Efficiency Score"
+        },
+        {
+          "id": 1703123456806,
+          "oracleAddress": "0x8901234567890123456789012345678901234567",
+          "propertyName": "getComponentUptime",
+          "displayName": "Component Uptime Hours"
+        }
+      ],
+      "royaltyRate": {
+        "type": "proportional",
+        "lumpsumValue": "",
+        "proportionalValue": "0.5",
+        "proportionalRB": "Component Uptime Hours",
+        "customFunc": "sum",
+        "customInputs": [],
+        "stepStructure": {
+          "xAxis": "Component Uptime Hours",
+          "steps": [
+            {
+              "id": 1703123456807,
+              "threshold": "1000",
+              "rate": "0.2",
+              "description": "Basic rate for up to 1000 hours/quarter"
+            },
+            {
+              "id": 1703123456808,
+              "threshold": "2000",
+              "rate": "0.5",
+              "description": "Standard rate for 1000-2000 hours/quarter"
+            },
+            {
+              "id": 1703123456809,
+              "threshold": "3000",
+              "rate": "0.8",
+              "description": "Premium rate for 2000-3000 hours/quarter"
+            }
+          ],
+          "infiniteValue": "1.0"
+        },
+        "min": "10",
+        "max": "1000"
+      }
+    },
+    {
+      "id": 1703123456810,
+      "name": "Advanced Custom Calculation",
+      "validityStart": "2024-01-01",
+      "validityEnd": "2026-12-31",
+      "evaluationInterval": {
+        "duration": "1M 0D"
+      },
+      "royaltyBase": [
+        {
+          "id": 1703123456811,
+          "oracleAddress": "0x1111111111111111111111111111111111111111",
+          "propertyName": "getDeviceCount",
+          "displayName": "Device Count"
+        },
+        {
+          "id": 1703123456812,
+          "oracleAddress": "0x2222222222222222222222222222222222222222",
+          "propertyName": "getUsageHours",
+          "displayName": "Usage Hours"
+        },
+        {
+          "id": 1703123456813,
+          "oracleAddress": "0x3333333333333333333333333333333333333333",
+          "propertyName": "getDataTransferred",
+          "displayName": "Data Transferred (GB)"
+        }
+      ],
+      "royaltyRate": {
+        "type": "custom",
+        "lumpsumValue": "",
+        "proportionalValue": "",
+        "proportionalRB": "",
+        "customFunc": "multiply",
+        "customInputs": [
+          {
+            "id": 1703123456814,
+            "type": "func",
+            "value": "",
+            "func": "sum",
+            "rb": "",
+            "inputs": [
+              {
+                "id": 1703123456815,
+                "type": "rb",
+                "value": "",
+                "func": "sum",
+                "rb": "Device Count",
+                "inputs": []
+              },
+              {
+                "id": 1703123456816,
+                "type": "constant",
+                "value": "2.5",
+                "func": "sum",
+                "rb": "",
+                "inputs": []
+              }
+            ]
+          },
+          {
+            "id": 1703123456817,
+            "type": "func",
+            "value": "",
+            "func": "divide",
+            "rb": "",
+            "inputs": [
+              {
+                "id": 1703123456818,
+                "type": "rb",
+                "value": "",
+                "func": "sum",
+                "rb": "Usage Hours",
+                "inputs": []
+              },
+              {
+                "id": 1703123456819,
+                "type": "constant",
+                "value": "100",
+                "func": "sum",
+                "rb": "",
+                "inputs": []
+              }
+            ]
+          }
+        ],
+        "stepStructure": {
+          "xAxis": "",
+          "steps": [],
+          "infiniteValue": ""
+        },
+        "min": "5",
+        "max": "500"
+      }
+    }
+  ]
+}
