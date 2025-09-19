@@ -24,106 +24,19 @@ import StepConfiguration from "./StepConfiguration";
 
 const StepReviewGenerate = ({ 
   generatedJson, 
+  generatedContract,
   generateJson, 
   handleBack, 
   handleNext,
-  onCreateLicense,
   manualData,
   rules
 }) => {
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
-  const [generatedContract, setGeneratedContract] = useState('');
   const [approvalStatus, setApprovalStatus] = useState('pending'); // pending, sent, approved, deployed
   const [recipientAddress, setRecipientAddress] = useState('');
   const [isValidating, setIsValidating] = useState(false);
 
-  // Generate smart contract from JSON
-  const generateSmartContract = () => {
-    try {
-      const jsonData = JSON.parse(generatedJson);
-      
-      // Mock smart contract generation (replace with actual generator)
-      const contract = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
-
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-contract SmartLicense is Ownable, ReentrancyGuard {
-    struct LicenseData {
-        string name;
-        address licensor;
-        address licensee;
-        string territory;
-        uint256 duration;
-        string intellectualProperty;
-        bool isActive;
-        uint256 createdAt;
-    }
-    
-    LicenseData public licenseData;
-    mapping(address => bool) public approvedBy;
-    bool public isApproved;
-    bool public isDeployed;
-    
-    event LicenseCreated(string name, address licensor, address licensee);
-    event LicenseApproved(address approver);
-    event LicenseDeployed();
-    
-    constructor(
-        string memory _name,
-        address _licensor,
-        address _licensee,
-        string memory _territory,
-        uint256 _duration,
-        string memory _intellectualProperty
-    ) {
-        licenseData = LicenseData({
-            name: _name,
-            licensor: _licensor,
-            licensee: _licensee,
-            territory: _territory,
-            duration: _duration,
-            intellectualProperty: _intellectualProperty,
-            isActive: true,
-            createdAt: block.timestamp
-        });
-        
-        emit LicenseCreated(_name, _licensor, _licensee);
-    }
-    
-    function approveLicense() external {
-        require(msg.sender == licenseData.licensor || msg.sender == licenseData.licensee, "Not authorized");
-        require(!approvedBy[msg.sender], "Already approved");
-        
-        approvedBy[msg.sender] = true;
-        emit LicenseApproved(msg.sender);
-        
-        if (approvedBy[licenseData.licensor] && approvedBy[licenseData.licensee]) {
-            isApproved = true;
-        }
-    }
-    
-    function deployLicense() external onlyOwner {
-        require(isApproved, "License not approved by both parties");
-        require(!isDeployed, "Already deployed");
-        
-        isDeployed = true;
-        emit LicenseDeployed();
-    }
-    
-    function getLicenseInfo() external view returns (LicenseData memory) {
-        return licenseData;
-    }
-}`;
-      
-      setGeneratedContract(contract);
-    } catch (error) {
-      console.error('Error generating contract:', error);
-      setGeneratedContract('// Error generating contract: ' + error.message);
-    }
-  };
 
   // Send for approval
   const sendForApproval = () => {
@@ -153,21 +66,9 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     alert('Smart License deployed successfully!');
   };
 
-  // Auto-generate contract when JSON changes
-  useEffect(() => {
-    if (generatedJson) {
-      generateSmartContract();
-    }
-  }, [generatedJson]);
+  // Contract is now generated automatically by the parent component
+  // when transitioning from Step 2 to Step 3
 
-  const handleCreateLicense = () => {
-    if (onCreateLicense) {
-      onCreateLicense(generatedJson);
-    } else {
-      // Default behavior - show success alert
-      alert('Smart License created successfully!');
-    }
-  };
 
   const handleDownloadJson = () => {
     const blob = new Blob([generatedJson], { type: 'application/json' });
@@ -467,16 +368,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             </Row>
             
             <Row>
-              <Col md="3">
-                <Button
-                  color="info"
-                  onClick={generateJson}
-                  block
-                >
-                  Regenerate JSON
-                </Button>
-              </Col>
-              <Col md="3">
+              <Col md="6">
                 <Button
                   color="secondary"
                   onClick={handleDownloadJson}
@@ -486,7 +378,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                   Download JSON
                 </Button>
               </Col>
-              <Col md="3">
+              <Col md="6">
                 <Button
                   color="warning"
                   onClick={handleCopyToClipboard}
@@ -494,16 +386,6 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                   disabled={!generatedJson}
                 >
                   Copy to Clipboard
-                </Button>
-              </Col>
-              <Col md="3">
-                <Button
-                  color="success"
-                  onClick={handleCreateLicense}
-                  block
-                  disabled={!generatedJson}
-                >
-                  Create License
                 </Button>
               </Col>
             </Row>
@@ -539,16 +421,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             </Row>
             
             <Row>
-              <Col md="4">
-                <Button
-                  color="info"
-                  onClick={generateSmartContract}
-                  block
-                >
-                  Regenerate Contract
-                </Button>
-              </Col>
-              <Col md="4">
+              <Col md="6">
                 <Button
                   color="secondary"
                   onClick={() => {
@@ -568,7 +441,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                   Download .sol
                 </Button>
               </Col>
-              <Col md="4">
+              <Col md="6">
                 <Button
                   color="warning"
                   onClick={async () => {
@@ -681,10 +554,10 @@ contract SmartLicense is Ownable, ReentrancyGuard {
 
 StepReviewGenerate.propTypes = {
   generatedJson: PropTypes.string.isRequired,
+  generatedContract: PropTypes.string.isRequired,
   generateJson: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
   handleNext: PropTypes.func.isRequired,
-  onCreateLicense: PropTypes.func, // Optional custom handler
   manualData: PropTypes.object, // Manual data for original configuration
   rules: PropTypes.array, // Rules for original configuration
 };

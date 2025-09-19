@@ -33,6 +33,93 @@ const BuildSmartLicense = () => {
     'Review & Generate'
   ];
 
+  // Generate smart contract from JSON
+  const generateSmartContract = (jsonData) => {
+    try {
+      const config = JSON.parse(jsonData);
+      
+      // Mock smart contract generation
+      const contract = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SmartLicense is Ownable, ReentrancyGuard {
+    struct LicenseData {
+        string name;
+        address licensor;
+        address licensee;
+        string territory;
+        uint256 duration;
+        string intellectualProperty;
+        bool isActive;
+        uint256 createdAt;
+    }
+    
+    LicenseData public licenseData;
+    mapping(address => bool) public approvedBy;
+    bool public isApproved;
+    bool public isDeployed;
+    
+    event LicenseCreated(string name, address licensor, address licensee);
+    event LicenseApproved(address approver);
+    event LicenseDeployed();
+    
+    constructor(
+        string memory _name,
+        address _licensor,
+        address _licensee,
+        string memory _territory,
+        uint256 _duration,
+        string memory _intellectualProperty
+    ) {
+        licenseData = LicenseData({
+            name: _name,
+            licensor: _licensor,
+            licensee: _licensee,
+            territory: _territory,
+            duration: _duration,
+            intellectualProperty: _intellectualProperty,
+            isActive: true,
+            createdAt: block.timestamp
+        });
+        
+        emit LicenseCreated(_name, _licensor, _licensee);
+    }
+    
+    function approveLicense() external {
+        require(msg.sender == licenseData.licensor || msg.sender == licenseData.licensee, "Not authorized");
+        require(!approvedBy[msg.sender], "Already approved");
+        
+        approvedBy[msg.sender] = true;
+        emit LicenseApproved(msg.sender);
+        
+        if (approvedBy[licenseData.licensor] && approvedBy[licenseData.licensee]) {
+            isApproved = true;
+        }
+    }
+    
+    function deployLicense() external onlyOwner {
+        require(isApproved, "License not approved by both parties");
+        require(!isDeployed, "Already deployed");
+        
+        isDeployed = true;
+        emit LicenseDeployed();
+    }
+    
+    function getLicenseInfo() external view returns (LicenseData memory) {
+        return licenseData;
+    }
+}`;
+      
+      return contract;
+    } catch (error) {
+      console.error('Error generating smart contract:', error);
+      return '// Error generating contract: ' + error.message;
+    }
+  };
+
   const handleNext = () => {
     if (currentStep === 1) {
       // Show validation errors when trying to proceed from Configuration step
@@ -40,6 +127,12 @@ const BuildSmartLicense = () => {
     }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      
+      // Generate smart contract when moving to Step 3
+      if (currentStep === 1 && generatedJson) {
+        const contract = generateSmartContract(generatedJson);
+        setGeneratedSmartContract(contract);
+      }
     }
   };
 
@@ -48,6 +141,7 @@ const BuildSmartLicense = () => {
       setCurrentStep(currentStep - 1);
     }
   };
+
 
   const handleModeSelection = (selectedMode) => {
     setMode(selectedMode);
@@ -169,11 +263,6 @@ contract SmartLicense is Ownable, ReentrancyGuard {
 }`;
   };
 
-  const handleCreateLicense = (jsonData) => {
-    // Here you would typically deploy the smart contract or save to database
-    console.log('Creating license with data:', jsonData);
-    alert('Smart License created successfully! Check the console for details.');
-  };
 
   const handleDownloadAll = () => {
     // Download JSON
@@ -235,6 +324,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
         return (
           <StepReviewGenerate
             generatedJson={generatedJson}
+            generatedContract={generatedSmartContract}
             generateJson={generateJson}
             handleBack={handleBack}
             handleNext={handleNext}
