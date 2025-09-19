@@ -146,9 +146,13 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested }) => {
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.stepStructure.xAxis', e.target.value)}
                 >
                   <option value="">Select X-Axis</option>
-                  {rule.royaltyBase.map((rb, idx) => (
-                    <option key={idx} value={rb.displayName}>{rb.displayName}</option>
-                  ))}
+                  {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
+                    (rule.royaltyBase || []).map((rb, idx) => (
+                      <option key={idx} value={rb.displayName}>{rb.displayName}</option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No Royalty Bases available</option>
+                  )}
                   <option value="time">Time</option>
                 </Input>
               </FormGroup>
@@ -736,29 +740,36 @@ const RulesConfiguration = ({ rules, setRules }) => {
   // Royalty Base management
   const addRoyaltyBase = (ruleId) => {
     const rule = rules.find(r => r.id === ruleId);
-    const rbNumber = String(rule.royaltyBase.length + 1).padStart(2, '0');
-    const newRB = {
-      id: Date.now(),
-      oracleAddress: '',
-      propertyName: '',
-      displayName: `RB${rbNumber}`,
-      intellectualProperty: ''
-    };
-    updateRuleNested(ruleId, 'royaltyBase', [...rule.royaltyBase, newRB]);
+    if (rule) {
+      const currentRB = rule.royaltyBase || [];
+      const rbNumber = String(currentRB.length + 1).padStart(2, '0');
+      const newRB = {
+        id: Date.now(),
+        oracleAddress: '',
+        propertyName: '',
+        displayName: `RB${rbNumber}`,
+        intellectualProperty: ''
+      };
+      updateRuleNested(ruleId, 'royaltyBase', [...currentRB, newRB]);
+    }
   };
 
   const removeRoyaltyBase = (ruleId, rbId) => {
     const rule = rules.find(r => r.id === ruleId);
-    const newRB = rule.royaltyBase.filter(rb => rb.id !== rbId);
-    updateRuleNested(ruleId, 'royaltyBase', newRB);
+    if (rule && rule.royaltyBase) {
+      const newRB = rule.royaltyBase.filter(rb => rb.id !== rbId);
+      updateRuleNested(ruleId, 'royaltyBase', newRB);
+    }
   };
 
   const updateRoyaltyBase = (ruleId, rbId, field, value) => {
     const rule = rules.find(r => r.id === ruleId);
-    const newRB = rule.royaltyBase.map(rb => 
-      rb.id === rbId ? { ...rb, [field]: value } : rb
-    );
-    updateRuleNested(ruleId, 'royaltyBase', newRB);
+    if (rule && rule.royaltyBase) {
+      const newRB = rule.royaltyBase.map(rb => 
+        rb.id === rbId ? { ...rb, [field]: value } : rb
+      );
+      updateRuleNested(ruleId, 'royaltyBase', newRB);
+    }
   };
 
   // Custom function management with tree structure
@@ -1053,9 +1064,13 @@ const RulesConfiguration = ({ rules, setRules }) => {
                   }}
                 >
                   <option value="">Select RB</option>
-                  {rule.royaltyBase.map((rb, rbIdx) => (
-                    <option key={rbIdx} value={rb.displayName}>{rb.displayName}</option>
-                  ))}
+                  {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
+                    (rule.royaltyBase || []).map((rb, rbIdx) => (
+                      <option key={rbIdx} value={rb.displayName}>{rb.displayName}</option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No Royalty Bases available</option>
+                  )}
                 </Input>
               </FormGroup>
             )}
@@ -1178,9 +1193,13 @@ const RulesConfiguration = ({ rules, setRules }) => {
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.proportionalRB', e.target.value)}
                 >
                   <option value="">Select RB</option>
-                  {rule.royaltyBase.map((rb, idx) => (
-                    <option key={idx} value={rb.displayName}>{rb.displayName}</option>
-                  ))}
+                  {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
+                    (rule.royaltyBase || []).map((rb, idx) => (
+                      <option key={idx} value={rb.displayName}>{rb.displayName}</option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No Royalty Bases available</option>
+                  )}
                 </Input>
               </FormGroup>
             </Col>
@@ -1441,7 +1460,21 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           >
                             Add RB
                           </Button>
-                          {rule.royaltyBase.map((rb, rbIndex) => (
+                          {(!rule.royaltyBase || rule.royaltyBase.length === 0) ? (
+                            <div style={{ 
+                              textAlign: 'center', 
+                              padding: '20px', 
+                              color: '#6c757d',
+                              fontStyle: 'italic',
+                              backgroundColor: '#f8f9fa',
+                              borderRadius: '4px',
+                              border: '1px dashed #dee2e6'
+                            }}>
+                              No Royalty Bases configured. Click "Add RB" to create one.
+                            </div>
+                          ) : (
+                            (rule.royaltyBase || []).map((rb, rbIndex) => {
+                            return (
                             <Row key={rb.id} style={{ marginBottom: '15px' }}>
                               <Col md="3">
                                 <FormGroup>
@@ -1501,7 +1534,6 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                     color="danger"
                                     size="sm"
                                     onClick={() => removeRoyaltyBase(rule.id, rb.id)}
-                                    disabled={rule.royaltyBase.length === 1}
                                     style={{ width: '100%' }}
                                   >
                                     Remove
@@ -1509,7 +1541,9 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                 </div>
                               </Col>
                             </Row>
-                          ))}
+                            );
+                            })
+                          )}
                         </div>
                       </Col>
 
@@ -1577,11 +1611,11 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             const processedRules = jsonData.rules?.map((rule, index) => ({
               ...rule,
               id: rule.id || Date.now() + index,
-              royaltyBase: rule.royaltyBase?.map((rb, rbIndex) => ({
+              royaltyBase: (rule.royaltyBase || []).map((rb, rbIndex) => ({
                 ...rb,
                 id: rb.id || Date.now() + index * 100 + rbIndex,
                 intellectualProperty: rb.intellectualProperty || ''
-              })) || [],
+              })),
               royaltyRate: {
                 ...rule.royaltyRate,
                 customInputs: rule.royaltyRate?.customInputs || [],
