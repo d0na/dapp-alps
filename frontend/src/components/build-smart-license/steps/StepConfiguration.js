@@ -606,7 +606,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
         duration: ''
       },
       royaltyBase: [
-        { id: Date.now(), oracleAddress: '', propertyName: '', displayName: 'RB01' }
+        { id: Date.now(), oracleAddress: '', propertyName: '', displayName: 'RB01', intellectualProperty: '' }
       ],
       royaltyRate: {
         type: 'lumpsum', // lumpsum, proportional, custom
@@ -647,7 +647,8 @@ const RulesConfiguration = ({ rules, setRules }) => {
           id: Date.now(),
           oracleAddress: '',
           propertyName: '',
-          displayName: 'RB01'
+          displayName: 'RB01',
+          intellectualProperty: ''
         }],
         royaltyRate: {
           type: 'lumpsum',
@@ -740,7 +741,8 @@ const RulesConfiguration = ({ rules, setRules }) => {
       id: Date.now(),
       oracleAddress: '',
       propertyName: '',
-      displayName: `RB${rbNumber}`
+      displayName: `RB${rbNumber}`,
+      intellectualProperty: ''
     };
     updateRuleNested(ruleId, 'royaltyBase', [...rule.royaltyBase, newRB]);
   };
@@ -1441,7 +1443,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           </Button>
                           {rule.royaltyBase.map((rb, rbIndex) => (
                             <Row key={rb.id} style={{ marginBottom: '15px' }}>
-                              <Col md="4">
+                              <Col md="3">
                                 <FormGroup>
                                   <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
                                     Oracle Address / Smart License Address
@@ -1454,7 +1456,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                   />
                                 </FormGroup>
                               </Col>
-                              <Col md="3">
+                              <Col md="2">
                                 <FormGroup>
                                   <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
                                     Property Name
@@ -1467,7 +1469,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                   />
                                 </FormGroup>
                               </Col>
-                              <Col md="3">
+                              <Col md="2">
                                 <FormGroup>
                                   <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
                                     Display Name
@@ -1477,6 +1479,19 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                     value={rb.displayName}
                                     onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'displayName', e.target.value)}
                                     placeholder="e.g., Manufactured Units"
+                                  />
+                                </FormGroup>
+                              </Col>
+                              <Col md="3">
+                                <FormGroup>
+                                  <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
+                                    Intellectual Property (IP)
+                                  </Label>
+                                  <Input
+                                    type="text"
+                                    value={rb.intellectualProperty}
+                                    onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'intellectualProperty', e.target.value)}
+                                    placeholder="e.g., Patent ID, Copyright, Trademark"
                                   />
                                 </FormGroup>
                               </Col>
@@ -1564,7 +1579,8 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               id: rule.id || Date.now() + index,
               royaltyBase: rule.royaltyBase?.map((rb, rbIndex) => ({
                 ...rb,
-                id: rb.id || Date.now() + index * 100 + rbIndex
+                id: rb.id || Date.now() + index * 100 + rbIndex,
+                intellectualProperty: rb.intellectualProperty || ''
               })) || [],
               royaltyRate: {
                 ...rule.royaltyRate,
@@ -2020,7 +2036,8 @@ RulesConfiguration.propTypes = {
       id: PropTypes.number.isRequired,
       oracleAddress: PropTypes.string.isRequired,
       propertyName: PropTypes.string.isRequired,
-      displayName: PropTypes.string.isRequired
+      displayName: PropTypes.string.isRequired,
+      intellectualProperty: PropTypes.string.isRequired
     })),
     royaltyRate: PropTypes.shape({
       type: PropTypes.oneOf(['lumpsum', 'proportional', 'custom']),

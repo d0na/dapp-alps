@@ -19,13 +19,15 @@
           "id": 1703123456790,
           "oracleAddress": "0x1234567890123456789012345678901234567890",
           "propertyName": "getCameraActivations",
-          "displayName": "Camera Activations per Month"
+          "displayName": "Camera Activations per Month",
+          "intellectualProperty": "US Patent 10,123,456 - Camera Activation Technology"
         },
         {
           "id": 1703123456791,
           "oracleAddress": "0x2345678901234567890123456789012345678901",
           "propertyName": "getPhotoCount",
-          "displayName": "Photos Taken"
+          "displayName": "Photos Taken",
+          "intellectualProperty": "US Patent 10,123,457 - Photo Processing Algorithm"
         }
       ],
       "royaltyRate": {
@@ -76,13 +78,15 @@
           "id": 1703123456796,
           "oracleAddress": "0x3456789012345678901234567890123456789012",
           "propertyName": "getGPSDistance",
-          "displayName": "GPS Navigation Distance (km)"
+          "displayName": "GPS Navigation Distance (km)",
+          "intellectualProperty": "US Patent 10,123,458 - GPS Navigation Optimization"
         },
         {
           "id": 1703123456797,
           "oracleAddress": "0x4567890123456789012345678901234567890123",
           "propertyName": "getLocationRequests",
-          "displayName": "Location API Calls"
+          "displayName": "Location API Calls",
+          "intellectualProperty": "US Patent 10,123,459 - Location API Technology"
         }
       ],
       "royaltyRate": {
@@ -133,13 +137,15 @@
           "id": 1703123456802,
           "oracleAddress": "0x5678901234567890123456789012345678901234",
           "propertyName": "getSensorDataPoints",
-          "displayName": "Sensor Data Points Processed"
+          "displayName": "Sensor Data Points Processed",
+          "intellectualProperty": "US Patent 10,123,460 - Sensor Data Processing"
         },
         {
           "id": 1703123456803,
           "oracleAddress": "0x6789012345678901234567890123456789012345",
           "propertyName": "getBiometricScans",
-          "displayName": "Biometric Authentication Scans"
+          "displayName": "Biometric Authentication Scans",
+          "intellectualProperty": "US Patent 10,123,461 - Biometric Authentication System"
         }
       ],
       "royaltyRate": {
@@ -171,13 +177,15 @@
           "id": 1703123456805,
           "oracleAddress": "0x7890123456789012345678901234567890123456",
           "propertyName": "getBatteryEfficiency",
-          "displayName": "Battery Efficiency Score"
+          "displayName": "Battery Efficiency Score",
+          "intellectualProperty": "US Patent 10,123,462 - Battery Management System"
         },
         {
           "id": 1703123456806,
           "oracleAddress": "0x8901234567890123456789012345678901234567",
           "propertyName": "getComponentUptime",
-          "displayName": "Component Uptime Hours"
+          "displayName": "Component Uptime Hours",
+          "intellectualProperty": "US Patent 10,123,463 - Component Monitoring Technology"
         }
       ],
       "royaltyRate": {
@@ -228,19 +236,22 @@
           "id": 1703123456811,
           "oracleAddress": "0x1111111111111111111111111111111111111111",
           "propertyName": "getDeviceCount",
-          "displayName": "Device Count"
+          "displayName": "Device Count",
+          "intellectualProperty": "US Patent 10,123,464 - Device Management System"
         },
         {
           "id": 1703123456812,
           "oracleAddress": "0x2222222222222222222222222222222222222222",
           "propertyName": "getUsageHours",
-          "displayName": "Usage Hours"
+          "displayName": "Usage Hours",
+          "intellectualProperty": "US Patent 10,123,465 - Usage Tracking Technology"
         },
         {
           "id": 1703123456813,
           "oracleAddress": "0x3333333333333333333333333333333333333333",
           "propertyName": "getDataTransferred",
-          "displayName": "Data Transferred (GB)"
+          "displayName": "Data Transferred (GB)",
+          "intellectualProperty": "US Patent 10,123,466 - Data Transfer Optimization"
         }
       ],
       "royaltyRate": {
