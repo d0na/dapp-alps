@@ -931,33 +931,41 @@ const RulesConfiguration = ({ rules, setRules }) => {
 
   const updateCustomInput = (ruleId, inputIndex, field, value, parentPath = '') => {
     const rule = rules.find(r => r.id === ruleId);
-    let newInputs = [...rule.royaltyRate.customInputs];
+    
+    // Create a deep copy of the customInputs array
+    const deepCopyInputs = (inputs) => {
+      return inputs.map(input => ({
+        ...input,
+        inputs: input.inputs ? deepCopyInputs(input.inputs) : []
+      }));
+    };
+    
+    let newInputs = deepCopyInputs(rule.royaltyRate.customInputs);
     
     if (parentPath) {
       // Update nested function
       const pathParts = parentPath.split('.');
       let current = newInputs;
       
-      // Navigate to the parent level
-      for (let i = 0; i < pathParts.length - 1; i++) {
+      // Navigate through all path parts to reach the parent container
+      for (let i = 0; i < pathParts.length; i++) {
         const pathIndex = parseInt(pathParts[i]);
         if (current[pathIndex] && current[pathIndex].inputs) {
           current = current[pathIndex].inputs;
         } else {
-          console.error('Invalid path:', parentPath);
+          console.error('Invalid path:', parentPath, 'at part', i);
           return;
         }
       }
       
-      // Update the target input
-      const targetIndex = parseInt(pathParts[pathParts.length - 1]);
-      if (current[targetIndex]) {
-        current[targetIndex] = { 
-          ...current[targetIndex], 
+      // Now current should be the inputs array containing the target input
+      if (current[inputIndex]) {
+        current[inputIndex] = { 
+          ...current[inputIndex], 
           [field]: value 
         };
       } else {
-        console.error('Target input not found:', targetIndex);
+        console.error('Target input not found at index:', inputIndex);
         return;
       }
     } else {
@@ -970,6 +978,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
       }
     }
     
+    console.log('Final newInputs after update:', newInputs);
     updateRuleNested(ruleId, 'royaltyRate.customInputs', newInputs);
   };
 
@@ -1081,7 +1090,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                 <Input
                   type="number"
                   step="0.01"
-                  value={input.value}
+                  value={input.value || ''}
                   onChange={(e) => updateCustomInput(rule.id, idx, 'value', e.target.value, parentPath)}
                   placeholder="Enter constant value"
                 />
