@@ -632,7 +632,52 @@ const RulesConfiguration = ({ rules, setRules }) => {
   };
 
   const removeRule = (ruleId) => {
-    setRules(rules.filter(rule => rule.id !== ruleId));
+    // Remove the rule and clean up any references
+    const updatedRules = rules.filter(rule => rule.id !== ruleId);
+    
+    // If no rules remain, set empty array
+    if (updatedRules.length === 0) {
+      setRules([]);
+      return;
+    }
+    
+    // Clean up any references to removed rule's Royalty Bases in other rules
+    const cleanedRules = updatedRules.map(rule => {
+      const cleanedRule = { ...rule };
+      
+      // Clean up proportionalRB references if they point to non-existent Royalty Bases
+      if (cleanedRule.royaltyRate?.proportionalRB) {
+        const validRB = cleanedRule.royaltyBase?.find(rb => rb.displayName === cleanedRule.royaltyRate.proportionalRB);
+        if (!validRB) {
+          cleanedRule.royaltyRate.proportionalRB = '';
+        }
+      }
+      
+      // Clean up stepStructure.xAxis references if they point to non-existent Royalty Bases
+      if (cleanedRule.royaltyRate?.stepStructure?.xAxis) {
+        const validRB = cleanedRule.royaltyBase?.find(rb => rb.displayName === cleanedRule.royaltyRate.stepStructure.xAxis);
+        if (!validRB && cleanedRule.royaltyRate.stepStructure.xAxis !== 'time') {
+          cleanedRule.royaltyRate.stepStructure.xAxis = '';
+        }
+      }
+      
+      // Clean up custom inputs that reference non-existent Royalty Bases
+      if (cleanedRule.royaltyRate?.customInputs) {
+        cleanedRule.royaltyRate.customInputs = cleanedRule.royaltyRate.customInputs.map(input => {
+          if (input.type === 'rb' && input.rb) {
+            const validRB = cleanedRule.royaltyBase?.find(rb => rb.displayName === input.rb);
+            if (!validRB) {
+              return { ...input, rb: '' };
+            }
+          }
+          return input;
+        });
+      }
+      
+      return cleanedRule;
+    });
+    
+    setRules(cleanedRules);
   };
 
   const resetRule = (ruleId) => {
@@ -757,18 +802,77 @@ const RulesConfiguration = ({ rules, setRules }) => {
   const removeRoyaltyBase = (ruleId, rbId) => {
     const rule = rules.find(r => r.id === ruleId);
     if (rule && rule.royaltyBase) {
+      const rbToRemove = rule.royaltyBase.find(rb => rb.id === rbId);
       const newRB = rule.royaltyBase.filter(rb => rb.id !== rbId);
+      
+      // Update the royalty base array
       updateRuleNested(ruleId, 'royaltyBase', newRB);
+      
+      // Clean up references to the removed Royalty Base
+      if (rbToRemove) {
+        const cleanedRule = { ...rule };
+        
+        // Clean up proportionalRB reference if it points to the removed Royalty Base
+        if (cleanedRule.royaltyRate?.proportionalRB === rbToRemove.displayName) {
+          updateRuleNested(ruleId, 'royaltyRate.proportionalRB', '');
+        }
+        
+        // Clean up stepStructure.xAxis reference if it points to the removed Royalty Base
+        if (cleanedRule.royaltyRate?.stepStructure?.xAxis === rbToRemove.displayName) {
+          updateRuleNested(ruleId, 'royaltyRate.stepStructure.xAxis', '');
+        }
+        
+        // Clean up custom inputs that reference the removed Royalty Base
+        if (cleanedRule.royaltyRate?.customInputs) {
+          const cleanedInputs = cleanedRule.royaltyRate.customInputs.map(input => {
+            if (input.type === 'rb' && input.rb === rbToRemove.displayName) {
+              return { ...input, rb: '' };
+            }
+            return input;
+          });
+          updateRuleNested(ruleId, 'royaltyRate.customInputs', cleanedInputs);
+        }
+      }
     }
   };
 
   const updateRoyaltyBase = (ruleId, rbId, field, value) => {
     const rule = rules.find(r => r.id === ruleId);
     if (rule && rule.royaltyBase) {
+      const rbToUpdate = rule.royaltyBase.find(rb => rb.id === rbId);
       const newRB = rule.royaltyBase.map(rb => 
         rb.id === rbId ? { ...rb, [field]: value } : rb
       );
+      
+      // Update the royalty base array
       updateRuleNested(ruleId, 'royaltyBase', newRB);
+      
+      // If displayName is being changed, update references
+      if (field === 'displayName' && rbToUpdate) {
+        const oldDisplayName = rbToUpdate.displayName;
+        const newDisplayName = value;
+        
+        // Update proportionalRB reference if it points to the old display name
+        if (rule.royaltyRate?.proportionalRB === oldDisplayName) {
+          updateRuleNested(ruleId, 'royaltyRate.proportionalRB', newDisplayName);
+        }
+        
+        // Update stepStructure.xAxis reference if it points to the old display name
+        if (rule.royaltyRate?.stepStructure?.xAxis === oldDisplayName) {
+          updateRuleNested(ruleId, 'royaltyRate.stepStructure.xAxis', newDisplayName);
+        }
+        
+        // Update custom inputs that reference the old display name
+        if (rule.royaltyRate?.customInputs) {
+          const updatedInputs = rule.royaltyRate.customInputs.map(input => {
+            if (input.type === 'rb' && input.rb === oldDisplayName) {
+              return { ...input, rb: newDisplayName };
+            }
+            return input;
+          });
+          updateRuleNested(ruleId, 'royaltyRate.customInputs', updatedInputs);
+        }
+      }
     }
   };
 
@@ -1370,7 +1474,6 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           <Button
                             color="danger"
                             onClick={() => removeRule(rule.id)}
-                            disabled={rules.length === 1}
                             style={{ marginTop: '10px' }}
                           >
                             Remove Rule
