@@ -1406,32 +1406,6 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                 </small>
                               </FormGroup>
                             </Col>
-                            <Col md="6">
-                              <FormGroup>
-                                <Label>Interval Breakdown</Label>
-                                <div style={{ 
-                                  padding: '12px', 
-                                  backgroundColor: '#f8f9fa', 
-                                  borderRadius: '4px',
-                                  border: '1px solid #dee2e6'
-                                }}>
-                                  {rule.evaluationInterval.duration ? (
-                                    <div>
-                                      <strong>Parsed Interval:</strong>
-                                      <div style={{ marginTop: '8px' }}>
-                                        {parseDuration(rule.evaluationInterval.duration).map((part, index) => (
-                                          <Badge key={index} color="info" style={{ marginRight: '5px' }}>
-                                            {part.value} {part.unit}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <span style={{ color: '#6c757d' }}>Enter interval to see breakdown</span>
-                                  )}
-                                </div>
-                              </FormGroup>
-                            </Col>
                           </Row>
                         </div>
                       </Col>
