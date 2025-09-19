@@ -1449,72 +1449,126 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           ) : (
                             (rule.royaltyBase || []).map((rb, rbIndex) => {
                             return (
-                            <Row key={rb.id} style={{ marginBottom: '15px' }}>
-                              <Col md="3">
-                                <FormGroup>
-                                  <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
-                                    Oracle Address / Smart License Address
-                                  </Label>
-                                  <Input
-                                    type="text"
-                                    value={rb.oracleAddress}
-                                    onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'oracleAddress', e.target.value)}
-                                    placeholder="0x..."
-                                  />
-                                </FormGroup>
-                              </Col>
-                              <Col md="2">
-                                <FormGroup>
-                                  <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
-                                    Property Name
-                                  </Label>
-                                  <Input
-                                    type="text"
-                                    value={rb.propertyName}
-                                    onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'propertyName', e.target.value)}
-                                    placeholder="e.g., getManufacturedCount"
-                                  />
-                                </FormGroup>
-                              </Col>
-                              <Col md="2">
-                                <FormGroup>
-                                  <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
-                                    Display Name
-                                  </Label>
-                                  <Input
-                                    type="text"
-                                    value={rb.displayName}
-                                    onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'displayName', e.target.value)}
-                                    placeholder="e.g., Manufactured Units"
-                                  />
-                                </FormGroup>
-                              </Col>
-                              <Col md="3">
-                                <FormGroup>
-                                  <Label style={{ fontSize: '0.875rem', lineHeight: '1.2', marginBottom: '5px', height: '32px', display: 'flex', alignItems: 'center' }}>
-                                    Intellectual Property (IP)
-                                  </Label>
-                                  <Input
-                                    type="text"
-                                    value={rb.intellectualProperty}
-                                    onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'intellectualProperty', e.target.value)}
-                                    placeholder="e.g., Patent ID, Copyright, Trademark"
-                                  />
-                                </FormGroup>
-                              </Col>
-                              <Col md="2">
-                                <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
-                                  <Button
-                                    color="danger"
-                                    size="sm"
-                                    onClick={() => removeRoyaltyBase(rule.id, rb.id)}
-                                    style={{ width: '100%' }}
-                                  >
-                                    Remove
-                                  </Button>
-                                </div>
-                              </Col>
-                            </Row>
+                            <div key={rb.id} style={{ 
+                              marginBottom: '12px', 
+                              padding: '12px', 
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #e9ecef',
+                              borderRadius: '6px',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                            }}>
+                              <Row>
+                                <Col md="12">
+                                  <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    marginBottom: '8px'
+                                  }}>
+                                    <h6 style={{ 
+                                      margin: 0, 
+                                      color: '#495057',
+                                      fontSize: '0.9rem',
+                                      fontWeight: '600'
+                                    }}>
+                                      {rb.displayName || `RB${String(rbIndex + 1).padStart(2, '0')}`}
+                                    </h6>
+                                    <Button
+                                      color="danger"
+                                      size="sm"
+                                      onClick={() => removeRoyaltyBase(rule.id, rb.id)}
+                                      style={{ 
+                                        padding: '4px 8px',
+                                        fontSize: '0.75rem',
+                                        minWidth: '60px'
+                                      }}
+                                    >
+                                      × Remove
+                                    </Button>
+                                  </div>
+                                </Col>
+                              </Row>
+                              <Row>
+                                <Col md="6">
+                                  <FormGroup style={{ marginBottom: '8px' }}>
+                                    <Label style={{ 
+                                      fontSize: '0.75rem', 
+                                      marginBottom: '3px',
+                                      color: '#6c757d',
+                                      fontWeight: '500'
+                                    }}>
+                                      Oracle Address / Smart License Address
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      value={rb.oracleAddress}
+                                      onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'oracleAddress', e.target.value)}
+                                      placeholder="0x..."
+                                      style={{ fontSize: '0.8rem', padding: '6px 8px' }}
+                                    />
+                                  </FormGroup>
+                                </Col>
+                                <Col md="6">
+                                  <FormGroup style={{ marginBottom: '8px' }}>
+                                    <Label style={{ 
+                                      fontSize: '0.75rem', 
+                                      marginBottom: '3px',
+                                      color: '#6c757d',
+                                      fontWeight: '500'
+                                    }}>
+                                      Property Name
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      value={rb.propertyName}
+                                      onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'propertyName', e.target.value)}
+                                      placeholder="e.g., getManufacturedCount"
+                                      style={{ fontSize: '0.8rem', padding: '6px 8px' }}
+                                    />
+                                  </FormGroup>
+                                </Col>
+                              </Row>
+                              <Row>
+                                <Col md="6">
+                                  <FormGroup style={{ marginBottom: '8px' }}>
+                                    <Label style={{ 
+                                      fontSize: '0.75rem', 
+                                      marginBottom: '3px',
+                                      color: '#6c757d',
+                                      fontWeight: '500'
+                                    }}>
+                                      Display Name
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      value={rb.displayName}
+                                      onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'displayName', e.target.value)}
+                                      placeholder="e.g., Manufactured Units"
+                                      style={{ fontSize: '0.8rem', padding: '6px 8px' }}
+                                    />
+                                  </FormGroup>
+                                </Col>
+                                <Col md="6">
+                                  <FormGroup style={{ marginBottom: '8px' }}>
+                                    <Label style={{ 
+                                      fontSize: '0.75rem', 
+                                      marginBottom: '3px',
+                                      color: '#6c757d',
+                                      fontWeight: '500'
+                                    }}>
+                                      Intellectual Property (IP)
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      value={rb.intellectualProperty}
+                                      onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'intellectualProperty', e.target.value)}
+                                      placeholder="e.g., Patent ID, Copyright, Trademark"
+                                      style={{ fontSize: '0.8rem', padding: '6px 8px' }}
+                                    />
+                                  </FormGroup>
+                                </Col>
+                              </Row>
+                            </div>
                             );
                             })
                           )}
