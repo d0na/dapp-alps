@@ -1939,20 +1939,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
           </FormGroup>
         </Col>
         <Col md="6">
-          <FormGroup>
-            <Label for="royaltyRate">
-              Royalty Rate (%)
-            </Label>
-            <Input
-              type="number"
-              id="royaltyRate"
-              step="0.01"
-              min="0"
-              placeholder="Enter royalty rate percentage"
-              value={manualData.royaltyRate || ''}
-              onChange={(e) => updateManualData('royaltyRate', e.target.value)}
-            />
-          </FormGroup>
         </Col>
       </Row>
 
