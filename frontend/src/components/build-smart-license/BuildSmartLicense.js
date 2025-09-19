@@ -295,22 +295,6 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                 </Col>
               </Row>
 
-              {/* Help Section */}
-              <Row style={{ marginTop: '30px' }}>
-                <Col md="12">
-                  <Alert color="info">
-                    <h5>Need Help?</h5>
-                    <p>
-                      This wizard will guide you through creating a smart license. 
-                      You can choose between manual configuration or AI-assisted creation.
-                    </p>
-                    <ul>
-                      <li><strong>Manual Mode:</strong> Fill out forms to configure all license parameters</li>
-                      <li><strong>AI Mode:</strong> Upload documents or provide text for AI analysis</li>
-                    </ul>
-                  </Alert>
-                </Col>
-              </Row>
             </CardBody>
           </Card>
         </Col>
