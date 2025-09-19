@@ -13,7 +13,7 @@ import {
 import {
   StepModeSelection,
   StepConfiguration,
-  StepFinalOutput,
+  StepReviewGenerate,
   generateSmartLicenseJson
 } from './index';
 
@@ -21,6 +21,7 @@ const BuildSmartLicense = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState('');
   const [manualData, setManualData] = useState({});
+  const [rules, setRules] = useState([]);
   const [aiText, setAiText] = useState('');
   const [generatedJson, setGeneratedJson] = useState('');
   const [generatedSmartContract, setGeneratedSmartContract] = useState('');
@@ -220,6 +221,8 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             mode={mode}
             manualData={manualData}
             setManualData={setManualData}
+            rules={rules}
+            setRules={setRules}
             aiText={aiText}
             setAiText={setAiText}
             handleNext={handleNext}
@@ -230,12 +233,13 @@ contract SmartLicense is Ownable, ReentrancyGuard {
         );
       case 2:
         return (
-          <StepFinalOutput
+          <StepReviewGenerate
             generatedJson={generatedJson}
-            generatedSmartContract={generatedSmartContract}
+            generateJson={generateJson}
             handleBack={handleBack}
-            handleDownloadAll={handleDownloadAll}
-            handleDeployContract={handleDeployContract}
+            handleNext={handleNext}
+            manualData={manualData}
+            rules={rules}
           />
         );
       default:

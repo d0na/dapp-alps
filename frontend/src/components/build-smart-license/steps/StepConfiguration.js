@@ -42,7 +42,7 @@ const parseDuration = (durationStr) => {
 };
 
 // Step Structure Component for Royalty Rate
-const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested }) => {
+const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnly = false }) => {
   const [activeTab, setActiveTab] = useState('1');
   const [newStep, setNewStep] = useState({ x: '', y: '' });
 
@@ -123,6 +123,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested }) => {
                       updateRuleNested(rule.id, 'royaltyRate.proportionalValue', e.target.value);
                     }
                   }}
+                  readOnly={isReadOnly}
                   placeholder="Enter value"
                 />
               </FormGroup>
@@ -144,6 +145,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested }) => {
                   type="select"
                   value={royaltyRate.stepStructure.xAxis}
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.stepStructure.xAxis', e.target.value)}
+                  readOnly={isReadOnly}
                 >
                   <option value="">Select X-Axis</option>
                   {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
@@ -202,6 +204,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested }) => {
                   min="0"
                   value={royaltyRate.stepStructure.infiniteValue}
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.stepStructure.infiniteValue', e.target.value)}
+                  readOnly={isReadOnly}
                   placeholder="Value for infinite X"
                 />
               </FormGroup>
@@ -597,7 +600,7 @@ const ValidationStatus = ({ isValid, warnings, requiredFields, mode, showValidat
 };
 
 // Rules Configuration Component
-const RulesConfiguration = ({ rules, setRules }) => {
+const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
   const [activeRuleIndex, setActiveRuleIndex] = useState(0);
 
   const addRule = () => {
@@ -994,7 +997,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
     }
   };
 
-  const renderCustomInputs = (rule, inputs, parentPath = '') => {
+  const renderCustomInputs = (rule, inputs, parentPath = '', isReadOnly = false) => {
     const depth = parentPath ? parentPath.split('.').length : 0;
     const indentLevel = depth * 20;
     
@@ -1076,6 +1079,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                     updateRuleNested(currentRule.id, 'royaltyRate.customInputs', newInputsArray);
                   }
                 }}
+                readOnly={isReadOnly}
               >
                 <option value="constant">Constant</option>
                 <option value="func">Function</option>
@@ -1092,6 +1096,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                   step="0.01"
                   value={input.value || ''}
                   onChange={(e) => updateCustomInput(rule.id, idx, 'value', e.target.value, parentPath)}
+                  readOnly={isReadOnly}
                   placeholder="Enter constant value"
                 />
               </FormGroup>
@@ -1125,6 +1130,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                       updateCustomInput(rule.id, idx, 'inputs', (input.inputs || []).slice(0, inputsNeeded), parentPath);
                     }
                   }}
+                  readOnly={isReadOnly}
                 >
                   <option value="sum">Sum</option>
                   <option value="multiply">Multiply</option>
@@ -1175,6 +1181,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                       }
                     }
                   }}
+                  readOnly={isReadOnly}
                 >
                   <option value="">Select RB</option>
                   {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
@@ -1189,14 +1196,16 @@ const RulesConfiguration = ({ rules, setRules }) => {
             )}
           </Col>
           <Col md="2">
-            <Button
-              color="danger"
-              size="sm"
-              onClick={() => removeCustomInput(rule.id, idx, parentPath)}
-              style={{ marginTop: '30px' }}
-            >
-              Remove
-            </Button>
+            {!isReadOnly && (
+              <Button
+                color="danger"
+                size="sm"
+                onClick={() => removeCustomInput(rule.id, idx, parentPath)}
+                style={{ marginTop: '30px' }}
+              >
+                Remove
+              </Button>
+            )}
           </Col>
         </Row>
         
@@ -1214,7 +1223,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                 ↳ Nested Function: {input.func} (Level {depth + 1})
               </Label>
             </div>
-            {renderCustomInputs(rule, input.inputs, parentPath ? `${parentPath}.${idx}` : `${idx}`)}
+            {renderCustomInputs(rule, input.inputs, parentPath ? `${parentPath}.${idx}` : `${idx}`, isReadOnly)}
             <Button
               color="info"
               size="sm"
@@ -1229,7 +1238,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
     ));
   };
 
-  const renderRoyaltyRateSection = (rule) => {
+  const renderRoyaltyRateSection = (rule, isReadOnly = false) => {
     const { royaltyRate } = rule;
 
     return (
@@ -1261,6 +1270,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                 type="select"
                 value={royaltyRate.type}
                 onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.type', e.target.value)}
+                readOnly={isReadOnly}
               >
                 <option value="lumpsum">Lumpsum</option>
                 <option value="proportional">Proportional</option>
@@ -1276,6 +1286,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                 step="0.01"
                 value={royaltyRate.min || ''}
                 onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.min', e.target.value)}
+                readOnly={isReadOnly}
                 placeholder="Min value"
               />
             </FormGroup>
@@ -1288,6 +1299,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                 step="0.01"
                 value={royaltyRate.max || ''}
                 onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.max', e.target.value)}
+                readOnly={isReadOnly}
                 placeholder="Max value"
               />
             </FormGroup>
@@ -1304,6 +1316,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                   type="select"
                   value={royaltyRate.proportionalRB || ''}
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.proportionalRB', e.target.value)}
+                  readOnly={isReadOnly}
                 >
                   <option value="">Select RB</option>
                   {rule.royaltyBase && rule.royaltyBase.length > 0 ? (
@@ -1324,6 +1337,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
           rule={rule}
           royaltyRate={royaltyRate}
           updateRuleNested={updateRuleNested}
+          isReadOnly={isReadOnly}
         />
 
         {/* Custom function editor - shown only when type is custom */}
@@ -1359,6 +1373,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                         updateRuleNested(rule.id, 'royaltyRate.customInputs', royaltyRate.customInputs.slice(0, inputsNeeded));
                       }
                     }}
+                    readOnly={isReadOnly}
                   >
                     <option value="sum">Sum</option>
                     <option value="multiply">Multiply</option>
@@ -1373,15 +1388,17 @@ const RulesConfiguration = ({ rules, setRules }) => {
 
             <div style={{ marginTop: '20px' }}>
               <Label>Function Inputs</Label>
-              {renderCustomInputs(rule, royaltyRate.customInputs)}
-              <Button
-                color="info"
-                size="sm"
-                onClick={() => addCustomInput(rule.id)}
-                style={{ marginTop: '10px' }}
-              >
-                Add Input
-              </Button>
+              {renderCustomInputs(rule, royaltyRate.customInputs, '', isReadOnly)}
+              {!isReadOnly && (
+                <Button
+                  color="info"
+                  size="sm"
+                  onClick={() => addCustomInput(rule.id)}
+                  style={{ marginTop: '10px' }}
+                >
+                  Add Input
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -1408,9 +1425,11 @@ const RulesConfiguration = ({ rules, setRules }) => {
           <div>
             <Row style={{ marginBottom: '20px' }}>
               <Col md="8">
-                <Button color="primary" onClick={addRule} style={{ marginRight: '10px' }}>
-                  Add Rule
-                </Button>
+                {!isReadOnly && (
+                  <Button color="primary" onClick={addRule} style={{ marginRight: '10px' }}>
+                    Add Rule
+                  </Button>
+                )}
                 <small>Total Rules: {rules.length}</small>
               </Col>
             </Row>
@@ -1453,6 +1472,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                               type="text"
                               value={rule.name}
                               onChange={(e) => updateRule(rule.id, 'name', e.target.value)}
+                              readOnly={isReadOnly}
                               placeholder="Enter rule name"
                             />
                           </FormGroup>
@@ -1465,6 +1485,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                   type="date"
                                   value={rule.validityStart}
                                   onChange={(e) => updateRule(rule.id, 'validityStart', e.target.value)}
+                                  readOnly={isReadOnly}
                                 />
                               </FormGroup>
                             </Col>
@@ -1475,18 +1496,21 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                   type="date"
                                   value={rule.validityEnd}
                                   onChange={(e) => updateRule(rule.id, 'validityEnd', e.target.value)}
+                                  readOnly={isReadOnly}
                                 />
                               </FormGroup>
                             </Col>
                           </Row>
 
-                          <Button
-                            color="danger"
-                            onClick={() => removeRule(rule.id)}
-                            style={{ marginTop: '10px' }}
-                          >
-                            Remove Rule
-                          </Button>
+                          {!isReadOnly && (
+                            <Button
+                              color="danger"
+                              onClick={() => removeRule(rule.id)}
+                              style={{ marginTop: '10px' }}
+                            >
+                              Remove Rule
+                            </Button>
+                          )}
                         </div>
                       </Col>
 
@@ -1511,6 +1535,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                   type="text"
                                   value={rule.evaluationInterval.duration || ''}
                                   onChange={(e) => updateRuleNested(rule.id, 'evaluationInterval.duration', e.target.value)}
+                                  readOnly={isReadOnly}
                                   placeholder="e.g., 1Y 0M 0D or 6M or 30D"
                                 />
                                 <small className="form-text text-muted">
@@ -1538,14 +1563,16 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           <h6 style={{ color: '#495057', marginBottom: '15px', borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
                             Royalty Base (RB)
                           </h6>
-                          <Button
-                            color="info"
-                            size="sm"
-                            onClick={() => addRoyaltyBase(rule.id)}
-                            style={{ marginBottom: '15px' }}
-                          >
-                            Add RB
-                          </Button>
+                          {!isReadOnly && (
+                            <Button
+                              color="info"
+                              size="sm"
+                              onClick={() => addRoyaltyBase(rule.id)}
+                              style={{ marginBottom: '15px' }}
+                            >
+                              Add RB
+                            </Button>
+                          )}
                           {(!rule.royaltyBase || rule.royaltyBase.length === 0) ? (
                             <div style={{ 
                               textAlign: 'center', 
@@ -1585,18 +1612,20 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                     }}>
                                       {rb.displayName || `RB${String(rbIndex + 1).padStart(2, '0')}`}
                                     </h6>
-                                    <Button
-                                      color="danger"
-                                      size="sm"
-                                      onClick={() => removeRoyaltyBase(rule.id, rb.id)}
-                                      style={{ 
-                                        padding: '4px 8px',
-                                        fontSize: '0.75rem',
-                                        minWidth: '60px'
-                                      }}
-                                    >
-                                      × Remove
-                                    </Button>
+                                    {!isReadOnly && (
+                                      <Button
+                                        color="danger"
+                                        size="sm"
+                                        onClick={() => removeRoyaltyBase(rule.id, rb.id)}
+                                        style={{ 
+                                          padding: '4px 8px',
+                                          fontSize: '0.75rem',
+                                          minWidth: '60px'
+                                        }}
+                                      >
+                                        × Remove
+                                      </Button>
+                                    )}
                                   </div>
                                 </Col>
                               </Row>
@@ -1615,6 +1644,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                       type="text"
                                       value={rb.oracleAddress}
                                       onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'oracleAddress', e.target.value)}
+                                      readOnly={isReadOnly}
                                       placeholder="0x..."
                                       style={{ fontSize: '0.8rem', padding: '6px 8px' }}
                                     />
@@ -1634,6 +1664,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                       type="text"
                                       value={rb.propertyName}
                                       onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'propertyName', e.target.value)}
+                                      readOnly={isReadOnly}
                                       placeholder="e.g., getManufacturedCount"
                                       style={{ fontSize: '0.8rem', padding: '6px 8px' }}
                                     />
@@ -1655,6 +1686,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                       type="text"
                                       value={rb.displayName}
                                       onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'displayName', e.target.value)}
+                                      readOnly={isReadOnly}
                                       placeholder="e.g., Manufactured Units"
                                       style={{ fontSize: '0.8rem', padding: '6px 8px' }}
                                     />
@@ -1674,6 +1706,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
                                       type="text"
                                       value={rb.intellectualProperty}
                                       onChange={(e) => updateRoyaltyBase(rule.id, rb.id, 'intellectualProperty', e.target.value)}
+                                      readOnly={isReadOnly}
                                       placeholder="e.g., Patent ID, Copyright, Trademark"
                                       style={{ fontSize: '0.8rem', padding: '6px 8px' }}
                                     />
@@ -1700,24 +1733,25 @@ const RulesConfiguration = ({ rules, setRules }) => {
                           <h6 style={{ color: '#495057', marginBottom: '15px', borderBottom: '1px solid #dee2e6', paddingBottom: '8px' }}>
                             Royalty Rate
                           </h6>
-                          {renderRoyaltyRateSection(rule)}
+                          {renderRoyaltyRateSection(rule, isReadOnly)}
                         </div>
                       </Col>
                     </Row>
 
 
-                    {/* Reset Button */}
-                    <Row>
-                      <Col md="12" style={{ textAlign: 'center' }}>
-                        <Button
-                          color="warning"
-                          onClick={() => resetRule(rule.id)}
-                          style={{ marginTop: '10px' }}
-                        >
-                          Reset This Rule
-                        </Button>
-                      </Col>
-                    </Row>
+                    {!isReadOnly && (
+                      <Row>
+                        <Col md="12" style={{ textAlign: 'center' }}>
+                          <Button
+                            color="warning"
+                            onClick={() => resetRule(rule.id)}
+                            style={{ marginTop: '10px' }}
+                          >
+                            Reset This Rule
+                          </Button>
+                        </Col>
+                      </Row>
+                    )}
                   </div>
                 </TabPane>
               ))}
@@ -1730,7 +1764,7 @@ const RulesConfiguration = ({ rules, setRules }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false }) => {
   const updateManualData = (field, value) => {
     setManualData({ ...manualData, [field]: value });
   };
@@ -1795,49 +1829,50 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
   return (
     <div>
-      {/* JSON Upload Section - Compact */}
-      <Row style={{ marginBottom: '15px' }}>
-        <Col md="12">
-          <div style={{ 
-            padding: '12px 16px', 
-            backgroundColor: '#f8f9fa', 
-            borderRadius: '4px',
-            border: '1px solid #dee2e6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div>
-              <span style={{ color: '#495057', fontSize: '14px', fontWeight: '500' }}>
-                Load from JSON file
-              </span>
-              <small style={{ color: '#6c757d', marginLeft: '8px' }}>
-                Upload to populate all fields automatically
-              </small>
+      {!isReadOnly && (
+        <Row style={{ marginBottom: '15px' }}>
+          <Col md="12">
+            <div style={{ 
+              padding: '12px 16px', 
+              backgroundColor: '#f8f9fa', 
+              borderRadius: '4px',
+              border: '1px solid #dee2e6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <span style={{ color: '#495057', fontSize: '14px', fontWeight: '500' }}>
+                  Load from JSON file
+                </span>
+                <small style={{ color: '#6c757d', marginLeft: '8px' }}>
+                  Upload to populate all fields automatically
+                </small>
+              </div>
+              <div>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleJsonUpload}
+                  style={{ display: 'none' }}
+                  id="json-upload"
+                />
+                <Button
+                  color="outline-primary"
+                  size="sm"
+                  onClick={() => document.getElementById('json-upload').click()}
+                  style={{ 
+                    fontSize: '12px',
+                    padding: '6px 12px'
+                  }}
+                >
+                  Choose File
+                </Button>
+              </div>
             </div>
-            <div>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleJsonUpload}
-                style={{ display: 'none' }}
-                id="json-upload"
-              />
-              <Button
-                color="outline-primary"
-                size="sm"
-                onClick={() => document.getElementById('json-upload').click()}
-                style={{ 
-                  fontSize: '12px',
-                  padding: '6px 12px'
-                }}
-              >
-                Choose File
-              </Button>
-            </div>
-          </div>
-        </Col>
-      </Row>
+          </Col>
+        </Row>
+      )}
 
       <ValidationStatus 
         isValid={validation.isValid} 
@@ -1859,6 +1894,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="Enter license name"
               value={manualData.name || ''}
               onChange={(e) => updateManualData('name', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasName}
             />
           </FormGroup>
@@ -1874,6 +1910,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="e.g., Worldwide, USA, Europe"
               value={manualData.territory || ''}
               onChange={(e) => updateManualData('territory', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasTerritory}
             />
           </FormGroup>
@@ -1892,6 +1929,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="Enter blockchain address (0x...) or name"
               value={manualData.licensor || ''}
               onChange={(e) => updateManualData('licensor', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasLicensor}
             />
             <small className="form-text text-muted">
@@ -1910,6 +1948,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="Enter blockchain address (0x...) or name"
               value={manualData.licensee || ''}
               onChange={(e) => updateManualData('licensee', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasLicensee}
             />
             <small className="form-text text-muted">
@@ -1931,6 +1970,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="e.g., 5Y 10M 2D or 3Y 6M or 2Y"
               value={manualData.duration || ''}
               onChange={(e) => updateManualData('duration', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasDuration}
             />
             <small className="form-text text-muted">
@@ -1955,6 +1995,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               placeholder="Describe the intellectual properties being licensed"
               value={manualData.ips || ''}
               onChange={(e) => updateManualData('ips', e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasIPs}
             />
           </FormGroup>
@@ -1965,6 +2006,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
       <RulesConfiguration 
         rules={manualData.rules || []}
         setRules={(rules) => updateManualData('rules', rules)}
+        isReadOnly={isReadOnly}
       />
 
       {/* Smart Policy Dependencies */}
@@ -1974,7 +2016,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 };
 
 // AI Configuration Form
-const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErrors, setShowValidationErrors }) => {
+const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false }) => {
   const classes = useBuildSmartLicenseStyles();
 
   const handleFileUpload = (event) => {
@@ -1997,35 +2039,37 @@ const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErro
         showValidationErrors={showValidationErrors}
       />
       
-      <Row>
-        <Col md="12">
-          <FormGroup>
-            <Label for="fileUpload">Upload Document</Label>
-            <div className={classes.uploadArea}>
-              <input
-                accept=".txt,.doc,.docx,.pdf,.json"
-                style={{ display: 'none' }}
-                id="file-upload"
-                type="file"
-                onChange={handleFileUpload}
-              />
-              <label htmlFor="file-upload">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  component="span"
-                  className={classes.uploadButton}
-                >
-                  Upload Document
-                </Button>
-              </label>
-              <Typography variant="body2" color="textSecondary">
-                Supported formats: TXT, DOC, DOCX, PDF, JSON
-              </Typography>
-            </div>
-          </FormGroup>
-        </Col>
-      </Row>
+      {!isReadOnly && (
+        <Row>
+          <Col md="12">
+            <FormGroup>
+              <Label for="fileUpload">Upload Document</Label>
+              <div className={classes.uploadArea}>
+                <input
+                  accept=".txt,.doc,.docx,.pdf,.json"
+                  style={{ display: 'none' }}
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileUpload}
+                />
+                <label htmlFor="file-upload">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    component="span"
+                    className={classes.uploadButton}
+                  >
+                    Upload Document
+                  </Button>
+                </label>
+                <Typography variant="body2" color="textSecondary">
+                  Supported formats: TXT, DOC, DOCX, PDF, JSON
+                </Typography>
+              </div>
+            </FormGroup>
+          </Col>
+        </Row>
+      )}
       <Row>
         <Col md="12">
           <FormGroup>
@@ -2039,6 +2083,7 @@ const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErro
               placeholder="Paste license agreement text, contract details, or requirements for AI analysis..."
               value={aiText}
               onChange={(e) => setAiText(e.target.value)}
+              readOnly={isReadOnly}
               invalid={!validation.isValid}
             />
           </FormGroup>
@@ -2058,7 +2103,8 @@ const StepConfiguration = ({
   handleNext, 
   handleBack,
   showValidationErrors,
-  setShowValidationErrors
+  setShowValidationErrors,
+  isReadOnly = false
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -2127,6 +2173,7 @@ const StepConfiguration = ({
             validation={validation}
             showValidationErrors={showValidationErrors}
             setShowValidationErrors={setShowValidationErrors}
+            isReadOnly={isReadOnly}
           />
         ) : (
           <AIConfigurationForm 
@@ -2135,27 +2182,30 @@ const StepConfiguration = ({
             validation={validation}
             showValidationErrors={showValidationErrors}
             setShowValidationErrors={setShowValidationErrors}
+            isReadOnly={isReadOnly}
           />
         )}
         
-        <Row style={{ marginTop: '30px' }}>
-          <Col md="12" className="text-right">
-            <Button
-              color="secondary"
-              onClick={handleBack}
-              className="mr-2"
-            >
-              Back
-            </Button>
-            <Button
-              color="primary"
-              onClick={handleNext}
-              disabled={isNextDisabled}
-            >
-              Next
-            </Button>
-          </Col>
-        </Row>
+        {!isReadOnly && (
+          <Row style={{ marginTop: '30px' }}>
+            <Col md="12" className="text-right">
+              <Button
+                color="secondary"
+                onClick={handleBack}
+                className="mr-2"
+              >
+                Back
+              </Button>
+              <Button
+                color="primary"
+                onClick={handleNext}
+                disabled={isNextDisabled}
+              >
+                Next
+              </Button>
+            </Col>
+          </Row>
+        )}
       </CardBody>
     </Card>
   );
@@ -2181,6 +2231,7 @@ ManualConfigurationForm.propTypes = {
   validation: PropTypes.object.isRequired,
   showValidationErrors: PropTypes.bool,
   setShowValidationErrors: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 RulesConfiguration.propTypes = {
@@ -2216,6 +2267,7 @@ RulesConfiguration.propTypes = {
     })
   })).isRequired,
   setRules: PropTypes.func.isRequired,
+  isReadOnly: PropTypes.bool,
 };
 
 AIConfigurationForm.propTypes = {
@@ -2224,6 +2276,7 @@ AIConfigurationForm.propTypes = {
   validation: PropTypes.object.isRequired,
   showValidationErrors: PropTypes.bool,
   setShowValidationErrors: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 StepConfiguration.propTypes = {
@@ -2236,6 +2289,7 @@ StepConfiguration.propTypes = {
   handleBack: PropTypes.func.isRequired,
   showValidationErrors: PropTypes.bool,
   setShowValidationErrors: PropTypes.func,
+  isReadOnly: PropTypes.bool,
 };
 
 export default StepConfiguration;
