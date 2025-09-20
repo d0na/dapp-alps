@@ -22,21 +22,57 @@ import {
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import StepConfiguration from "./StepConfiguration";
 
+// Convert JSON data to form data format for StepConfiguration
+const convertJsonToFormData = (jsonString) => {
+  try {
+    const jsonData = JSON.parse(jsonString);
+    
+    // Convert JSON structure to form data format
+    const manualData = {
+      licenseName: jsonData.licenseName || jsonData.name || '',
+      territory: jsonData.territory || '',
+      licensor: jsonData.licensor || '',
+      licensee: jsonData.licensee || '',
+      duration: jsonData.duration || '',
+      intellectualProperties: jsonData.intellectualProperties || [],
+      rules: jsonData.rules || []
+    };
+    
+    return {
+      manualData,
+      rules: jsonData.rules || []
+    };
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return {
+      manualData: {
+        licenseName: '',
+        territory: '',
+        licensor: '',
+        licensee: '',
+        duration: '',
+        intellectualProperties: [],
+        rules: []
+      },
+      rules: []
+    };
+  }
+};
+
 const StepReviewGenerate = ({ 
   generatedJson, 
   generatedContract,
+  uploadedSolidity,
   generateJson, 
   handleBack, 
-  handleNext,
-  manualData,
-  rules
+  handleNext
 }) => {
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
   const [approvalStatus, setApprovalStatus] = useState('pending'); // pending, sent, approved, deployed
   const [recipientAddress, setRecipientAddress] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-
+  // No contract comparison needed - JSON is the source of truth
 
   // Send for approval
   const sendForApproval = () => {
@@ -125,7 +161,7 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>License Name</strong></Label>
-              <Input type="text" value={jsonData.name || ''} readOnly />
+              <Input type="text" value={jsonData.licenseName || jsonData.name || ''} readOnly />
             </FormGroup>
           </Col>
           <Col md="6">
@@ -161,7 +197,7 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>Intellectual Property</strong></Label>
-              <Input type="textarea" value={jsonData.ips || ''} readOnly rows="3" />
+              <Input type="textarea" value={jsonData.intellectualProperties ? jsonData.intellectualProperties.join('\n') : (jsonData.ips || '')} readOnly rows="3" />
             </FormGroup>
           </Col>
         </Row>
@@ -317,9 +353,9 @@ const StepReviewGenerate = ({
               
               <StepConfiguration
                 mode="manual"
-                manualData={manualData}
+                manualData={convertJsonToFormData(generatedJson).manualData}
                 setManualData={() => {}} // No-op function for read-only
-                rules={rules}
+                rules={convertJsonToFormData(generatedJson).rules}
                 setRules={() => {}} // No-op function for read-only
                 aiText=""
                 setAiText={() => {}} // No-op function for read-only
@@ -462,6 +498,7 @@ const StepReviewGenerate = ({
           </TabPane>
         </TabContent>
 
+
         {/* Approval Actions */}
         <Row style={{ marginTop: '30px' }}>
           <Col md="12">
@@ -528,6 +565,47 @@ const StepReviewGenerate = ({
             </Card>
           </Col>
         </Row>
+
+        {/* Response to Sender (always available for verification mode) */}
+        {uploadedSolidity && approvalStatus === 'pending' && (
+          <Row style={{ marginTop: '20px' }}>
+            <Col md="12">
+              <Card style={{ backgroundColor: '#e3f2fd', borderColor: '#2196f3' }}>
+                <CardHeader>
+                  <CardTitle tag="h5">📨 Response to Sender</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <Alert color="info">
+                    <strong>License proposal ready for review.</strong> You can now respond to the sender.
+                  </Alert>
+                  <div className="text-center">
+                    <Button
+                      color="success"
+                      onClick={() => {
+                        setApprovalStatus('approved');
+                        alert('✅ Response sent to sender! License is approved and ready for deployment.');
+                      }}
+                      size="lg"
+                      style={{ marginRight: '10px' }}
+                    >
+                      ✅ Approve & Respond to Sender
+                    </Button>
+                    <Button
+                      color="warning"
+                      onClick={() => {
+                        setApprovalStatus('pending');
+                        alert('⚠️ Response sent to sender requesting changes.');
+                      }}
+                      size="lg"
+                    >
+                      ⚠️ Request Changes
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        )}
         
         <Row>
           <Col md="12" className="text-right" style={{ marginTop: '15px' }}>
@@ -555,11 +633,10 @@ const StepReviewGenerate = ({
 StepReviewGenerate.propTypes = {
   generatedJson: PropTypes.string.isRequired,
   generatedContract: PropTypes.string.isRequired,
+  uploadedSolidity: PropTypes.string, // Optional uploaded solidity contract
   generateJson: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
   handleNext: PropTypes.func.isRequired,
-  manualData: PropTypes.object, // Manual data for original configuration
-  rules: PropTypes.array, // Rules for original configuration
 };
 
 export default StepReviewGenerate;
