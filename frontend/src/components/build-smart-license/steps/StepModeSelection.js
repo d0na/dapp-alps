@@ -58,9 +58,33 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
             <Typography 
               variant="body2" 
               color="textSecondary" 
-              style={{ marginLeft: 32 }}
+              style={{ marginLeft: 32, marginBottom: 20 }}
             >
               Upload a document or provide text for AI to analyze and generate the license
+            </Typography>
+          </RadioGroup>
+        </FormControl>
+
+        {/* Verify Proposal Section */}
+        <FormControl component="fieldset" className={classes.formControl} style={{ marginTop: '30px' }}>
+          <FormLabel component="legend">Verify Proposal</FormLabel>
+          <RadioGroup
+            aria-label="mode"
+            name="mode"
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
+          >
+            <FormControlLabel
+              value="upload"
+              control={<Radio />}
+              label="Upload Existing Files"
+            />
+            <Typography 
+              variant="body2" 
+              color="textSecondary" 
+              style={{ marginLeft: 32 }}
+            >
+              Upload existing JSON and Solidity files to review and proceed with deployment
             </Typography>
           </RadioGroup>
         </FormControl>

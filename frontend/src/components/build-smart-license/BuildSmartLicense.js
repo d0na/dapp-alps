@@ -13,6 +13,7 @@ import {
 import {
   StepModeSelection,
   StepConfiguration,
+  StepFileUpload,
   StepReviewGenerate,
   generateSmartLicenseJson
 } from './index';
@@ -25,12 +26,35 @@ const BuildSmartLicense = () => {
   const [aiText, setAiText] = useState('');
   const [generatedJson, setGeneratedJson] = useState('');
   const [generatedSmartContract, setGeneratedSmartContract] = useState('');
+  const [uploadedJson, setUploadedJson] = useState('');
+  const [uploadedSolidity, setUploadedSolidity] = useState('');
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [isVerificationMode, setIsVerificationMode] = useState(false);
+
+  // Update generatedJson when uploadedJson changes (for upload mode)
+  useEffect(() => {
+    if (mode === 'upload' && uploadedJson) {
+      setGeneratedJson(uploadedJson);
+    }
+  }, [uploadedJson, mode]);
+
+  // Update generatedSmartContract when uploadedSolidity changes (for upload mode)
+  useEffect(() => {
+    if (mode === 'upload' && uploadedSolidity) {
+      setGeneratedSmartContract(uploadedSolidity);
+    }
+  }, [uploadedSolidity, mode]);
 
   const steps = [
     'Mode Selection',
     'Configuration',
     'Review & Generate'
+  ];
+
+  const verificationSteps = [
+    'Mode Selection',
+    'File Upload',
+    'Review & Verify'
   ];
 
   // Generate smart contract from JSON
@@ -145,6 +169,11 @@ contract SmartLicense is Ownable, ReentrancyGuard {
 
   const handleModeSelection = (selectedMode) => {
     setMode(selectedMode);
+    if (selectedMode === 'upload') {
+      setIsVerificationMode(true);
+    } else {
+      setIsVerificationMode(false);
+    }
     handleNext();
   };
 
@@ -295,6 +324,8 @@ contract SmartLicense is Ownable, ReentrancyGuard {
   };
 
   const renderCurrentStep = () => {
+    const currentSteps = isVerificationMode ? verificationSteps : steps;
+    
     switch (currentStep) {
       case 0:
         return (
@@ -305,31 +336,43 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           />
         );
       case 1:
-        return (
-          <StepConfiguration
-            mode={mode}
-            manualData={manualData}
-            setManualData={setManualData}
-            rules={rules}
-            setRules={setRules}
-            aiText={aiText}
-            setAiText={setAiText}
-            handleNext={handleNext}
-            handleBack={handleBack}
-            showValidationErrors={showValidationErrors}
-            setShowValidationErrors={setShowValidationErrors}
-          />
-        );
+        if (isVerificationMode) {
+          return (
+            <StepFileUpload
+              uploadedJson={uploadedJson}
+              setUploadedJson={setUploadedJson}
+              uploadedSolidity={uploadedSolidity}
+              setUploadedSolidity={setUploadedSolidity}
+              handleNext={handleNext}
+              handleBack={handleBack}
+            />
+          );
+        } else {
+          return (
+            <StepConfiguration
+              mode={mode}
+              manualData={manualData}
+              setManualData={setManualData}
+              rules={rules}
+              setRules={setRules}
+              aiText={aiText}
+              setAiText={setAiText}
+              handleNext={handleNext}
+              handleBack={handleBack}
+              showValidationErrors={showValidationErrors}
+              setShowValidationErrors={setShowValidationErrors}
+            />
+          );
+        }
       case 2:
         return (
           <StepReviewGenerate
             generatedJson={generatedJson}
             generatedContract={generatedSmartContract}
+            uploadedSolidity={uploadedSolidity}
             generateJson={generateJson}
             handleBack={handleBack}
             handleNext={handleNext}
-            manualData={manualData}
-            rules={rules}
           />
         );
       default:
@@ -343,9 +386,14 @@ contract SmartLicense is Ownable, ReentrancyGuard {
         <Col md="12">
           <Card>
             <CardHeader>
-              <CardTitle tag="h4">Create Smart License</CardTitle>
+              <CardTitle tag="h4">
+                {isVerificationMode ? 'Verify Smart License Proposal' : 'Create Smart License'}
+              </CardTitle>
               <p className="card-category">
-                Build and deploy smart licenses for intellectual property management
+                {isVerificationMode 
+                  ? 'Review and verify existing smart license proposals for deployment'
+                  : 'Build and deploy smart licenses for intellectual property management'
+                }
               </p>
             </CardHeader>
             <CardBody>
@@ -354,7 +402,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                 <Col md="12">
                   <div style={{ marginBottom: '30px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      {steps.map((step, index) => (
+                      {(isVerificationMode ? verificationSteps : steps).map((step, index) => (
                         <div
                           key={index}
                           style={{
