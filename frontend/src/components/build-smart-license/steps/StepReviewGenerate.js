@@ -29,12 +29,12 @@ const convertJsonToFormData = (jsonString) => {
     
     // Convert JSON structure to form data format
     const manualData = {
-      licenseName: jsonData.licenseName || jsonData.name || '',
+      name: jsonData.name || '',
       territory: jsonData.territory || '',
       licensor: jsonData.licensor || '',
       licensee: jsonData.licensee || '',
       duration: jsonData.duration || '',
-      intellectualProperties: jsonData.intellectualProperties || [],
+      ips: jsonData.ips || '',
       rules: jsonData.rules || []
     };
     
@@ -46,12 +46,12 @@ const convertJsonToFormData = (jsonString) => {
     console.error('Error parsing JSON:', error);
     return {
       manualData: {
-        licenseName: '',
+        name: '',
         territory: '',
         licensor: '',
         licensee: '',
         duration: '',
-        intellectualProperties: [],
+        ips: '',
         rules: []
       },
       rules: []
@@ -253,7 +253,7 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>License Name</strong></Label>
-              <Input type="text" value={jsonData.licenseName || jsonData.name || ''} readOnly />
+              <Input type="text" value={jsonData.name || ''} readOnly />
             </FormGroup>
           </Col>
           <Col md="6">
@@ -289,7 +289,7 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>Intellectual Property</strong></Label>
-              <Input type="textarea" value={jsonData.intellectualProperties ? jsonData.intellectualProperties.join('\n') : (jsonData.ips || '')} readOnly rows="3" />
+              <Input type="textarea" value={jsonData.ips || ''} readOnly rows="3" />
             </FormGroup>
           </Col>
         </Row>
