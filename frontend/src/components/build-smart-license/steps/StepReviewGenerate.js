@@ -63,7 +63,10 @@ const StepReviewGenerate = ({
   generatedJson, 
   generatedContract,
   uploadedSolidity,
-  generateJson, 
+  generateJson,
+  isVerificationMode,
+  contractComparisonValid,
+  setContractComparisonValid,
   handleBack, 
   handleNext
 }) => {
@@ -184,8 +187,10 @@ const StepReviewGenerate = ({
     if (generatedContract && uploadedSolidity) {
       const comparison = compareContracts(generatedContract, uploadedSolidity);
       setContractComparison(comparison);
+      // Update parent component with comparison validity
+      setContractComparisonValid(comparison.isSimilar);
     }
-  }, [generatedContract, uploadedSolidity]);
+  }, [generatedContract, uploadedSolidity, setContractComparisonValid]);
 
   // Approval and deployment logic moved to StepDeployment component
 
@@ -669,12 +674,13 @@ const StepReviewGenerate = ({
                                 similarity: 100,
                                 differences: []
                               }));
-                              alert('✅ Contract comparison simulated as valid for testing purposes!');
+                              setContractComparisonValid(true);
+                              alert('Contract comparison simulated as valid for testing purposes!');
                             }}
                             size="sm"
                             style={{ marginRight: '10px' }}
                           >
-                            🧪 Simulate Valid Comparison (Testing)
+                            Simulate Valid Comparison (Testing)
                           </Button>
                           <Button
                             color="secondary"
@@ -689,11 +695,12 @@ const StepReviewGenerate = ({
                                   'Missing struct: LicenseData'
                                 ]
                               }));
-                              alert('⚠️ Contract comparison reset with random differences for testing!');
+                              setContractComparisonValid(false);
+                              alert('Contract comparison reset with random differences for testing!');
                             }}
                             size="sm"
                           >
-                            🔄 Reset Comparison (Testing)
+                            Reset Comparison (Testing)
                           </Button>
                         </Col>
                       </Row>
@@ -755,7 +762,7 @@ const StepReviewGenerate = ({
             <Button
               color="primary"
               onClick={handleNext}
-              disabled={!generatedJson}
+              disabled={isVerificationMode ? !contractComparisonValid : !generatedJson}
             >
               Next
             </Button>
@@ -771,6 +778,9 @@ StepReviewGenerate.propTypes = {
   generatedContract: PropTypes.string.isRequired,
   uploadedSolidity: PropTypes.string, // Optional uploaded solidity contract
   generateJson: PropTypes.func.isRequired,
+  isVerificationMode: PropTypes.bool.isRequired,
+  contractComparisonValid: PropTypes.bool.isRequired,
+  setContractComparisonValid: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
   handleNext: PropTypes.func.isRequired,
 };

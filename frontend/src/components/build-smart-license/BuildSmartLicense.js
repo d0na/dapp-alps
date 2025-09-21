@@ -32,6 +32,7 @@ const BuildSmartLicense = () => {
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [isVerificationMode, setIsVerificationMode] = useState(false);
   const [deploymentStatus, setDeploymentStatus] = useState('pending'); // pending, sent, approved, deployed
+  const [contractComparisonValid, setContractComparisonValid] = useState(false);
 
   // Update generatedJson when uploadedJson changes (for upload mode)
   useEffect(() => {
@@ -243,7 +244,11 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           return validation.isValid;
         }
       } else if (currentStep === 2) {
-        return !!generatedJson; // Must have generated JSON
+        if (isVerificationMode) {
+          return contractComparisonValid; // Contract comparison must be valid in verification mode
+        } else {
+          return !!generatedJson; // Must have generated JSON in creation mode
+        }
       }
     }
     
@@ -268,7 +273,11 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           return validation.isValid;
         }
       } else if (stepIndex === 2) {
-        return !!generatedJson; // JSON generated
+        if (isVerificationMode) {
+          return contractComparisonValid; // Contract comparison must be valid in verification mode
+        } else {
+          return !!generatedJson; // JSON generated in creation mode
+        }
       } else if (stepIndex === 3) {
         return deploymentStatus !== 'pending'; // Deployment step started (sent, approved, or deployed)
       }
@@ -482,6 +491,9 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             generatedContract={generatedSmartContract}
             uploadedSolidity={uploadedSolidity}
             generateJson={generateJson}
+            isVerificationMode={isVerificationMode}
+            contractComparisonValid={contractComparisonValid}
+            setContractComparisonValid={setContractComparisonValid}
             handleBack={handleBack}
             handleNext={handleNext}
           />

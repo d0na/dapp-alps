@@ -93,13 +93,13 @@ const StepFileUpload = ({
                   onClick={() => setUploadMode('file')}
                   style={{ marginRight: '10px' }}
                 >
-                  📁 Upload Files
+                  Upload Files
                 </Button>
                 <Button
                   color={uploadMode === 'text' ? 'primary' : 'outline-primary'}
                   onClick={() => setUploadMode('text')}
                 >
-                  📝 Paste Text
+                  Paste Text
                 </Button>
               </div>
             </FormGroup>
@@ -176,13 +176,28 @@ const StepFileUpload = ({
           </Row>
         )}
 
-        {/* Status Summary */}
+        {/* File Upload Status */}
         <Row style={{ marginTop: '20px' }}>
           <Col md="12">
-            <Card style={{ backgroundColor: '#f8f9fa' }}>
+            <Card style={{ 
+              backgroundColor: isReadyToProceed ? '#d4edda' : '#fff3cd',
+              borderColor: isReadyToProceed ? '#c3e6cb' : '#ffeaa7'
+            }}>
+              <CardHeader>
+                <CardTitle tag="h5">
+                  {isReadyToProceed ? '✅' : '⚠️'} File Upload Status
+                </CardTitle>
+              </CardHeader>
               <CardBody>
-                <h6>Upload Status:</h6>
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <Alert color={isReadyToProceed ? 'success' : 'warning'}>
+                  <strong>
+                    {isReadyToProceed 
+                      ? 'Files uploaded successfully! Ready to proceed to review.'
+                      : 'Upload Required - Please upload both JSON and Solidity files.'
+                    }
+                  </strong>
+                </Alert>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center' }}>
                   <div>
                     <Badge color={uploadedJson ? 'success' : 'secondary'}>
                       {uploadedJson ? '✅' : '⏳'} JSON Configuration
@@ -191,11 +206,6 @@ const StepFileUpload = ({
                   <div>
                     <Badge color={uploadedSolidity ? 'success' : 'secondary'}>
                       {uploadedSolidity ? '✅' : '⏳'} Solidity Contract
-                    </Badge>
-                  </div>
-                  <div>
-                    <Badge color={isReadyToProceed ? 'success' : 'warning'}>
-                      {isReadyToProceed ? '🚀 Ready to Proceed' : '⏳ Upload Required'}
                     </Badge>
                   </div>
                 </div>
