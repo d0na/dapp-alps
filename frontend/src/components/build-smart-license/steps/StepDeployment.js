@@ -26,6 +26,8 @@ const StepDeployment = ({
   handleBack,
   handleNext
 }) => {
+  // Check if we're in verification mode (file upload mode)
+  const isVerificationMode = !!uploadedSolidity;
   const classes = useBuildSmartLicenseStyles();
   const [recipientAddress, setRecipientAddress] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -105,7 +107,10 @@ const StepDeployment = ({
       <CardHeader>
         <CardTitle tag="h4">Deploy Smart License</CardTitle>
         <p className="card-category">
-          Approve and deploy your smart license to the blockchain
+          {isVerificationMode 
+            ? 'Deploy the verified smart license to the blockchain'
+            : 'Approve and deploy your smart license to the blockchain'
+          }
         </p>
         
         {/* Approval Status */}
@@ -183,197 +188,279 @@ const StepDeployment = ({
           </Col>
         </Row>
 
-        {/* Approval Process */}
-        <Row style={{ marginBottom: '30px' }}>
-          <Col md="12">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h5">Approval Process</CardTitle>
-              </CardHeader>
-              <CardBody>
-                {deploymentStatus === 'pending' && (
-                  <Row>
-                    <Col md="8">
-                      <FormGroup>
-                        <Label for="recipientAddress">Recipient Address (Licensor/Licensee)</Label>
-                        <Input
-                          type="text"
-                          id="recipientAddress"
-                          value={recipientAddress}
-                          onChange={(e) => setRecipientAddress(e.target.value)}
-                          placeholder="0x..."
-                        />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <Button
-                        color="primary"
-                        onClick={sendForApproval}
-                        disabled={!recipientAddress || !generatedJson || isValidating}
-                        block
-                        style={{ marginTop: '30px' }}
-                      >
-                        {isValidating ? 'Sending...' : 'Send for Approval'}
-                      </Button>
-                    </Col>
-                  </Row>
-                )}
-                
-                {deploymentStatus === 'sent' && (
-                  <Alert color="warning">
-                    License sent for approval. Waiting for recipient to review and approve.
-                  </Alert>
-                )}
-                
-                {deploymentStatus === 'approved' && (
-                  <div>
-                    <Alert color="success">
-                      License approved by both parties! Ready for deployment.
-                    </Alert>
-                    <Button
-                      color="success"
-                      onClick={deployLicense}
-                      size="lg"
-                    >
-                      Deploy Smart License
-                    </Button>
-                  </div>
-                )}
-                
-                {deploymentStatus === 'deploying' && (
-                  <div>
-                    <Alert color="info">
-                      Deploying smart license to blockchain...
-                    </Alert>
-                    <Progress value={deploymentProgress} color="success" style={{ height: '20px' }}>
-                      {deploymentProgress}%
-                    </Progress>
-                  </div>
-                )}
-                
-                {deploymentStatus === 'deployed' && (
-                  <div>
-                    <Alert color="success">
-                      <h5>🎉 Smart License Deployed Successfully!</h5>
-                      <p>Your smart license is now active on the blockchain.</p>
-                    </Alert>
-                    
-                    <Row>
-                      <Col md="6">
-                        <Card style={{ backgroundColor: '#d4edda' }}>
-                          <CardBody>
-                            <h6>Contract Address:</h6>
-                            <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
-                              {contractAddress}
-                            </code>
-                            <br />
-                            <Button
-                              color="link"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(contractAddress);
-                                alert('Contract address copied to clipboard!');
-                              }}
-                            >
-                              Copy Address
-                            </Button>
-                          </CardBody>
-                        </Card>
-                      </Col>
-                      <Col md="6">
-                        <Card style={{ backgroundColor: '#d1ecf1' }}>
-                          <CardBody>
-                            <h6>Transaction Hash:</h6>
-                            <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
-                              {transactionHash}
-                            </code>
-                            <br />
-                            <Button
-                              color="link"
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(transactionHash);
-                                alert('Transaction hash copied to clipboard!');
-                              }}
-                            >
-                              Copy Hash
-                            </Button>
-                          </CardBody>
-                        </Card>
-                      </Col>
-                    </Row>
-                    
-                    <Row style={{ marginTop: '20px' }}>
-                      <Col md="12" className="text-center">
-                        <Button
-                          color="primary"
-                          size="lg"
-                          onClick={() => {
-                            // In a real app, this would open the contract on Etherscan
-                            window.open(`https://etherscan.io/address/${contractAddress}`, '_blank');
-                          }}
-                          style={{ marginRight: '10px' }}
-                        >
-                          View on Etherscan
-                        </Button>
-                        <Button
-                          color="success"
-                          size="lg"
-                          onClick={() => {
-                            alert('License management dashboard would open here');
-                          }}
-                        >
-                          Manage License
-                        </Button>
-                      </Col>
-                    </Row>
-                  </div>
-                )}
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Response to Sender (for verification mode) */}
-        {uploadedSolidity && deploymentStatus === 'pending' && (
-          <Row style={{ marginTop: '20px' }}>
+        {/* Approval Process - Only for creation mode */}
+        {!isVerificationMode && (
+          <Row style={{ marginBottom: '30px' }}>
             <Col md="12">
-              <Card style={{ backgroundColor: '#e3f2fd', borderColor: '#2196f3' }}>
+              <Card>
                 <CardHeader>
-                  <CardTitle tag="h5">Response to Sender</CardTitle>
+                  <CardTitle tag="h5">Approval Process</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <Alert color="info">
-                    <strong>License proposal ready for review.</strong> You can now respond to the sender.
-                  </Alert>
-                  <div className="text-center">
-                    <Button
-                      color="success"
-                      onClick={() => {
-                        setDeploymentStatus('approved');
-                        alert('Response sent to sender! License is approved and ready for deployment.');
-                      }}
-                      size="lg"
-                      style={{ marginRight: '10px' }}
-                    >
-                      Approve & Respond to Sender
-                    </Button>
-                    <Button
-                      color="warning"
-                      onClick={() => {
-                        setDeploymentStatus('pending');
-                        alert('Response sent to sender requesting changes.');
-                      }}
-                      size="lg"
-                    >
-                      Request Changes
-                    </Button>
-                  </div>
+                  {deploymentStatus === 'pending' && (
+                    <Row>
+                      <Col md="8">
+                        <FormGroup>
+                          <Label for="recipientAddress">Recipient Address (Licensor/Licensee)</Label>
+                          <Input
+                            type="text"
+                            id="recipientAddress"
+                            value={recipientAddress}
+                            onChange={(e) => setRecipientAddress(e.target.value)}
+                            placeholder="0x..."
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col md="4">
+                        <Button
+                          color="primary"
+                          onClick={sendForApproval}
+                          disabled={!recipientAddress || !generatedJson || isValidating}
+                          block
+                          style={{ marginTop: '30px' }}
+                        >
+                          {isValidating ? 'Sending...' : 'Send for Approval'}
+                        </Button>
+                      </Col>
+                    </Row>
+                  )}
+                  
+                  {deploymentStatus === 'sent' && (
+                    <Alert color="warning">
+                      License sent for approval. Waiting for recipient to review and approve.
+                    </Alert>
+                  )}
+                  
+                  {deploymentStatus === 'approved' && (
+                    <div>
+                      <Alert color="success">
+                        License approved by both parties! Ready for deployment.
+                      </Alert>
+                      <Button
+                        color="success"
+                        onClick={deployLicense}
+                        size="lg"
+                      >
+                        Deploy Smart License
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {deploymentStatus === 'deploying' && (
+                    <div>
+                      <Alert color="info">
+                        Deploying smart license to blockchain...
+                      </Alert>
+                      <Progress value={deploymentProgress} color="success" style={{ height: '20px' }}>
+                        {deploymentProgress}%
+                      </Progress>
+                    </div>
+                  )}
+                  
+                  {deploymentStatus === 'deployed' && (
+                    <div>
+                      <Alert color="success">
+                        <h5>Smart License Deployed Successfully!</h5>
+                        <p>Your smart license is now active on the blockchain.</p>
+                      </Alert>
+                      
+                      <Row>
+                        <Col md="6">
+                          <Card style={{ backgroundColor: '#d4edda' }}>
+                            <CardBody>
+                              <h6>Contract Address:</h6>
+                              <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                {contractAddress}
+                              </code>
+                              <br />
+                              <Button
+                                color="link"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(contractAddress);
+                                  alert('Contract address copied to clipboard!');
+                                }}
+                              >
+                                Copy Address
+                              </Button>
+                            </CardBody>
+                          </Card>
+                        </Col>
+                        <Col md="6">
+                          <Card style={{ backgroundColor: '#d1ecf1' }}>
+                            <CardBody>
+                              <h6>Transaction Hash:</h6>
+                              <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                {transactionHash}
+                              </code>
+                              <br />
+                              <Button
+                                color="link"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(transactionHash);
+                                  alert('Transaction hash copied to clipboard!');
+                                }}
+                              >
+                                Copy Hash
+                              </Button>
+                            </CardBody>
+                          </Card>
+                        </Col>
+                      </Row>
+                      
+                      <Row style={{ marginTop: '20px' }}>
+                        <Col md="12" className="text-center">
+                          <Button
+                            color="primary"
+                            size="lg"
+                            onClick={() => {
+                              // In a real app, this would open the contract on Etherscan
+                              window.open(`https://etherscan.io/address/${contractAddress}`, '_blank');
+                            }}
+                            style={{ marginRight: '10px' }}
+                          >
+                            View on Etherscan
+                          </Button>
+                          <Button
+                            color="success"
+                            size="lg"
+                            onClick={() => {
+                              alert('License management dashboard would open here');
+                            }}
+                          >
+                            Manage License
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  )}
                 </CardBody>
               </Card>
             </Col>
           </Row>
         )}
+
+        {/* Direct Deployment for Verification Mode */}
+        {isVerificationMode && (
+          <Row style={{ marginBottom: '30px' }}>
+            <Col md="12">
+              <Card style={{ backgroundColor: '#e3f2fd', borderColor: '#2196f3' }}>
+                <CardHeader>
+                  <CardTitle tag="h5">Direct Deployment</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <Alert color="info">
+                    <strong>Verification Mode:</strong> Since you're reviewing an existing license proposal, you can deploy directly without approval process.
+                  </Alert>
+                  
+                  {deploymentStatus === 'pending' && (
+                    <div className="text-center">
+                      <Button
+                        color="success"
+                        onClick={deployLicense}
+                        size="lg"
+                      >
+                        Deploy Smart License
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {deploymentStatus === 'deploying' && (
+                    <div>
+                      <Alert color="info">
+                        Deploying smart license to blockchain...
+                      </Alert>
+                      <Progress value={deploymentProgress} color="success" style={{ height: '20px' }}>
+                        {deploymentProgress}%
+                      </Progress>
+                    </div>
+                  )}
+                  
+                  {deploymentStatus === 'deployed' && (
+                    <div>
+                      <Alert color="success">
+                        <h5>Smart License Deployed Successfully!</h5>
+                        <p>Your smart license is now active on the blockchain.</p>
+                      </Alert>
+                      
+                      <Row>
+                        <Col md="6">
+                          <Card style={{ backgroundColor: '#d4edda' }}>
+                            <CardBody>
+                              <h6>Contract Address:</h6>
+                              <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                {contractAddress}
+                              </code>
+                              <br />
+                              <Button
+                                color="link"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(contractAddress);
+                                  alert('Contract address copied to clipboard!');
+                                }}
+                              >
+                                Copy Address
+                              </Button>
+                            </CardBody>
+                          </Card>
+                        </Col>
+                        <Col md="6">
+                          <Card style={{ backgroundColor: '#d1ecf1' }}>
+                            <CardBody>
+                              <h6>Transaction Hash:</h6>
+                              <code style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                {transactionHash}
+                              </code>
+                              <br />
+                              <Button
+                                color="link"
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(transactionHash);
+                                  alert('Transaction hash copied to clipboard!');
+                                }}
+                              >
+                                Copy Hash
+                              </Button>
+                            </CardBody>
+                          </Card>
+                        </Col>
+                      </Row>
+                      
+                      <Row style={{ marginTop: '20px' }}>
+                        <Col md="12" className="text-center">
+                          <Button
+                            color="primary"
+                            size="lg"
+                            onClick={() => {
+                              // In a real app, this would open the contract on Etherscan
+                              window.open(`https://etherscan.io/address/${contractAddress}`, '_blank');
+                            }}
+                            style={{ marginRight: '10px' }}
+                          >
+                            View on Etherscan
+                          </Button>
+                          <Button
+                            color="success"
+                            size="lg"
+                            onClick={() => {
+                              alert('License management dashboard would open here');
+                            }}
+                          >
+                            Manage License
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        )}
+
 
         <Row>
           <Col md="12" className="text-right" style={{ marginTop: '15px' }}>
