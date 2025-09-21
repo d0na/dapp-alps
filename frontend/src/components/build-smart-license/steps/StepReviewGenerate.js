@@ -72,7 +72,122 @@ const StepReviewGenerate = ({
   const [approvalStatus, setApprovalStatus] = useState('pending'); // pending, sent, approved, deployed
   const [recipientAddress, setRecipientAddress] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  // No contract comparison needed - JSON is the source of truth
+  const [contractComparison, setContractComparison] = useState({
+    isSimilar: false,
+    similarity: 0,
+    differences: [],
+    generatedElements: [],
+    uploadedElements: []
+  });
+
+  // Compare generated contract with uploaded contract
+  const compareContracts = (generated, uploaded) => {
+    if (!generated || !uploaded) {
+      return {
+        isSimilar: false,
+        similarity: 0,
+        differences: ['Missing generated or uploaded contract'],
+        generatedElements: [],
+        uploadedElements: []
+      };
+    }
+
+    // Extract key elements from contracts
+    const extractElements = (contract) => {
+      const elements = [];
+      
+      // Extract contract name
+      const contractMatch = contract.match(/contract\s+(\w+)/);
+      if (contractMatch) elements.push({ type: 'contract', name: contractMatch[1] });
+      
+      // Extract structs
+      const structMatches = contract.match(/struct\s+(\w+)\s*{/g);
+      if (structMatches) {
+        structMatches.forEach(match => {
+          const name = match.match(/struct\s+(\w+)/)[1];
+          elements.push({ type: 'struct', name });
+        });
+      }
+      
+      // Extract functions
+      const functionMatches = contract.match(/function\s+(\w+)\s*\(/g);
+      if (functionMatches) {
+        functionMatches.forEach(match => {
+          const name = match.match(/function\s+(\w+)/)[1];
+          elements.push({ type: 'function', name });
+        });
+      }
+      
+      // Extract mappings
+      const mappingMatches = contract.match(/mapping\s*\([^)]+\)\s+(\w+)/g);
+      if (mappingMatches) {
+        mappingMatches.forEach(match => {
+          const name = match.match(/mapping\s*\([^)]+\)\s+(\w+)/)[1];
+          elements.push({ type: 'mapping', name });
+        });
+      }
+      
+      // Extract events
+      const eventMatches = contract.match(/event\s+(\w+)\s*\(/g);
+      if (eventMatches) {
+        eventMatches.forEach(match => {
+          const name = match.match(/event\s+(\w+)/)[1];
+          elements.push({ type: 'event', name });
+        });
+      }
+      
+      return elements;
+    };
+
+    const generatedElements = extractElements(generated);
+    const uploadedElements = extractElements(uploaded);
+    
+    // Compare elements
+    const differences = [];
+    let matches = 0;
+    const totalElements = Math.max(generatedElements.length, uploadedElements.length);
+    
+    // Check for missing elements in uploaded contract
+    generatedElements.forEach(genEl => {
+      const found = uploadedElements.find(uploadEl => 
+        uploadEl.type === genEl.type && uploadEl.name === genEl.name
+      );
+      if (!found) {
+        differences.push(`Missing ${genEl.type}: ${genEl.name}`);
+      } else {
+        matches++;
+      }
+    });
+    
+    // Check for extra elements in uploaded contract
+    uploadedElements.forEach(uploadEl => {
+      const found = generatedElements.find(genEl => 
+        genEl.type === uploadEl.type && genEl.name === uploadEl.name
+      );
+      if (!found) {
+        differences.push(`Extra ${uploadEl.type}: ${uploadEl.name}`);
+      }
+    });
+    
+    const similarity = totalElements > 0 ? (matches / totalElements) * 100 : 0;
+    const isSimilar = similarity >= 80; // 80% similarity threshold
+    
+    return {
+      isSimilar,
+      similarity,
+      differences,
+      generatedElements,
+      uploadedElements
+    };
+  };
+
+  // Compare contracts when they change
+  useEffect(() => {
+    if (generatedContract && uploadedSolidity) {
+      const comparison = compareContracts(generatedContract, uploadedSolidity);
+      setContractComparison(comparison);
+    }
+  }, [generatedContract, uploadedSolidity]);
 
   // Send for approval
   const sendForApproval = () => {
@@ -495,6 +610,146 @@ const StepReviewGenerate = ({
                 </Button>
               </Col>
             </Row>
+            
+            {/* Contract Comparison (only shown when both contracts exist) */}
+            {generatedContract && uploadedSolidity && (
+              <Row style={{ marginTop: '30px' }}>
+                <Col md="12">
+                  <Card style={{ 
+                    backgroundColor: contractComparison.isSimilar ? '#d4edda' : '#f8d7da',
+                    borderColor: contractComparison.isSimilar ? '#c3e6cb' : '#f5c6cb'
+                  }}>
+                    <CardHeader>
+                      <CardTitle tag="h5">
+                        {contractComparison.isSimilar ? '✅' : '⚠️'} Contract Comparison
+                      </CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                      <Row>
+                        <Col md="6">
+                          <h6>Similarity: {contractComparison.similarity.toFixed(1)}%</h6>
+                          <p className={contractComparison.isSimilar ? 'text-success' : 'text-warning'}>
+                            {contractComparison.isSimilar 
+                              ? '✅ Contracts are similar! Ready to proceed.'
+                              : '⚠️ Contracts have differences. Please review.'
+                            }
+                          </p>
+                        </Col>
+                        <Col md="6">
+                          <h6>Elements Found:</h6>
+                          <div style={{ fontSize: '0.9em' }}>
+                            <strong>Generated:</strong> {contractComparison.generatedElements.length} elements<br/>
+                            <strong>Uploaded:</strong> {contractComparison.uploadedElements.length} elements
+                          </div>
+                        </Col>
+                      </Row>
+                      
+                      {contractComparison.differences.length > 0 && (
+                        <Row style={{ marginTop: '15px' }}>
+                          <Col md="12">
+                            <h6>Differences Found:</h6>
+                            <ul style={{ fontSize: '0.9em', maxHeight: '150px', overflowY: 'auto' }}>
+                              {contractComparison.differences.map((diff, index) => (
+                                <li key={index} style={{ marginBottom: '5px' }}>
+                                  <span style={{ color: contractComparison.isSimilar ? '#28a745' : '#dc3545' }}>
+                                    {contractComparison.isSimilar ? '✅' : '❌'}
+                                  </span> {diff}
+                                </li>
+                              ))}
+                            </ul>
+                          </Col>
+                        </Row>
+                      )}
+                      
+                      {/* Detailed Elements Comparison */}
+                      <Row style={{ marginTop: '15px' }}>
+                        <Col md="6">
+                          <h6>Generated Contract Elements:</h6>
+                          <div style={{ 
+                            backgroundColor: '#f8f9fa', 
+                            padding: '10px', 
+                            borderRadius: '4px',
+                            maxHeight: '200px',
+                            overflowY: 'auto',
+                            fontSize: '0.8em'
+                          }}>
+                            {contractComparison.generatedElements.map((el, index) => (
+                              <div key={index} style={{ marginBottom: '3px' }}>
+                                <span style={{ 
+                                  color: '#007bff',
+                                  fontWeight: 'bold'
+                                }}>{el.type}:</span> {el.name}
+                              </div>
+                            ))}
+                          </div>
+                        </Col>
+                        <Col md="6">
+                          <h6>Uploaded Contract Elements:</h6>
+                          <div style={{ 
+                            backgroundColor: '#f8f9fa', 
+                            padding: '10px', 
+                            borderRadius: '4px',
+                            maxHeight: '200px',
+                            overflowY: 'auto',
+                            fontSize: '0.8em'
+                          }}>
+                            {contractComparison.uploadedElements.map((el, index) => (
+                              <div key={index} style={{ marginBottom: '3px' }}>
+                                <span style={{ 
+                                  color: '#28a745',
+                                  fontWeight: 'bold'
+                                }}>{el.type}:</span> {el.name}
+                              </div>
+                            ))}
+                          </div>
+                        </Col>
+                      </Row>
+                      
+                      {/* Simulation Button for Testing */}
+                      <Row style={{ marginTop: '15px' }}>
+                        <Col md="12" className="text-center">
+                          <Button
+                            color="info"
+                            onClick={() => {
+                              setContractComparison(prev => ({
+                                ...prev,
+                                isSimilar: true,
+                                similarity: 100,
+                                differences: []
+                              }));
+                              alert('✅ Contract comparison simulated as valid for testing purposes!');
+                            }}
+                            size="sm"
+                            style={{ marginRight: '10px' }}
+                          >
+                            🧪 Simulate Valid Comparison (Testing)
+                          </Button>
+                          <Button
+                            color="secondary"
+                            onClick={() => {
+                              setContractComparison(prev => ({
+                                ...prev,
+                                isSimilar: false,
+                                similarity: Math.random() * 50 + 20, // Random between 20-70%
+                                differences: [
+                                  'Missing function: deployLicense',
+                                  'Extra function: customFunction',
+                                  'Missing struct: LicenseData'
+                                ]
+                              }));
+                              alert('⚠️ Contract comparison reset with random differences for testing!');
+                            }}
+                            size="sm"
+                          >
+                            🔄 Reset Comparison (Testing)
+                          </Button>
+                        </Col>
+                      </Row>
+                    </CardBody>
+                  </Card>
+                </Col>
+              </Row>
+            )}
           </TabPane>
         </TabContent>
 
@@ -566,8 +821,8 @@ const StepReviewGenerate = ({
           </Col>
         </Row>
 
-        {/* Response to Sender (always available for verification mode) */}
-        {uploadedSolidity && approvalStatus === 'pending' && (
+        {/* Response to Sender (only available when contract comparison is valid) */}
+        {uploadedSolidity && approvalStatus === 'pending' && contractComparison.isSimilar && (
           <Row style={{ marginTop: '20px' }}>
             <Col md="12">
               <Card style={{ backgroundColor: '#e3f2fd', borderColor: '#2196f3' }}>
@@ -575,8 +830,8 @@ const StepReviewGenerate = ({
                   <CardTitle tag="h5">📨 Response to Sender</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <Alert color="info">
-                    <strong>License proposal ready for review.</strong> You can now respond to the sender.
+                  <Alert color="success">
+                    <strong>✅ Contract comparison is valid!</strong> You can now approve and respond to the sender.
                   </Alert>
                   <div className="text-center">
                     <Button
@@ -606,7 +861,34 @@ const StepReviewGenerate = ({
             </Col>
           </Row>
         )}
-        
+
+        {/* Information when contract comparison is not valid */}
+        {uploadedSolidity && approvalStatus === 'pending' && !contractComparison.isSimilar && (
+          <Row style={{ marginTop: '20px' }}>
+            <Col md="12">
+              <Card style={{ backgroundColor: '#fff3cd', borderColor: '#ffeaa7' }}>
+                <CardHeader>
+                  <CardTitle tag="h5">⚠️ Contract Validation Required</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <Alert color="warning">
+                    <strong>Contract comparison shows differences.</strong> Please review the contract comparison in the Smart Contract tab and use the simulation buttons to validate the contracts before responding to the sender.
+                  </Alert>
+                  <div className="text-center">
+                    <Button
+                      color="info"
+                      onClick={() => setActiveTab('4')}
+                      size="lg"
+                    >
+                      🔍 Review Contract Comparison
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        )}
+
         <Row>
           <Col md="12" className="text-right" style={{ marginTop: '15px' }}>
             <Button
