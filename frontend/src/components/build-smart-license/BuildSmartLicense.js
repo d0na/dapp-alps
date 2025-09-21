@@ -166,6 +166,84 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     }
   };
 
+  const handleStepClick = (stepIndex) => {
+    // Allow navigation to any step that has been completed or is the next step
+    const currentSteps = isVerificationMode ? verificationSteps : steps;
+    const maxAllowedStep = currentSteps.length - 1;
+    
+    // Allow going back to any previous step
+    if (stepIndex <= currentStep) {
+      setCurrentStep(stepIndex);
+    }
+    // Allow going forward only if current step is valid
+    else if (stepIndex === currentStep + 1) {
+      // Check if current step is valid before allowing forward navigation
+      if (currentStep === 0) {
+        // Step 0 (Mode Selection) - can always proceed if mode is selected
+        if (mode) {
+          setCurrentStep(stepIndex);
+        }
+      } else if (currentStep === 1) {
+        // Step 1 (Configuration or File Upload) - check validation
+        if (isVerificationMode) {
+          // For verification mode, check if files are uploaded
+          if (uploadedJson && uploadedSolidity) {
+            setCurrentStep(stepIndex);
+          }
+        } else {
+          // For creation mode, check if configuration is valid
+          const validation = getValidation();
+          if (validation.isValid) {
+            setCurrentStep(stepIndex);
+          }
+        }
+      }
+    }
+  };
+
+  // Validation helper function
+  const getValidation = () => {
+    if (mode === 'ai') {
+      const isValid = aiText && aiText.trim().length >= 10;
+      return { isValid };
+    }
+    
+    // Manual mode validation
+    const hasName = !!(manualData.name && manualData.name.trim());
+    const hasLicensor = !!(manualData.licensor && manualData.licensor.trim());
+    const hasLicensee = !!(manualData.licensee && manualData.licensee.trim());
+    const hasDuration = !!(manualData.duration && manualData.duration.trim());
+    const hasTerritory = !!(manualData.territory && manualData.territory.trim());
+    const hasIPs = !!(manualData.ips && manualData.ips.trim());
+    
+    const isValid = hasName && hasLicensor && hasLicensee && hasDuration && hasTerritory && hasIPs;
+    
+    return { isValid };
+  };
+
+  // Check if we can navigate to a specific step
+  const canNavigateToStep = (stepIndex) => {
+    if (stepIndex <= currentStep) {
+      return true; // Can always go back
+    }
+    
+    if (stepIndex === currentStep + 1) {
+      // Check if current step is valid
+      if (currentStep === 0) {
+        return !!mode; // Mode must be selected
+      } else if (currentStep === 1) {
+        if (isVerificationMode) {
+          return !!(uploadedJson && uploadedSolidity);
+        } else {
+          const validation = getValidation();
+          return validation.isValid;
+        }
+      }
+    }
+    
+    return false;
+  };
+
 
   const handleModeSelection = (selectedMode) => {
     setMode(selectedMode);
@@ -402,27 +480,52 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                 <Col md="12">
                   <div style={{ marginBottom: '30px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      {(isVerificationMode ? verificationSteps : steps).map((step, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            flex: 1,
-                            textAlign: 'center',
-                            padding: '10px',
-                            backgroundColor: index <= currentStep ? '#007bff' : '#e9ecef',
-                            color: index <= currentStep ? 'white' : '#6c757d',
-                            borderRadius: '4px',
-                            marginRight: index < steps.length - 1 ? '10px' : '0',
-                            fontSize: '14px',
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          {step}
-                        </div>
-                      ))}
+                      {(isVerificationMode ? verificationSteps : steps).map((step, index) => {
+                        const isClickable = index <= currentStep || (index === currentStep + 1 && canNavigateToStep(index));
+                        const isCompleted = index < currentStep;
+                        const isCurrent = index === currentStep;
+                        const isNext = index === currentStep + 1;
+                        
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => isClickable && handleStepClick(index)}
+                            style={{
+                              flex: 1,
+                              textAlign: 'center',
+                              padding: '10px',
+                              backgroundColor: isCompleted ? '#28a745' : (isCurrent ? '#007bff' : '#e9ecef'),
+                              color: isCompleted ? 'white' : (isCurrent ? 'white' : '#6c757d'),
+                              borderRadius: '4px',
+                              marginRight: index < (isVerificationMode ? verificationSteps : steps).length - 1 ? '10px' : '0',
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                              cursor: isClickable ? 'pointer' : 'default',
+                              opacity: isClickable ? 1 : 0.6,
+                              transition: 'all 0.2s ease',
+                              position: 'relative'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (isClickable) {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (isClickable) {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = 'none';
+                              }
+                            }}
+                          >
+                            {isCompleted && '✓ '}{step}
+                            {isNext && !isClickable && ' (Complete current step)'}
+                          </div>
+                        );
+                      })}
                     </div>
                     <Progress
-                      value={(currentStep + 1) / steps.length * 100}
+                      value={(currentStep + 1) / (isVerificationMode ? verificationSteps : steps).length * 100}
                       color="primary"
                       style={{ height: '8px' }}
                     />
