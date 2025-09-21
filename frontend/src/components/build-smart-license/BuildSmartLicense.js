@@ -15,6 +15,7 @@ import {
   StepConfiguration,
   StepFileUpload,
   StepReviewGenerate,
+  StepDeployment,
   generateSmartLicenseJson
 } from './index';
 
@@ -30,6 +31,7 @@ const BuildSmartLicense = () => {
   const [uploadedSolidity, setUploadedSolidity] = useState('');
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [isVerificationMode, setIsVerificationMode] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState('pending'); // pending, sent, approved, deployed
 
   // Update generatedJson when uploadedJson changes (for upload mode)
   useEffect(() => {
@@ -48,13 +50,15 @@ const BuildSmartLicense = () => {
   const steps = [
     'Mode Selection',
     'Configuration',
-    'Review & Generate'
+    'Review & Generate',
+    'Deploy'
   ];
 
   const verificationSteps = [
     'Mode Selection',
     'File Upload',
-    'Review & Verify'
+    'Review & Verify',
+    'Deploy'
   ];
 
   // Generate smart contract from JSON
@@ -238,6 +242,35 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           const validation = getValidation();
           return validation.isValid;
         }
+      } else if (currentStep === 2) {
+        return !!generatedJson; // Must have generated JSON
+      }
+    }
+    
+    return false;
+  };
+
+  // Check if a step is completed
+  const isStepCompleted = (stepIndex) => {
+    if (stepIndex < currentStep) {
+      return true; // Previous steps are always completed
+    }
+    
+    if (stepIndex === currentStep) {
+      // Current step is completed if:
+      if (stepIndex === 0) {
+        return !!mode; // Mode selected
+      } else if (stepIndex === 1) {
+        if (isVerificationMode) {
+          return !!(uploadedJson && uploadedSolidity);
+        } else {
+          const validation = getValidation();
+          return validation.isValid;
+        }
+      } else if (stepIndex === 2) {
+        return !!generatedJson; // JSON generated
+      } else if (stepIndex === 3) {
+        return deploymentStatus !== 'pending'; // Deployment step started (sent, approved, or deployed)
       }
     }
     
@@ -453,6 +486,18 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             handleNext={handleNext}
           />
         );
+      case 3:
+        return (
+          <StepDeployment
+            generatedJson={generatedJson}
+            generatedContract={generatedSmartContract}
+            uploadedSolidity={uploadedSolidity}
+            deploymentStatus={deploymentStatus}
+            setDeploymentStatus={setDeploymentStatus}
+            handleBack={handleBack}
+            handleNext={handleNext}
+          />
+        );
       default:
         return null;
     }
@@ -482,7 +527,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                       {(isVerificationMode ? verificationSteps : steps).map((step, index) => {
                         const isClickable = index <= currentStep || (index === currentStep + 1 && canNavigateToStep(index));
-                        const isCompleted = index < currentStep;
+                        const isCompleted = isStepCompleted(index);
                         const isCurrent = index === currentStep;
                         const isNext = index === currentStep + 1;
                         

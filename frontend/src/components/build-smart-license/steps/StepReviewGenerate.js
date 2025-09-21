@@ -69,9 +69,7 @@ const StepReviewGenerate = ({
 }) => {
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
-  const [approvalStatus, setApprovalStatus] = useState('pending'); // pending, sent, approved, deployed
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
+  // Removed approval and deployment logic - now handled in StepDeployment
   const [contractComparison, setContractComparison] = useState({
     isSimilar: false,
     similarity: 0,
@@ -189,33 +187,7 @@ const StepReviewGenerate = ({
     }
   }, [generatedContract, uploadedSolidity]);
 
-  // Send for approval
-  const sendForApproval = () => {
-    if (!recipientAddress) {
-      alert('Please enter recipient address');
-      return;
-    }
-    
-    setIsValidating(true);
-    // Simulate sending for approval
-    setTimeout(() => {
-      setApprovalStatus('sent');
-      setIsValidating(false);
-      alert('License sent for approval to ' + recipientAddress);
-    }, 2000);
-  };
-
-  // Approve license
-  const approveLicense = () => {
-    setApprovalStatus('approved');
-    alert('License approved! Ready for deployment.');
-  };
-
-  // Deploy license
-  const deployLicense = () => {
-    setApprovalStatus('deployed');
-    alert('Smart License deployed successfully!');
-  };
+  // Approval and deployment logic moved to StepDeployment component
 
   // Contract is now generated automatically by the parent component
   // when transitioning from Step 2 to Step 3
@@ -384,28 +356,8 @@ const StepReviewGenerate = ({
       <CardHeader>
         <CardTitle tag="h4">Review & Generate Smart License</CardTitle>
         <p className="card-category">
-          Review configuration, generate smart contract, and manage approval process
+          Review configuration and generated smart contract
         </p>
-        
-        {/* Approval Status */}
-        <div style={{ marginTop: '15px' }}>
-          <Badge 
-            color={
-              approvalStatus === 'pending' ? 'secondary' :
-              approvalStatus === 'sent' ? 'warning' :
-              approvalStatus === 'approved' ? 'success' :
-              'info'
-            }
-            style={{ fontSize: '0.9rem', padding: '8px 12px' }}
-          >
-            Status: {
-              approvalStatus === 'pending' ? 'Pending Review' :
-              approvalStatus === 'sent' ? 'Sent for Approval' :
-              approvalStatus === 'approved' ? 'Approved - Ready to Deploy' :
-              'Deployed'
-            }
-          </Badge>
-        </div>
       </CardHeader>
       
       <CardBody>
@@ -754,125 +706,27 @@ const StepReviewGenerate = ({
         </TabContent>
 
 
-        {/* Approval Actions */}
-        <Row style={{ marginTop: '30px' }}>
-          <Col md="12">
-            <Card style={{ backgroundColor: '#f8f9fa' }}>
-              <CardHeader>
-                <CardTitle tag="h5">Approval & Deployment</CardTitle>
-              </CardHeader>
-              <CardBody>
-                {approvalStatus === 'pending' && (
-                  <Row>
-                    <Col md="8">
-                      <FormGroup>
-                        <Label for="recipientAddress">Recipient Address (Licensor/Licensee)</Label>
-                        <Input
-                          type="text"
-                          id="recipientAddress"
-                          value={recipientAddress}
-                          onChange={(e) => setRecipientAddress(e.target.value)}
-                          placeholder="0x..."
-                        />
-                      </FormGroup>
-                    </Col>
-                    <Col md="4">
-                      <Button
-                        color="primary"
-                        onClick={sendForApproval}
-                        disabled={!recipientAddress || !generatedJson || isValidating}
-                        block
-                        style={{ marginTop: '30px' }}
-                      >
-                        {isValidating ? 'Sending...' : 'Send for Approval'}
-                      </Button>
-                    </Col>
-                  </Row>
-                )}
-                
-                {approvalStatus === 'sent' && (
-                  <Alert color="warning">
-                    License sent for approval. Waiting for recipient to review and approve.
-                  </Alert>
-                )}
-                
-                {approvalStatus === 'approved' && (
-                  <div>
-                    <Alert color="success">
-                      License approved by both parties! Ready for deployment.
-                    </Alert>
-                    <Button
-                      color="success"
-                      onClick={deployLicense}
-                      size="lg"
-                    >
-                      Deploy Smart License
-                    </Button>
-                  </div>
-                )}
-                
-                {approvalStatus === 'deployed' && (
-                  <Alert color="info">
-                    Smart License deployed successfully! The license is now active on the blockchain.
-                  </Alert>
-                )}
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Response to Sender (only available when contract comparison is valid) */}
-        {uploadedSolidity && approvalStatus === 'pending' && contractComparison.isSimilar && (
+        {/* Contract comparison info for verification mode */}
+        {uploadedSolidity && (
           <Row style={{ marginTop: '20px' }}>
             <Col md="12">
-              <Card style={{ backgroundColor: '#e3f2fd', borderColor: '#2196f3' }}>
+              <Card style={{ 
+                backgroundColor: contractComparison.isSimilar ? '#d4edda' : '#fff3cd',
+                borderColor: contractComparison.isSimilar ? '#c3e6cb' : '#ffeaa7'
+              }}>
                 <CardHeader>
-                  <CardTitle tag="h5">📨 Response to Sender</CardTitle>
+                  <CardTitle tag="h5">
+                    {contractComparison.isSimilar ? '✅' : '⚠️'} Contract Comparison Status
+                  </CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <Alert color="success">
-                    <strong>✅ Contract comparison is valid!</strong> You can now approve and respond to the sender.
-                  </Alert>
-                  <div className="text-center">
-                    <Button
-                      color="success"
-                      onClick={() => {
-                        setApprovalStatus('approved');
-                        alert('✅ Response sent to sender! License is approved and ready for deployment.');
-                      }}
-                      size="lg"
-                      style={{ marginRight: '10px' }}
-                    >
-                      ✅ Approve & Respond to Sender
-                    </Button>
-                    <Button
-                      color="warning"
-                      onClick={() => {
-                        setApprovalStatus('pending');
-                        alert('⚠️ Response sent to sender requesting changes.');
-                      }}
-                      size="lg"
-                    >
-                      ⚠️ Request Changes
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        )}
-
-        {/* Information when contract comparison is not valid */}
-        {uploadedSolidity && approvalStatus === 'pending' && !contractComparison.isSimilar && (
-          <Row style={{ marginTop: '20px' }}>
-            <Col md="12">
-              <Card style={{ backgroundColor: '#fff3cd', borderColor: '#ffeaa7' }}>
-                <CardHeader>
-                  <CardTitle tag="h5">⚠️ Contract Validation Required</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <Alert color="warning">
-                    <strong>Contract comparison shows differences.</strong> Please review the contract comparison in the Smart Contract tab and use the simulation buttons to validate the contracts before responding to the sender.
+                  <Alert color={contractComparison.isSimilar ? 'success' : 'warning'}>
+                    <strong>
+                      {contractComparison.isSimilar 
+                        ? 'Contracts are similar! Ready to proceed to deployment.'
+                        : 'Contracts have differences. Please review the comparison above.'
+                      }
+                    </strong>
                   </Alert>
                   <div className="text-center">
                     <Button
@@ -880,7 +734,7 @@ const StepReviewGenerate = ({
                       onClick={() => setActiveTab('4')}
                       size="lg"
                     >
-                      🔍 Review Contract Comparison
+                      Review Contract Comparison
                     </Button>
                   </div>
                 </CardBody>
