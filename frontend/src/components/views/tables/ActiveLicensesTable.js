@@ -1,18 +1,12 @@
-import React from "react";
-import MUIDataTable, { ExpandButton } from "mui-datatables";
-import TableRow from "@material-ui/core/TableRow";
-import TableCell from "@material-ui/core/TableCell";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import React, { useState } from "react";
+import { Card, CardBody, CardHeader, CardTitle, Table, Button, Collapse } from "reactstrap";
 import LicenseTableExtension from "./LicenseTableExpansion";
 // import ActiveLicenseExpansion from "components/table/ActiveLicenseExpansion";
 
-class ActiveLicensesTable extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+const ActiveLicensesTable = (props) => {
+  const [expandedRows, setExpandedRows] = useState({});
 
-  transformTableData(data) {
+  const transformTableData = (data) => {
     let transformedData = [];
     let counter = 0;
 
@@ -27,115 +21,77 @@ class ActiveLicensesTable extends React.Component {
     }
     console.log("test", transformedData);
     return transformedData;
-  }
+  };
 
-  render() {
-    const columns = [
-      {
-        name: "ID",
-      },
-      {
-        name: "Address",
-        options: {
-          filter: true,
-        },
-      },
-      {
-        name: "Licensee",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-      {
-        name: "Licensor",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-      {
-        name: "Active Status",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-    ];
+  const toggleRow = (index) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
-    const options = {
-      filter: true,
-      filterType: "dropdown",
-      responsive: "standard",
-      selectableRowsHeader: false,
-      selectableRows: "none",
-      expandableRows: true,
-      expandableRowsHeader: false,
-      expandableRowsOnClick: true,
-      isRowExpandable: (dataIndex, expandedRows) => {
-        //if (dataIndex === 3 || dataIndex === 4) return false;
-
-        // Prevent expand/collapse of any row if there are 4 rows expanded already (but allow those already expanded to be collapsed)
-        if (
-          expandedRows.data.length > 4 &&
-          expandedRows.data.filter((d) => d.dataIndex === dataIndex).length ===
-            0
-        )
-          return false;
-        return true;
-      },
-      // Rows that are expanded sinces loading the table. Would probably never want to start with a Row expanded in this view
-      // rowsExpanded: [0, 1],
-      renderExpandableRow: (rowData, rowMeta) => {
-        const colSpan = rowData.length + 1;
-        console.log("ROW DATA", rowData, rowMeta);
-        return (
-          <TableRow>
-            <TableCell colSpan={colSpan}>
-              <LicenseTableExtension
-                {...this.props}
-                rowData={rowData}
-                managerAddress={rowData[1]}
-              />
-            </TableCell>
-          </TableRow>
-        );
-      },
-      // onRowExpansionChange: (curExpanded, allExpanded, rowsExpanded) =>
-      //   console.log(curExpanded, allExpanded, rowsExpanded),
-    };
-
-    const theme = createMuiTheme({
-      overrides: {
-        MUIDataTableSelectCell: {
-          expandDisabled: {
-            // Soft hide the button.
-            visibility: "hidden",
-          },
-        },
-      },
-    });
-
-    const components = {
-      ExpandButton: function (props) {
-        // If needed, remove the expand "arrow" from the table rows
-        //if (props.dataIndex === 3 || props.dataIndex === 4) return <div style={{width:'24px'}} />;
-        return <ExpandButton {...props} />;
-      },
-    };
-
-    return (
-      <MuiThemeProvider theme={theme}>
-        <MUIDataTable
-          title={"Licenses"}
-          data={this.transformTableData(this.props.managerData)}
-          columns={columns}
-          options={options}
-          components={components}
-        />
-      </MuiThemeProvider>
-    );
-  }
-}
+  const data = transformTableData(props.managerData);
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle tag="h4">Active Licenses</CardTitle>
+      </CardHeader>
+      <CardBody>
+        <Table responsive striped>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Address</th>
+              <th>Licensee</th>
+              <th>Licensor</th>
+              <th>Active Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, index) => (
+              <React.Fragment key={index}>
+                <tr>
+                  <td>{row[0]}</td>
+                  <td>{row[1]}</td>
+                  <td>{row[2]}</td>
+                  <td>{row[3]}</td>
+                  <td>
+                    <span className={`badge ${row[4] === 'Active' ? 'badge-success' : 'badge-secondary'}`}>
+                      {row[4]}
+                    </span>
+                  </td>
+                  <td>
+                    <Button
+                      color="primary"
+                      size="sm"
+                      onClick={() => toggleRow(index)}
+                    >
+                      {expandedRows[index] ? 'Hide Details' : 'Show Details'}
+                    </Button>
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan="6" style={{ padding: 0 }}>
+                    <Collapse isOpen={expandedRows[index]}>
+                      <div style={{ padding: '15px', backgroundColor: '#f8f9fa' }}>
+                        <LicenseTableExtension
+                          {...props}
+                          rowData={row}
+                          managerAddress={row[1]}
+                        />
+                      </div>
+                    </Collapse>
+                  </td>
+                </tr>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </Table>
+      </CardBody>
+    </Card>
+  );
+};
 
 export default ActiveLicensesTable;

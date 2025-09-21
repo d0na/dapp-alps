@@ -1,7 +1,5 @@
 import React from "react";
-import MUIDataTable, { ExpandButton } from "mui-datatables";
-
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import { Card, CardBody, CardHeader, CardTitle, Table } from "reactstrap";
 
 class RoyaltiesTable extends React.Component {
   constructor(props) {
@@ -33,92 +31,42 @@ class RoyaltiesTable extends React.Component {
   }
 
   render() {
-    const columns = [
-      {
-        name: "ID",
-        options: {
-          filter: false,
-        },
-      },
-      {
-        name: "Associated Smart License",
-        options: {
-          filter: true,
-          label: "Smart License",
-        },
-      },
-      {
-        name: "Royalty Value",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-      {
-        name: "Issue Date",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-      {
-        name: "Payment Status",
-        options: {
-          filter: true,
-          sort: false,
-        },
-      },
-    ];
-
-    const columns_aux = [
-      "ID",
-
-      "Associated Smart License",
-
-      "Royalty Value",
-
-      "Issue Date",
-
-      "Payment Status",
-    ];
-
-    const options = {
-      filter: true,
-      filterType: "dropdown",
-      responsive: "standard",
-      selectableRowsHeader: false,
-      selectableRows: "none",
-    };
-
-    const theme = createMuiTheme({
-      overrides: {
-        MUIDataTableSelectCell: {
-          expandDisabled: {
-            // Soft hide the button.
-            visibility: "hidden",
-          },
-        },
-      },
-    });
-
-    const components = {
-      ExpandButton: function (props) {
-        // If needed, remove the expand "arrow" from the table rows
-        //if (props.dataIndex === 3 || props.dataIndex === 4) return <div style={{width:'24px'}} />;
-        return <ExpandButton {...props} />;
-      },
-    };
-
+    const data = this.transformDataTable(this.props.managerData);
+    
     return (
-      //   <MuiThemeProvider theme={theme}>
-      <MUIDataTable
-        title={"Royalties History"}
-        data={this.transformDataTable(this.props.managerData)}
-        columns={columns_aux}
-        //   options={options}
-        //   components={components}
-      />
-      //   </MuiThemeProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle tag="h4">Royalties History</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <Table responsive striped>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Associated Smart License</th>
+                <th>Royalty Value</th>
+                <th>Issue Date</th>
+                <th>Payment Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, index) => (
+                <tr key={index}>
+                  <td>{row[0]}</td>
+                  <td>{row[1]}</td>
+                  <td>{row[2]}</td>
+                  <td>{row[3]}</td>
+                  <td>
+                    <span className={`badge ${row[4] === 'Paid' ? 'badge-success' : 'badge-warning'}`}>
+                      {row[4]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </CardBody>
+      </Card>
     );
   }
 }
