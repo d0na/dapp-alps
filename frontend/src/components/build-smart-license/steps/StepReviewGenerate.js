@@ -340,6 +340,63 @@ const StepReviewGenerate = ({
                             )}
                           </div>
                         )}
+                        
+                        {/* Step Structure Display */}
+                        {rule.royaltyRate.stepStructure && rule.royaltyRate.stepStructure.steps && rule.royaltyRate.stepStructure.steps.length > 0 && (
+                          <div style={{ marginTop: '15px' }}>
+                            <strong>Step Structure ({rule.royaltyRate.stepStructure.xAxis}):</strong>
+                            <div style={{ marginLeft: '20px', marginTop: '10px' }}>
+                              {rule.royaltyRate.stepStructure.steps.map((step, stepIndex) => (
+                                <div key={step.id || stepIndex} style={{ 
+                                  marginBottom: '8px',
+                                  padding: '8px',
+                                  backgroundColor: '#f8f9fa',
+                                  borderRadius: '4px',
+                                  border: '1px solid #e9ecef'
+                                }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>
+                                      <strong>≤ {step.threshold}</strong> → <strong>${step.rate}</strong>
+                                    </span>
+                                    <span style={{ fontSize: '0.9em', color: '#6c757d' }}>
+                                      {step.description}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                              {rule.royaltyRate.stepStructure.infiniteValue && (
+                                <div style={{ 
+                                  marginBottom: '8px',
+                                  padding: '8px',
+                                  backgroundColor: '#e8f5e8',
+                                  borderRadius: '4px',
+                                  border: '1px solid #c3e6c3'
+                                }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>
+                                      <strong>∞</strong> → <strong>${rule.royaltyRate.stepStructure.infiniteValue}</strong>
+                                    </span>
+                                    <span style={{ fontSize: '0.9em', color: '#6c757d' }}>
+                                      Infinite value
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Min/Max Display */}
+                        {(rule.royaltyRate.min || rule.royaltyRate.max) && (
+                          <div style={{ marginTop: '10px' }}>
+                            <strong>Limits:</strong>
+                            <span style={{ marginLeft: '10px' }}>
+                              {rule.royaltyRate.min && `Min: $${rule.royaltyRate.min}`}
+                              {rule.royaltyRate.min && rule.royaltyRate.max && ' | '}
+                              {rule.royaltyRate.max && `Max: $${rule.royaltyRate.max}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardBody>

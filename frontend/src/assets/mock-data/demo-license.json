@@ -20,14 +20,14 @@
           "oracleAddress": "0x1234567890123456789012345678901234567890",
           "propertyName": "getCameraActivations",
           "displayName": "Camera Activations per Month",
-          "intellectualProperty": "US Patent 10,123,456 - Camera Activation Technology"
+          "intellectualProperty": "PAT-001 - Camera Activation Technology"
         },
         {
           "id": 1703123456791,
           "oracleAddress": "0x2345678901234567890123456789012345678901",
           "propertyName": "getPhotoCount",
           "displayName": "Photos Taken",
-          "intellectualProperty": "US Patent 10,123,457 - Photo Processing Algorithm"
+          "intellectualProperty": "PAT-002 - Photo Processing Algorithm"
         }
       ],
       "royaltyRate": {
@@ -36,31 +36,6 @@
         "proportionalValue": "0.15",
         "proportionalRB": "Photos Taken",
         "customFunc": "sum",
-        "customInputs": [],
-        "stepStructure": {
-          "xAxis": "Photos Taken",
-          "steps": [
-            {
-              "id": 1703123456792,
-              "threshold": "1000",
-              "rate": "0.05",
-              "description": "Basic rate for up to 1000 photos/month"
-            },
-            {
-              "id": 1703123456793,
-              "threshold": "5000",
-              "rate": "0.15",
-              "description": "Standard rate for 1000-5000 photos/month"
-            },
-            {
-              "id": 1703123456794,
-              "threshold": "10000",
-              "rate": "0.25",
-              "description": "Premium rate for 5000-10000 photos/month"
-            }
-          ],
-          "infiniteValue": "0.35"
-        },
         "min": "5",
         "max": "1000"
       }
@@ -79,14 +54,14 @@
           "oracleAddress": "0x3456789012345678901234567890123456789012",
           "propertyName": "getGPSDistance",
           "displayName": "GPS Navigation Distance (km)",
-          "intellectualProperty": "US Patent 10,123,458 - GPS Navigation Optimization"
+          "intellectualProperty": "PAT-003 - GPS Navigation Optimization"
         },
         {
           "id": 1703123456797,
           "oracleAddress": "0x4567890123456789012345678901234567890123",
           "propertyName": "getLocationRequests",
           "displayName": "Location API Calls",
-          "intellectualProperty": "US Patent 10,123,459 - Location API Technology"
+          "intellectualProperty": "PAT-004 - Location API Technology"
         }
       ],
       "royaltyRate": {
@@ -95,7 +70,6 @@
         "proportionalValue": "0.02",
         "proportionalRB": "GPS Navigation Distance (km)",
         "customFunc": "sum",
-        "customInputs": [],
         "stepStructure": {
           "xAxis": "GPS Navigation Distance (km)",
           "steps": [
@@ -138,14 +112,14 @@
           "oracleAddress": "0x5678901234567890123456789012345678901234",
           "propertyName": "getSensorDataPoints",
           "displayName": "Sensor Data Points Processed",
-          "intellectualProperty": "US Patent 10,123,460 - Sensor Data Processing"
+          "intellectualProperty": "PAT-005 - Sensor Data Processing"
         },
         {
           "id": 1703123456803,
           "oracleAddress": "0x6789012345678901234567890123456789012345",
           "propertyName": "getBiometricScans",
           "displayName": "Biometric Authentication Scans",
-          "intellectualProperty": "US Patent 10,123,461 - Biometric Authentication System"
+          "intellectualProperty": "PAT-006 - Biometric Authentication System"
         }
       ],
       "royaltyRate": {
@@ -154,73 +128,8 @@
         "proportionalValue": "",
         "proportionalRB": "",
         "customFunc": "average",
-        "customInputs": [],
-        "stepStructure": {
-          "xAxis": "",
-          "steps": [],
-          "infiniteValue": ""
-        },
         "min": "25",
         "max": "200"
-      }
-    },
-    {
-      "id": 1703123456804,
-      "name": "Power Management Optimization",
-      "validityStart": "2024-01-01",
-      "validityEnd": "2026-12-31",
-      "evaluationInterval": {
-        "duration": "3M 0D"
-      },
-      "royaltyBase": [
-        {
-          "id": 1703123456805,
-          "oracleAddress": "0x7890123456789012345678901234567890123456",
-          "propertyName": "getBatteryEfficiency",
-          "displayName": "Battery Efficiency Score",
-          "intellectualProperty": "US Patent 10,123,462 - Battery Management System"
-        },
-        {
-          "id": 1703123456806,
-          "oracleAddress": "0x8901234567890123456789012345678901234567",
-          "propertyName": "getComponentUptime",
-          "displayName": "Component Uptime Hours",
-          "intellectualProperty": "US Patent 10,123,463 - Component Monitoring Technology"
-        }
-      ],
-      "royaltyRate": {
-        "type": "proportional",
-        "lumpsumValue": "",
-        "proportionalValue": "0.5",
-        "proportionalRB": "Component Uptime Hours",
-        "customFunc": "sum",
-        "customInputs": [],
-        "stepStructure": {
-          "xAxis": "Component Uptime Hours",
-          "steps": [
-            {
-              "id": 1703123456807,
-              "threshold": "1000",
-              "rate": "0.2",
-              "description": "Basic rate for up to 1000 hours/quarter"
-            },
-            {
-              "id": 1703123456808,
-              "threshold": "2000",
-              "rate": "0.5",
-              "description": "Standard rate for 1000-2000 hours/quarter"
-            },
-            {
-              "id": 1703123456809,
-              "threshold": "3000",
-              "rate": "0.8",
-              "description": "Premium rate for 2000-3000 hours/quarter"
-            }
-          ],
-          "infiniteValue": "1.0"
-        },
-        "min": "10",
-        "max": "1000"
       }
     },
     {
@@ -237,21 +146,21 @@
           "oracleAddress": "0x1111111111111111111111111111111111111111",
           "propertyName": "getDeviceCount",
           "displayName": "Device Count",
-          "intellectualProperty": "US Patent 10,123,464 - Device Management System"
+          "intellectualProperty": "PAT-007 - Device Management System"
         },
         {
           "id": 1703123456812,
           "oracleAddress": "0x2222222222222222222222222222222222222222",
           "propertyName": "getUsageHours",
           "displayName": "Usage Hours",
-          "intellectualProperty": "US Patent 10,123,465 - Usage Tracking Technology"
+          "intellectualProperty": "PAT-008 - Usage Tracking Technology"
         },
         {
           "id": 1703123456813,
           "oracleAddress": "0x3333333333333333333333333333333333333333",
           "propertyName": "getDataTransferred",
           "displayName": "Data Transferred (GB)",
-          "intellectualProperty": "US Patent 10,123,466 - Data Transfer Optimization"
+          "intellectualProperty": "PAT-009 - Data Transfer Optimization"
         }
       ],
       "royaltyRate": {
@@ -312,11 +221,6 @@
             ]
           }
         ],
-        "stepStructure": {
-          "xAxis": "",
-          "steps": [],
-          "infiniteValue": ""
-        },
         "min": "5",
         "max": "500"
       }
