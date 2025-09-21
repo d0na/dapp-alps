@@ -356,7 +356,7 @@ const StepReviewGenerate = ({
                                 }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>
-                                      <strong>≤ {step.threshold}</strong> → <strong>${step.rate}</strong>
+                                      <strong>≤ {step.threshold || step.x}</strong> → <strong>${step.rate || step.y}</strong>
                                     </span>
                                     <span style={{ fontSize: '0.9em', color: '#6c757d' }}>
                                       {step.description}

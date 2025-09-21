@@ -50,34 +50,35 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
     if (newStep.x && newStep.y) {
       const step = {
         id: Date.now(),
-        x: parseFloat(newStep.x),
-        y: parseFloat(newStep.y)
+        threshold: parseFloat(newStep.x),
+        rate: parseFloat(newStep.y),
+        description: `Step for ${newStep.x} → $${newStep.y}`
       };
-      const updatedSteps = [...royaltyRate.stepStructure.steps, step].sort((a, b) => a.x - b.x);
+      const updatedSteps = [...(royaltyRate.stepStructure?.steps || []), step].sort((a, b) => (a.threshold || a.x) - (b.threshold || b.x));
       updateRuleNested(rule.id, 'royaltyRate.stepStructure.steps', updatedSteps);
       setNewStep({ x: '', y: '' });
     }
   };
 
   const removeStep = (stepId) => {
-    const updatedSteps = royaltyRate.stepStructure.steps.filter(step => step.id !== stepId);
+    const updatedSteps = (royaltyRate.stepStructure?.steps || []).filter(step => step.id !== stepId);
     updateRuleNested(rule.id, 'royaltyRate.stepStructure.steps', updatedSteps);
   };
 
   const chartData = [
-    ...royaltyRate.stepStructure.steps.map(step => ({
-      name: `${step.x}`,
-      value: step.y,
-      x: step.x
+    ...(royaltyRate.stepStructure?.steps || []).map(step => ({
+      name: `${step.threshold || step.x}`,
+      value: step.rate || step.y,
+      x: step.threshold || step.x
     })),
     // Add intermediate step to infinity if there are steps and infinite value
-    ...(royaltyRate.stepStructure.steps.length > 0 && royaltyRate.stepStructure.infiniteValue ? [{
-      name: `${Math.max(...royaltyRate.stepStructure.steps.map(s => s.x)) * 2}`,
+    ...((royaltyRate.stepStructure?.steps?.length > 0 && royaltyRate.stepStructure?.infiniteValue) ? [{
+      name: `${Math.max(...royaltyRate.stepStructure.steps.map(s => s.threshold || s.x)) * 2}`,
       value: parseFloat(royaltyRate.stepStructure.infiniteValue),
-      x: Math.max(...royaltyRate.stepStructure.steps.map(s => s.x)) * 2
+      x: Math.max(...royaltyRate.stepStructure.steps.map(s => s.threshold || s.x)) * 2
     }] : []),
     // Add infinite value if it exists
-    ...(royaltyRate.stepStructure.infiniteValue ? [{
+    ...(royaltyRate.stepStructure?.infiniteValue ? [{
       name: '∞',
       value: parseFloat(royaltyRate.stepStructure.infiniteValue),
       x: Infinity
@@ -143,7 +144,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                 <Label>X-Axis (Royalty Base or Time)</Label>
                 <Input
                   type="select"
-                  value={royaltyRate.stepStructure.xAxis}
+                  value={royaltyRate.stepStructure?.xAxis || ''}
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.stepStructure.xAxis', e.target.value)}
                   readOnly={isReadOnly}
                 >
@@ -202,17 +203,17 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                   type="number"
                   step="0.01"
                   min="0"
-                  value={royaltyRate.stepStructure.infiniteValue}
+                  value={royaltyRate.stepStructure?.infiniteValue || ''}
                   onChange={(e) => updateRuleNested(rule.id, 'royaltyRate.stepStructure.infiniteValue', e.target.value)}
                   readOnly={isReadOnly}
                   placeholder="Value for infinite X"
                 />
               </FormGroup>
 
-              {(royaltyRate.stepStructure.steps.length > 0 || royaltyRate.stepStructure.infiniteValue) && (
+              {((royaltyRate.stepStructure?.steps?.length > 0) || royaltyRate.stepStructure?.infiniteValue) && (
                 <div>
                   <Label>Current Steps</Label>
-                  {royaltyRate.stepStructure.steps.map((step, idx) => (
+                  {(royaltyRate.stepStructure?.steps || []).map((step, idx) => (
                     <div key={step.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
@@ -223,7 +224,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                       borderRadius: '4px'
                     }}>
                       <span>
-                        {step.x} → {step.y} $
+                        {step.threshold || step.x} → {step.rate || step.y} $
                       </span>
                       <Button 
                         color="danger" 
@@ -234,7 +235,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                       </Button>
                     </div>
                   ))}
-                  {royaltyRate.stepStructure.infiniteValue && (
+                  {royaltyRate.stepStructure?.infiniteValue && (
                     <div style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
@@ -246,7 +247,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                       border: '1px solid #c3e6c3'
                     }}>
                       <span>
-                        ∞ → {royaltyRate.stepStructure.infiniteValue} $
+                        ∞ → {royaltyRate.stepStructure?.infiniteValue} $
                       </span>
                       <Button 
                         color="danger" 
@@ -261,7 +262,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
               )}
             </Col>
             <Col md="6">
-              {(chartData.length > 0 || royaltyRate.stepStructure.infiniteValue) ? (
+              {(chartData.length > 0 || royaltyRate.stepStructure?.infiniteValue) ? (
                 <div style={{ height: '300px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
@@ -275,8 +276,8 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                             return [`${value} $ (∞)`, 'Infinite Value'];
                           }
                           // Check if this is the intermediate step to infinity
-                          if (royaltyRate.stepStructure.steps.length > 0 && royaltyRate.stepStructure.infiniteValue) {
-                            const maxStep = Math.max(...royaltyRate.stepStructure.steps.map(s => s.x));
+                          if (royaltyRate.stepStructure?.steps?.length > 0 && royaltyRate.stepStructure?.infiniteValue) {
+                            const maxStep = Math.max(...royaltyRate.stepStructure.steps.map(s => s.threshold || s.x));
                             if (parseFloat(name) === maxStep * 2) {
                               return [`${value} $ (→∞)`, 'To Infinity'];
                             }

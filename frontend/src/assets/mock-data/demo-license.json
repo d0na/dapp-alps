@@ -67,7 +67,7 @@
       "royaltyRate": {
         "type": "proportional",
         "lumpsumValue": "",
-        "proportionalValue": "0.02",
+        "proportionalValue": "",
         "proportionalRB": "GPS Navigation Distance (km)",
         "customFunc": "sum",
         "stepStructure": {
