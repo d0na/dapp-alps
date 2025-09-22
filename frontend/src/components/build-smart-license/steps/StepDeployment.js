@@ -16,6 +16,8 @@ import {
   Progress
 } from "reactstrap";
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
+import Toast from "../../common/Toast";
+import useToast from "../../../hooks/useToast";
 
 const StepDeployment = ({ 
   generatedJson, 
@@ -30,6 +32,7 @@ const StepDeployment = ({
   const isVerificationMode = !!uploadedSolidity;
   const classes = useBuildSmartLicenseStyles();
   const [recipientAddress, setRecipientAddress] = useState('');
+  const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const [deploymentProgress, setDeploymentProgress] = useState(0);
   const [contractAddress, setContractAddress] = useState('');
@@ -38,7 +41,7 @@ const StepDeployment = ({
   // Send for approval
   const sendForApproval = () => {
     if (!recipientAddress) {
-      alert('Please enter recipient address');
+      showError('Please enter recipient address');
       return;
     }
     
@@ -47,14 +50,14 @@ const StepDeployment = ({
     setTimeout(() => {
       setDeploymentStatus('sent');
       setIsValidating(false);
-      alert('License sent for approval to ' + recipientAddress);
+      showSuccess('License sent for approval to ' + recipientAddress);
     }, 2000);
   };
 
   // Approve license
   const approveLicense = () => {
     setDeploymentStatus('approved');
-    alert('License approved! Ready for deployment.');
+    showSuccess('License approved! Ready for deployment.');
   };
 
   // Deploy license
@@ -70,7 +73,7 @@ const StepDeployment = ({
           setDeploymentStatus('deployed');
           setContractAddress('0x' + Math.random().toString(16).substr(2, 40));
           setTransactionHash('0x' + Math.random().toString(16).substr(2, 64));
-          alert('Smart License deployed successfully!');
+          showSuccess('Smart License deployed successfully!');
           return 100;
         }
         return prev + 10;
@@ -278,7 +281,7 @@ const StepDeployment = ({
                                 size="sm"
                                 onClick={() => {
                                   navigator.clipboard.writeText(contractAddress);
-                                  alert('Contract address copied to clipboard!');
+                                  showSuccess('Contract address copied to clipboard!');
                                 }}
                               >
                                 Copy Address
@@ -299,7 +302,7 @@ const StepDeployment = ({
                                 size="sm"
                                 onClick={() => {
                                   navigator.clipboard.writeText(transactionHash);
-                                  alert('Transaction hash copied to clipboard!');
+                                  showSuccess('Transaction hash copied to clipboard!');
                                 }}
                               >
                                 Copy Hash
@@ -326,7 +329,7 @@ const StepDeployment = ({
                             color="success"
                             size="lg"
                             onClick={() => {
-                              alert('License management dashboard would open here');
+                              showInfo('License management dashboard would open here');
                             }}
                           >
                             Manage License
@@ -398,7 +401,7 @@ const StepDeployment = ({
                                 size="sm"
                                 onClick={() => {
                                   navigator.clipboard.writeText(contractAddress);
-                                  alert('Contract address copied to clipboard!');
+                                  showSuccess('Contract address copied to clipboard!');
                                 }}
                               >
                                 Copy Address
@@ -419,7 +422,7 @@ const StepDeployment = ({
                                 size="sm"
                                 onClick={() => {
                                   navigator.clipboard.writeText(transactionHash);
-                                  alert('Transaction hash copied to clipboard!');
+                                  showSuccess('Transaction hash copied to clipboard!');
                                 }}
                               >
                                 Copy Hash
@@ -446,7 +449,7 @@ const StepDeployment = ({
                             color="success"
                             size="lg"
                             onClick={() => {
-                              alert('License management dashboard would open here');
+                              showInfo('License management dashboard would open here');
                             }}
                           >
                             Manage License
@@ -481,6 +484,15 @@ const StepDeployment = ({
             )}
           </Col>
         </Row>
+        
+        {/* Toast Notifications */}
+        <Toast
+          isOpen={toast.isOpen}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={hideToast}
+        />
       </CardBody>
     </Card>
   );

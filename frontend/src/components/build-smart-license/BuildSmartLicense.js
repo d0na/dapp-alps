@@ -18,11 +18,14 @@ import {
   StepDeployment,
   generateSmartLicenseJson
 } from './index';
+import Toast from "../common/Toast";
+import useToast from "../../hooks/useToast";
 
 const BuildSmartLicense = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState('');
   const [manualData, setManualData] = useState({});
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [rules, setRules] = useState([]);
   const [aiText, setAiText] = useState('');
   const [generatedJson, setGeneratedJson] = useState('');
@@ -440,7 +443,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
   const handleDeployContract = () => {
     // Here you would typically deploy the smart contract to the blockchain
     console.log('Deploying smart contract...');
-    alert('Smart Contract deployment initiated! Check the console for details.');
+    showSuccess('Smart Contract deployment initiated! Check the console for details.');
   };
 
   const renderCurrentStep = () => {
@@ -601,6 +604,15 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           </Card>
         </Col>
       </Row>
+      
+      {/* Toast Notifications */}
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
     </div>
   );
 };

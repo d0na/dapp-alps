@@ -23,6 +23,8 @@ import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import { validateManualData, validateAiText } from "../utils/jsonGenerator";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import Typography from "@material-ui/core/Typography";
+import Toast from "../../common/Toast";
+import useToast from "../../../hooks/useToast";
 
 // Utility function to parse duration string (e.g., "5Y 10M 2D")
 const parseDuration = (durationStr) => {
@@ -1766,6 +1768,8 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
 
 // Manual Configuration Form
 const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false }) => {
+  const { toast, showSuccess, showError, hideToast } = useToast();
+  
   const updateManualData = (field, value) => {
     setManualData({ ...manualData, [field]: value });
   };
@@ -1810,17 +1814,17 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             };
             
             setManualData(processedData);
-            alert('✅ License data loaded successfully! All fields have been populated.');
+            showSuccess('License data loaded successfully! All fields have been populated.');
           } else {
-            alert('❌ Invalid JSON format. Please ensure the file contains required fields: name, licensor, licensee');
+            showError('Invalid JSON format. Please ensure the file contains required fields: name, licensor, licensee');
           }
         } catch (error) {
-          alert('❌ Error parsing JSON file: ' + error.message);
+          showError('Error parsing JSON file: ' + error.message);
         }
       };
       reader.readAsText(file);
     } else {
-      alert('❌ Please select a valid JSON file');
+      showError('Please select a valid JSON file');
     }
     
     // Reset the input value to allow re-uploading the same file
@@ -2012,6 +2016,15 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
       {/* Smart Policy Dependencies */}
       <SmartPolicyDependenciesReadOnly rules={manualData.rules || []} />
+      
+      {/* Toast Notifications */}
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
     </div>
   );
 };

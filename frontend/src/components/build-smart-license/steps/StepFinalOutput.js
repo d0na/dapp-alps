@@ -16,15 +16,18 @@ import {
   Badge,
   Alert,
 } from "reactstrap";
+import Toast from "../../common/Toast";
+import useToast from "../../../hooks/useToast";
 
 const StepFinalOutput = ({ 
   generatedJson, 
   generatedSmartContract, 
   handleBack, 
   handleDownloadAll,
-  handleDeployContract 
+  handleDeployContract
 }) => {
   const [activeTab, setActiveTab] = useState('1');
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   // Parse JSON to extract data for visualization
   const parseJsonForVisualization = () => {
@@ -66,7 +69,7 @@ const StepFinalOutput = ({
   const handleCopyToClipboard = async (text, type) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert(`${type} copied to clipboard!`);
+      showSuccess(`${type} copied to clipboard!`);
     } catch (err) {
       const textArea = document.createElement('textarea');
       textArea.value = text;
@@ -74,7 +77,7 @@ const StepFinalOutput = ({
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert(`${type} copied to clipboard!`);
+      showSuccess(`${type} copied to clipboard!`);
     }
   };
 
@@ -327,6 +330,15 @@ const StepFinalOutput = ({
             </Button>
           </Col>
         </Row>
+        
+        {/* Toast Notifications */}
+        <Toast
+          isOpen={toast.isOpen}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={hideToast}
+        />
       </CardBody>
     </Card>
   );

@@ -21,6 +21,8 @@ import {
 } from "reactstrap";
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import StepConfiguration from "./StepConfiguration";
+import Toast from "../../common/Toast";
+import useToast from "../../../hooks/useToast";
 
 // Convert JSON data to form data format for StepConfiguration
 const convertJsonToFormData = (jsonString) => {
@@ -72,6 +74,7 @@ const StepReviewGenerate = ({
 }) => {
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
+  const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
   // Removed approval and deployment logic - now handled in StepDeployment
   const [contractComparison, setContractComparison] = useState({
     isSimilar: false,
@@ -213,7 +216,7 @@ const StepReviewGenerate = ({
   const handleCopyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedJson);
-      alert('JSON copied to clipboard!');
+      showSuccess('JSON copied to clipboard!');
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -222,7 +225,7 @@ const StepReviewGenerate = ({
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('JSON copied to clipboard!');
+      showSuccess('JSON copied to clipboard!');
     }
   };
 
@@ -612,9 +615,9 @@ const StepReviewGenerate = ({
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(generatedContract);
-                      alert('Contract copied to clipboard!');
+                      showSuccess('Contract copied to clipboard!');
                     } catch (err) {
-                      alert('Failed to copy to clipboard');
+                      showError('Failed to copy to clipboard');
                     }
                   }}
                   block
@@ -732,7 +735,7 @@ const StepReviewGenerate = ({
                                 differences: []
                               }));
                               setContractComparisonValid(true);
-                              alert('Contract comparison simulated as valid for testing purposes!');
+                              showSuccess('Contract comparison simulated as valid for testing purposes!');
                             }}
                             size="sm"
                             style={{ marginRight: '10px' }}
@@ -753,7 +756,7 @@ const StepReviewGenerate = ({
                                 ]
                               }));
                               setContractComparisonValid(false);
-                              alert('Contract comparison reset with random differences for testing!');
+                              showInfo('Contract comparison reset with random differences for testing!');
                             }}
                             size="sm"
                           >
@@ -825,6 +828,15 @@ const StepReviewGenerate = ({
             </Button>
           </Col>
         </Row>
+        
+        {/* Toast Notifications */}
+        <Toast
+          isOpen={toast.isOpen}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={hideToast}
+        />
       </CardBody>
     </Card>
   );
