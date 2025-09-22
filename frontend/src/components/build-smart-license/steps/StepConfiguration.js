@@ -1433,7 +1433,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
                     Add Rule
                   </Button>
                 )}
-                <small>Total Rules: {rules.length}</small>
+                <small>Total Rules: <strong>{rules.length}</strong></small>
               </Col>
             </Row>
 
