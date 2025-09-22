@@ -579,7 +579,6 @@ contract SmartLicense is Ownable, ReentrancyGuard {
                             }}
                           >
                             {isCompleted && '✓ '}{step}
-                            {isNext && !isClickable && ' (Complete current step)'}
                           </div>
                         );
                       })}
