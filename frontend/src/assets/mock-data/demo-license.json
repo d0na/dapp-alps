@@ -1,10 +1,10 @@
 {
   "licenseId": "LIC-2024-001",
   "name": "Smartphone Components License - Camera & GPS",
-  "currentVersion": 2,
-  "status": "proposed",
+  "currentVersion": 3,
+  "status": "approved",
   "createdAt": "2024-01-15T10:30:00.000Z",
-  "lastModified": "2024-01-16T09:15:00.000Z",
+  "lastModified": "2024-01-17T14:20:00.000Z",
   
   "parties": {
   "licensor": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
@@ -19,7 +19,7 @@
       "status": "needs_revision",
       "createdAt": "2024-01-15T10:30:00.000Z",
       "createdBy": "creator",
-      "comment": "Initial smartphone components license with camera, GPS, sensor suite, and advanced custom calculation rules",
+      "comment": "Initial smartphone components license with camera, GPS, sensor suite, and advanced custom calculation rules. This version includes comprehensive royalty structures for camera and GPS usage.",
       "data": {
         "duration": "3Y 0M 0D",
         "ips": "Proprietary smartphone component integration technology including advanced camera sensor algorithms, GPS positioning optimization, accelerometer calibration, gyroscope stabilization, and biometric sensor processing. This intellectual property covers hardware-software integration protocols, power management systems, and real-time data processing algorithms for mobile device components.",
@@ -90,7 +90,7 @@
       "status": "proposed",
       "createdAt": "2024-01-16T09:15:00.000Z",
       "createdBy": "creator",
-      "comment": "Revised license with reduced duration from 3 years to 1 year based on validator feedback",
+      "comment": "Revised license with reduced duration from 3 years to 1 year and optimized royalty rates based on validator feedback. Camera royalty reduced from 15% to 10%, GPS royalty reduced from 8% to 5%.",
       "data": {
         "duration": "1Y 0M 0D",
         "ips": "Proprietary smartphone component integration technology including advanced camera sensor algorithms, GPS positioning optimization, accelerometer calibration, gyroscope stabilization, and biometric sensor processing. This intellectual property covers hardware-software integration protocols, power management systems, and real-time data processing algorithms for mobile device components.",
@@ -151,6 +151,100 @@
         ]
       },
       "feedback": null
+    },
+    {
+      "versionNumber": 3,
+      "status": "approved",
+      "createdAt": "2024-01-17T14:20:00.000Z",
+      "createdBy": "creator",
+      "comment": "Final approved version with additional sensor suite integration and enhanced royalty calculation rules. Added accelerometer and gyroscope usage tracking with tiered royalty structure.",
+      "data": {
+        "duration": "1Y 6M 0D",
+        "ips": "Comprehensive smartphone component integration technology including advanced camera sensor algorithms, GPS positioning optimization, accelerometer calibration, gyroscope stabilization, biometric sensor processing, and environmental sensor integration. This intellectual property covers hardware-software integration protocols, power management systems, real-time data processing algorithms, and machine learning optimization for mobile device components.",
+        "rules": [
+          {
+            "id": "rule-camera-001",
+            "name": "Camera Usage Royalty",
+            "validityStart": "2024-01-01",
+            "validityEnd": "2026-12-31",
+            "evaluationInterval": "1M 0D",
+            "royaltyBase": [
+              {
+                "id": "oracle-camera-001",
+                "oracleAddress": "0x1234567890123456789012345678901234567890",
+                "propertyName": "getCameraActivations",
+                "displayName": "Camera Activations per Month",
+                "intellectualProperty": "PAT-001 - Camera Activation Technology"
+              },
+              {
+                "id": "oracle-camera-002",
+                "oracleAddress": "0x2345678901234567890123456789012345678901",
+                "propertyName": "getPhotoCount",
+                "displayName": "Photos Taken",
+                "intellectualProperty": "PAT-002 - Photo Processing Algorithm"
+              }
+            ],
+            "royaltyRate": {
+              "type": "proportional",
+              "value": "0.08",
+              "base": "Photos Taken",
+              "min": "5",
+              "max": "1000"
+            }
+          },
+          {
+            "id": "rule-gps-001",
+            "name": "GPS Navigation Royalty",
+            "validityStart": "2024-01-01",
+            "validityEnd": "2026-12-31",
+            "evaluationInterval": "1M 0D",
+            "royaltyBase": [
+              {
+                "id": "oracle-gps-001",
+                "oracleAddress": "0x3456789012345678901234567890123456789012",
+                "propertyName": "getGPSDistance",
+                "displayName": "GPS Navigation Distance (km)",
+                "intellectualProperty": "PAT-003 - GPS Navigation Optimization"
+              }
+            ],
+            "royaltyRate": {
+              "type": "proportional",
+              "value": "0.04",
+              "base": "GPS Navigation Distance (km)",
+              "min": "1",
+              "max": "500"
+            }
+          },
+          {
+            "id": "rule-sensors-001",
+            "name": "Sensor Suite Royalty",
+            "validityStart": "2024-01-01",
+            "validityEnd": "2026-12-31",
+            "evaluationInterval": "1M 0D",
+            "royaltyBase": [
+              {
+                "id": "oracle-sensor-001",
+                "oracleAddress": "0x4567890123456789012345678901234567890123",
+                "propertyName": "getSensorActivations",
+                "displayName": "Sensor Activations per Month",
+                "intellectualProperty": "PAT-004 - Sensor Integration Technology"
+              }
+            ],
+            "royaltyRate": {
+              "type": "proportional",
+              "value": "0.06",
+              "base": "Sensor Activations per Month",
+              "min": "10",
+              "max": "2000"
+            }
+          }
+        ]
+      },
+      "feedback": {
+        "from": "validator",
+        "date": "2024-01-17T16:30:00.000Z",
+        "message": "Excellent improvements! The additional sensor suite integration and optimized royalty rates make this version very competitive. Approved for deployment."
+      }
     }
   ]
 }

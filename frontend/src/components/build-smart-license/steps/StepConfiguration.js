@@ -543,6 +543,150 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
   );
 };
 
+// Version History Navigation Component
+const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selectedVersion, isNewLicense = false }) => {
+  // Always show the component, but with different content based on whether it's a new license or has versions
+  const hasVersions = versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0;
+
+  return (
+    <Card style={{ marginBottom: '20px' }}>
+      <CardHeader>
+        <CardTitle tag="h6">
+          {hasVersions ? 'Version History' : 'License Version Information'}
+        </CardTitle>
+        <p className="card-category">
+          {hasVersions 
+            ? 'Navigate through different versions of this license'
+            : 'Configure version details for this new license'
+          }
+        </p>
+      </CardHeader>
+      <CardBody>
+        {hasVersions ? (
+          // Existing version navigation
+          <Row>
+            <Col md="12">
+              <Nav tabs>
+                {versionedLicenseData.versions.map((version, index) => (
+                  <NavItem key={version.versionNumber}>
+                    <NavLink
+                      className={selectedVersion === version.versionNumber ? 'active' : ''}
+                      onClick={() => onVersionSelect(version.versionNumber)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div style={{ textAlign: 'center' }}>
+                        <div><strong>V{version.versionNumber}</strong></div>
+                        <small style={{ fontSize: '0.7em' }}>
+                          {new Date(version.createdAt).toLocaleDateString()}
+                        </small>
+                        <div>
+                          <Badge 
+                            color={
+                              version.status === 'proposed' ? 'primary' :
+                              version.status === 'needs_revision' ? 'warning' :
+                              version.status === 'approved' ? 'success' : 'secondary'
+                            }
+                            style={{ fontSize: '0.6em' }}
+                          >
+                            {version.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </NavLink>
+                  </NavItem>
+                ))}
+              </Nav>
+            </Col>
+          </Row>
+        ) : (
+          // New license version info
+          <Row>
+            <Col md="12">
+              <Alert color="info">
+                <Row>
+                  <Col md="6">
+                    <strong>Creating New License Version:</strong><br />
+                    <small>
+                      This will be version 1 of a new license.<br />
+                      You can add comments to describe this version's purpose.
+                    </small>
+                  </Col>
+                  <Col md="6">
+                    <div style={{ textAlign: 'right' }}>
+                      <Badge color="primary" style={{ fontSize: '0.8em' }}>
+                        Version 1 - New License
+                      </Badge><br />
+                      <small style={{ color: '#6c757d' }}>
+                        Status: Will be set to "proposed"
+                      </small>
+                    </div>
+                  </Col>
+                </Row>
+              </Alert>
+            </Col>
+          </Row>
+        )}
+        
+        {/* Version Details - only show if has versions */}
+        {hasVersions && selectedVersion && (
+          <Row style={{ marginTop: '15px' }}>
+            <Col md="12">
+              {(() => {
+                const version = versionedLicenseData.versions.find(v => v.versionNumber === selectedVersion);
+                if (!version) return null;
+                
+                return (
+                  <Alert color="info">
+                    <Row>
+                      <Col md="6">
+                        <strong>Version {version.versionNumber} Details:</strong><br />
+                        <small>
+                          Created: {new Date(version.createdAt).toLocaleString()}<br />
+                          Created by: {version.createdBy}<br />
+                          Status: <Badge color={
+                            version.status === 'proposed' ? 'primary' :
+                            version.status === 'needs_revision' ? 'warning' :
+                            version.status === 'approved' ? 'success' : 'secondary'
+                          }>{version.status}</Badge>
+                        </small>
+                      </Col>
+                      <Col md="6">
+                        {version.comment && (
+                          <div>
+                            <strong>Comment:</strong><br />
+                            <em>"{version.comment}"</em>
+                          </div>
+                        )}
+                        {version.feedback && (
+                          <div style={{ marginTop: '10px' }}>
+                            <strong>Feedback:</strong><br />
+                            <div style={{ 
+                              backgroundColor: '#fff3cd', 
+                              padding: '8px', 
+                              borderRadius: '4px',
+                              border: '1px solid #ffeaa7'
+                            }}>
+                              <small>
+                                <strong>From:</strong> {version.feedback.from}<br />
+                                <strong>Date:</strong> {new Date(version.feedback.date).toLocaleString()}<br />
+                                <strong>Message:</strong> {version.feedback.message}
+                              </small>
+                            </div>
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+                  </Alert>
+                );
+              })()}
+            </Col>
+          </Row>
+        )}
+      </CardBody>
+    </Card>
+  );
+};
+
 // Required field indicator component
 const RequiredField = ({ children, isRequired = true }) => (
   <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1767,12 +1911,55 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null }) => {
   const { toast, showSuccess, showError, hideToast } = useToast();
+  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
   
   const updateManualData = (field, value) => {
     setManualData({ ...manualData, [field]: value });
   };
+
+  // Handle version selection
+  const handleVersionSelect = (versionNumber) => {
+    setSelectedVersion(versionNumber);
+    
+    const versionedData = localVersionedData || versionedLicenseData;
+    if (versionedData && versionedData.versions) {
+      const version = versionedData.versions.find(v => v.versionNumber === versionNumber);
+      if (version && version.data) {
+        // Load the selected version's data into the form
+        const versionData = {
+          name: versionedData.name,
+          licensor: versionedData.parties?.licensor || versionedData.licensor,
+          licensee: versionedData.parties?.licensee || versionedData.licensee,
+          territory: versionedData.parties?.territory || versionedData.territory,
+          duration: version.data.duration,
+          ips: version.data.ips,
+          comment: version.comment || '',
+          rules: version.data.rules || []
+        };
+        setManualData(versionData);
+        showSuccess(`Loaded version ${versionNumber} data`);
+      }
+    }
+  };
+
+  // Initialize selected version when versionedLicenseData changes
+  React.useEffect(() => {
+    if (versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0) {
+      const currentVersion = versionedLicenseData.versions.find(v => v.versionNumber === versionedLicenseData.currentVersion) || 
+                           versionedLicenseData.versions[versionedLicenseData.versions.length - 1];
+      if (currentVersion) {
+        setSelectedVersion(currentVersion.versionNumber);
+      }
+    }
+  }, [versionedLicenseData]);
+
+  // Sync local versioned data with prop changes
+  React.useEffect(() => {
+    setLocalVersionedData(versionedLicenseData);
+  }, [versionedLicenseData]);
 
   // Function to handle JSON file upload and populate form
   const handleJsonUpload = (event) => {
@@ -1784,39 +1971,100 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         try {
           const jsonData = JSON.parse(e.target.result);
           
-          // Validate and process the JSON data
-          if (jsonData.name && jsonData.licensor && jsonData.licensee) {
-            // Ensure rules have proper IDs if missing
-            const processedRules = jsonData.rules?.map((rule, index) => ({
-              ...rule,
-              id: rule.id || Date.now() + index,
-              royaltyBase: (rule.royaltyBase || []).map((rb, rbIndex) => ({
-                ...rb,
-                id: rb.id || Date.now() + index * 100 + rbIndex,
-                intellectualProperty: rb.intellectualProperty || ''
-              })),
-              royaltyRate: {
-                ...rule.royaltyRate,
-                customInputs: rule.royaltyRate?.customInputs || [],
-                stepStructure: {
-                  ...rule.royaltyRate?.stepStructure,
-                  steps: rule.royaltyRate?.stepStructure?.steps?.map((step, stepIndex) => ({
-                    ...step,
-                    id: step.id || Date.now() + index * 1000 + stepIndex
-                  })) || []
+          // Check if this is the new versioned format or legacy format
+          let processedData;
+          
+          if (jsonData.versions && Array.isArray(jsonData.versions)) {
+            // New versioned format - extract data from current version
+            const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion) || jsonData.versions[jsonData.versions.length - 1];
+            
+            if (currentVersion && currentVersion.data) {
+              // Ensure rules have proper IDs if missing
+              const processedRules = currentVersion.data.rules?.map((rule, index) => ({
+                ...rule,
+                id: rule.id || Date.now() + index,
+                royaltyBase: (rule.royaltyBase || []).map((rb, rbIndex) => ({
+                  ...rb,
+                  id: rb.id || Date.now() + index * 100 + rbIndex,
+                  intellectualProperty: rb.intellectualProperty || ''
+                })),
+                royaltyRate: {
+                  ...rule.royaltyRate,
+                  customInputs: rule.royaltyRate?.customInputs || [],
+                  stepStructure: {
+                    ...rule.royaltyRate?.stepStructure,
+                    steps: rule.royaltyRate?.stepStructure?.steps?.map((step, stepIndex) => ({
+                      ...step,
+                      id: step.id || Date.now() + index * 1000 + stepIndex
+                    })) || []
+                  }
                 }
-              }
-            })) || [];
-            
-            const processedData = {
-              ...jsonData,
-              rules: processedRules
-            };
-            
-            setManualData(processedData);
-            showSuccess('License data loaded successfully! All fields have been populated.');
+              })) || [];
+              
+              processedData = {
+                name: jsonData.name,
+                licensor: jsonData.parties?.licensor || jsonData.licensor,
+                licensee: jsonData.parties?.licensee || jsonData.licensee,
+                territory: jsonData.parties?.territory || jsonData.territory,
+                duration: currentVersion.data.duration,
+                ips: currentVersion.data.ips,
+                comment: currentVersion.comment || '',
+                rules: processedRules
+              };
+            } else {
+              showError('Invalid versioned JSON format. No valid version data found.');
+              return;
+            }
           } else {
-            showError('Invalid JSON format. Please ensure the file contains required fields: name, licensor, licensee');
+            // Legacy format - process as before
+            if (jsonData.name && jsonData.licensor && jsonData.licensee) {
+              // Ensure rules have proper IDs if missing
+              const processedRules = jsonData.rules?.map((rule, index) => ({
+                ...rule,
+                id: rule.id || Date.now() + index,
+                royaltyBase: (rule.royaltyBase || []).map((rb, rbIndex) => ({
+                  ...rb,
+                  id: rb.id || Date.now() + index * 100 + rbIndex,
+                  intellectualProperty: rb.intellectualProperty || ''
+                })),
+                royaltyRate: {
+                  ...rule.royaltyRate,
+                  customInputs: rule.royaltyRate?.customInputs || [],
+                  stepStructure: {
+                    ...rule.royaltyRate?.stepStructure,
+                    steps: rule.royaltyRate?.stepStructure?.steps?.map((step, stepIndex) => ({
+                      ...step,
+                      id: step.id || Date.now() + index * 1000 + stepIndex
+                    })) || []
+                  }
+                }
+              })) || [];
+              
+              processedData = {
+                ...jsonData,
+                rules: processedRules
+              };
+            } else {
+              showError('Invalid JSON format. Please ensure the file contains required fields: name, licensor, licensee');
+              return;
+            }
+          }
+          
+          setManualData(processedData);
+          
+          // If this is versioned data, set it locally for version navigation
+          if (jsonData.versions && Array.isArray(jsonData.versions)) {
+            setLocalVersionedData(jsonData);
+            const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion) || 
+                                 jsonData.versions[jsonData.versions.length - 1];
+            if (currentVersion) {
+              setSelectedVersion(currentVersion.versionNumber);
+            }
+            showSuccess(`Versioned license data loaded successfully! Found ${jsonData.versions.length} versions. Currently viewing version ${currentVersion?.versionNumber || 'latest'}.`);
+          } else {
+            setLocalVersionedData(null);
+            setSelectedVersion(null);
+            showSuccess('License data loaded successfully! All fields have been populated.');
           }
         } catch (error) {
           showError('Error parsing JSON file: ' + error.message);
@@ -1834,6 +2082,14 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
   return (
     <div>
+      {/* Version History Navigation */}
+      <VersionHistoryNavigation 
+        versionedLicenseData={localVersionedData || versionedLicenseData}
+        onVersionSelect={handleVersionSelect}
+        selectedVersion={selectedVersion}
+        isNewLicense={!localVersionedData && (!versionedLicenseData || !versionedLicenseData.versions || versionedLicenseData.versions.length === 0)}
+      />
+
       {!isReadOnly && (
         <Row style={{ marginBottom: '15px' }}>
           <Col md="12">
@@ -2007,6 +2263,66 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         </Col>
       </Row>
 
+      <Row>
+        <Col md="12">
+          <FormGroup>
+            <Label for="comment">
+              Version Comment
+            </Label>
+            <Input
+              type="textarea"
+              id="comment"
+              rows="3"
+              placeholder="Add a comment describing this version of the license..."
+              value={manualData.comment || ''}
+              onChange={(e) => updateManualData('comment', e.target.value)}
+              readOnly={isReadOnly}
+            />
+            <small className="form-text text-muted">
+              Optional: Describe the changes or purpose of this license version
+            </small>
+          </FormGroup>
+        </Col>
+      </Row>
+
+      {/* Revision Information - Show when in revision mode */}
+      {(localVersionedData || versionedLicenseData) && (localVersionedData || versionedLicenseData).versions && selectedVersion && (() => {
+        const versionedData = localVersionedData || versionedLicenseData;
+        const currentVersion = versionedData.versions.find(v => v.versionNumber === selectedVersion);
+        if (currentVersion && currentVersion.feedback) {
+          return (
+            <Row>
+              <Col md="12">
+                <Alert color="warning">
+                  <h6><strong>📝 Revision Feedback</strong></h6>
+                  <Row>
+                    <Col md="6">
+                      <strong>From:</strong> {currentVersion.feedback.from}<br />
+                      <strong>Date:</strong> {new Date(currentVersion.feedback.date).toLocaleString()}
+                    </Col>
+                    <Col md="6">
+                      <strong>Status:</strong> <Badge color="warning">{currentVersion.status}</Badge>
+                    </Col>
+                  </Row>
+                  <hr />
+                  <div style={{ 
+                    backgroundColor: '#fff3cd', 
+                    padding: '10px', 
+                    borderRadius: '4px',
+                    border: '1px solid #ffeaa7',
+                    marginTop: '10px'
+                  }}>
+                    <strong>Feedback Message:</strong><br />
+                    <em>"{currentVersion.feedback.message}"</em>
+                  </div>
+                </Alert>
+              </Col>
+            </Row>
+          );
+        }
+        return null;
+      })()}
+
       {/* Rules Configuration */}
       <RulesConfiguration 
         rules={manualData.rules || []}
@@ -2118,7 +2434,8 @@ const StepConfiguration = ({
   handleBack,
   showValidationErrors,
   setShowValidationErrors,
-  isReadOnly = false
+  isReadOnly = false,
+  versionedLicenseData = null
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -2166,20 +2483,46 @@ const StepConfiguration = ({
   const validation = getValidation();
   const isNextDisabled = !validation.isValid;
 
+  // Check if we're in revision mode
+  const isRevisionMode = versionedLicenseData && 
+    versionedLicenseData._versioning && 
+    versionedLicenseData._versioning.status === 'needs_revision';
+  
+  const revisionDescription = isRevisionMode ? 
+    versionedLicenseData._versioning.revisionDescription : null;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle tag="h4">
-          {mode === 'manual' ? 'License Configuration' : 'AI-Assisted Creation'}
+          {isRevisionMode 
+            ? 'License Revision Required' 
+            : (mode === 'manual' ? 'License Configuration' : 'AI-Assisted Creation')
+          }
         </CardTitle>
         <p className="card-category">
-          {mode === 'manual' 
-            ? 'Configure license details with royalty structures and usage bases' 
-            : 'Provide text or upload a document for AI analysis'
-          }
+          {isRevisionMode 
+            ? 'Please address the feedback below and modify the license accordingly'
+            : (mode === 'manual' 
+              ? 'Configure license details with royalty structures and usage bases' 
+              : 'Provide text or upload a document for AI analysis')
+            }
         </p>
       </CardHeader>
       <CardBody>
+        {/* Revision Description Alert */}
+        {isRevisionMode && revisionDescription && (
+          <Alert color="warning" style={{ marginBottom: '20px' }}>
+            <h5><strong>Revision Required</strong></h5>
+            <p><strong>Validator Feedback:</strong></p>
+            <p style={{ fontStyle: 'italic', marginLeft: '20px' }}>
+              "{revisionDescription}"
+            </p>
+            <hr />
+            <p><strong>Please modify the license parameters below to address these concerns.</strong></p>
+          </Alert>
+        )}
+        
         {mode === 'manual' ? (
           <ManualConfigurationForm 
             manualData={manualData}
@@ -2188,6 +2531,7 @@ const StepConfiguration = ({
             showValidationErrors={showValidationErrors}
             setShowValidationErrors={setShowValidationErrors}
             isReadOnly={isReadOnly}
+            versionedLicenseData={versionedLicenseData}
           />
         ) : (
           <AIConfigurationForm 
@@ -2231,6 +2575,13 @@ RequiredField.propTypes = {
   isRequired: PropTypes.bool,
 };
 
+VersionHistoryNavigation.propTypes = {
+  versionedLicenseData: PropTypes.object,
+  onVersionSelect: PropTypes.func.isRequired,
+  selectedVersion: PropTypes.number,
+  isNewLicense: PropTypes.bool,
+};
+
 ValidationStatus.propTypes = {
   isValid: PropTypes.bool.isRequired,
   warnings: PropTypes.array,
@@ -2246,6 +2597,7 @@ ManualConfigurationForm.propTypes = {
   showValidationErrors: PropTypes.bool,
   setShowValidationErrors: PropTypes.func,
   isReadOnly: PropTypes.bool,
+  versionedLicenseData: PropTypes.object,
 };
 
 RulesConfiguration.propTypes = {
@@ -2304,6 +2656,7 @@ StepConfiguration.propTypes = {
   showValidationErrors: PropTypes.bool,
   setShowValidationErrors: PropTypes.func,
   isReadOnly: PropTypes.bool,
+  versionedLicenseData: PropTypes.object,
 };
 
 export default StepConfiguration;

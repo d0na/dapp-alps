@@ -29,20 +29,46 @@ const convertJsonToFormData = (jsonString) => {
   try {
     const jsonData = JSON.parse(jsonString);
     
-    // Convert JSON structure to form data format
-    const manualData = {
-      name: jsonData.name || '',
-      territory: jsonData.territory || '',
-      licensor: jsonData.licensor || '',
-      licensee: jsonData.licensee || '',
-      duration: jsonData.duration || '',
-      ips: jsonData.ips || '',
-      rules: jsonData.rules || []
-    };
+    // Check if this is the new versioned format or legacy format
+    let manualData, rules;
+    
+    if (jsonData.versions && Array.isArray(jsonData.versions)) {
+      // New versioned format - extract data from current version
+      const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion) || jsonData.versions[jsonData.versions.length - 1];
+      
+      if (currentVersion && currentVersion.data) {
+        manualData = {
+          name: jsonData.name || '',
+          territory: jsonData.parties?.territory || jsonData.territory || '',
+          licensor: jsonData.parties?.licensor || jsonData.licensor || '',
+          licensee: jsonData.parties?.licensee || jsonData.licensee || '',
+          duration: currentVersion.data.duration || '',
+          ips: currentVersion.data.ips || '',
+          comment: currentVersion.comment || '',
+          rules: currentVersion.data.rules || []
+        };
+        rules = currentVersion.data.rules || [];
+      } else {
+        throw new Error('No valid version data found');
+      }
+    } else {
+      // Legacy format - process as before
+      manualData = {
+        name: jsonData.name || '',
+        territory: jsonData.territory || '',
+        licensor: jsonData.licensor || '',
+        licensee: jsonData.licensee || '',
+        duration: jsonData.duration || '',
+        ips: jsonData.ips || '',
+        comment: jsonData.comment || '',
+        rules: jsonData.rules || []
+      };
+      rules = jsonData.rules || [];
+    }
     
     return {
       manualData,
-      rules: jsonData.rules || []
+      rules
     };
   } catch (error) {
     console.error('Error parsing JSON:', error);
@@ -54,6 +80,7 @@ const convertJsonToFormData = (jsonString) => {
         licensee: '',
         duration: '',
         ips: '',
+        comment: '',
         rules: []
       },
       rules: []
@@ -250,19 +277,67 @@ const StepReviewGenerate = ({
       );
     }
 
+    // Extract data based on format (new versioned or legacy)
+    let displayData;
+    if (jsonData.versions && Array.isArray(jsonData.versions)) {
+      // New versioned format
+      const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion) || jsonData.versions[jsonData.versions.length - 1];
+      displayData = {
+        name: jsonData.name,
+        territory: jsonData.parties?.territory || jsonData.territory,
+        licensor: jsonData.parties?.licensor || jsonData.licensor,
+        licensee: jsonData.parties?.licensee || jsonData.licensee,
+        duration: currentVersion?.data?.duration || '',
+        ips: currentVersion?.data?.ips || '',
+        rules: currentVersion?.data?.rules || [],
+        licenseId: jsonData.licenseId,
+        currentVersion: jsonData.currentVersion,
+        status: jsonData.status,
+        createdAt: jsonData.createdAt,
+        lastModified: jsonData.lastModified
+      };
+    } else {
+      // Legacy format
+      displayData = {
+        name: jsonData.name,
+        territory: jsonData.territory,
+        licensor: jsonData.licensor,
+        licensee: jsonData.licensee,
+        duration: jsonData.duration,
+        ips: jsonData.ips,
+        rules: jsonData.rules || []
+      };
+    }
+
     return (
       <div>
+        {/* Version Information (only for new format) */}
+        {jsonData.versions && (
+          <Row>
+            <Col md="12">
+              <Alert color="info">
+                <strong>License Information:</strong><br />
+                License ID: {displayData.licenseId}<br />
+                Current Version: {displayData.currentVersion}<br />
+                Status: <Badge color="primary">{displayData.status}</Badge><br />
+                Created: {new Date(displayData.createdAt).toLocaleDateString()}<br />
+                Last Modified: {new Date(displayData.lastModified).toLocaleDateString()}
+              </Alert>
+            </Col>
+          </Row>
+        )}
+        
         <Row>
           <Col md="6">
             <FormGroup>
               <Label><strong>License Name</strong></Label>
-              <Input type="text" value={jsonData.name || ''} readOnly />
+              <Input type="text" value={displayData.name || ''} readOnly />
             </FormGroup>
           </Col>
           <Col md="6">
             <FormGroup>
               <Label><strong>Territory</strong></Label>
-              <Input type="text" value={jsonData.territory || ''} readOnly />
+              <Input type="text" value={displayData.territory || ''} readOnly />
             </FormGroup>
           </Col>
         </Row>
@@ -271,13 +346,13 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>Licensor</strong></Label>
-              <Input type="text" value={jsonData.licensor || ''} readOnly />
+              <Input type="text" value={displayData.licensor || ''} readOnly />
             </FormGroup>
           </Col>
           <Col md="6">
             <FormGroup>
               <Label><strong>Licensee</strong></Label>
-              <Input type="text" value={jsonData.licensee || ''} readOnly />
+              <Input type="text" value={displayData.licensee || ''} readOnly />
             </FormGroup>
           </Col>
         </Row>
@@ -286,13 +361,13 @@ const StepReviewGenerate = ({
           <Col md="6">
             <FormGroup>
               <Label><strong>Duration</strong></Label>
-              <Input type="text" value={jsonData.duration || ''} readOnly />
+              <Input type="text" value={displayData.duration || ''} readOnly />
             </FormGroup>
           </Col>
           <Col md="6">
             <FormGroup>
               <Label><strong>Intellectual Property</strong></Label>
-              <Input type="textarea" value={jsonData.ips || ''} readOnly rows="3" />
+              <Input type="textarea" value={displayData.ips || ''} readOnly rows="3" />
             </FormGroup>
           </Col>
         </Row>
@@ -300,8 +375,8 @@ const StepReviewGenerate = ({
         <Row>
           <Col md="12">
             <h5 style={{ marginTop: '20px', marginBottom: '15px' }}>Rules Configuration</h5>
-            {jsonData.rules && jsonData.rules.length > 0 ? (
-              jsonData.rules.map((rule, index) => (
+            {displayData.rules && displayData.rules.length > 0 ? (
+              displayData.rules.map((rule, index) => (
                 <Card key={rule.id || index} style={{ marginBottom: '15px' }}>
                   <CardHeader>
                     <CardTitle tag="h6">Rule {index + 1}: {rule.name}</CardTitle>

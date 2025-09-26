@@ -6,26 +6,21 @@
  * @returns {string} JSON string of the smart license configuration
  */
 export const generateSmartLicenseJson = (mode, manualData, aiText) => {
-  let jsonData;
+  const timestamp = new Date().toISOString();
+  const licenseId = `LIC-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+  
+  let versionData;
   
   if (mode === 'manual') {
-    // Generate JSON in the same format as the upload system
-    jsonData = {
-      name: manualData.name || "Smart License",
-      licensor: manualData.licensor || "0x0000000000000000000000000000000000000000",
-      licensee: manualData.licensee || "0x0000000000000000000000000000000000000000",
-      territory: manualData.territory || "Worldwide",
+    // Generate version data in the new format
+    versionData = {
       duration: manualData.duration || "1Y 0M 0D",
       ips: manualData.ips || "Intellectual property description",
       rules: manualData.rules || []
     };
   } else {
     // AI mode - generate from AI text
-    jsonData = {
-      name: "AI Generated Smart License",
-      licensor: "0x0000000000000000000000000000000000000000",
-      licensee: "0x0000000000000000000000000000000000000000",
-      territory: "Worldwide",
+    versionData = {
       duration: "1Y 0M 0D",
       ips: aiText || "AI generated intellectual property description",
       rules: [
@@ -42,7 +37,8 @@ export const generateSmartLicenseJson = (mode, manualData, aiText) => {
               id: Date.now() + 1,
               oracleAddress: "0x0000000000000000000000000000000000000000",
               propertyName: "getCount",
-              displayName: "RB01"
+              displayName: "RB01",
+              intellectualProperty: ""
             }
           ],
           royaltyRate: {
@@ -64,6 +60,34 @@ export const generateSmartLicenseJson = (mode, manualData, aiText) => {
       ]
     };
   }
+
+  // Generate JSON in the new versioned format
+  const jsonData = {
+    licenseId: licenseId,
+    name: manualData.name || "Smart License",
+    currentVersion: 1,
+    status: "proposed",
+    createdAt: timestamp,
+    lastModified: timestamp,
+    parties: {
+      licensor: manualData.licensor || "0x0000000000000000000000000000000000000000",
+      licensee: manualData.licensee || "0x0000000000000000000000000000000000000000",
+      territory: manualData.territory || "Worldwide"
+    },
+    versions: [
+      {
+        versionNumber: 1,
+        status: "proposed",
+        createdAt: timestamp,
+        createdBy: "creator",
+        comment: mode === 'manual' 
+          ? (manualData.comment || `Initial license configuration: ${manualData.name || 'Smart License'}`)
+          : `AI-generated license based on provided text`,
+        data: versionData,
+        feedback: null
+      }
+    ]
+  };
 
   return JSON.stringify(jsonData, null, 2);
 };

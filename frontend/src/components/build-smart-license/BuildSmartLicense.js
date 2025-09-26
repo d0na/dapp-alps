@@ -36,11 +36,25 @@ const BuildSmartLicense = () => {
   const [isVerificationMode, setIsVerificationMode] = useState(false);
   const [deploymentStatus, setDeploymentStatus] = useState('pending'); // pending, sent, approved, deployed
   const [contractComparisonValid, setContractComparisonValid] = useState(false);
+  const [versionedLicenseData, setVersionedLicenseData] = useState(null);
 
   // Update generatedJson when uploadedJson changes (for upload mode)
   useEffect(() => {
     if (mode === 'upload' && uploadedJson) {
       setGeneratedJson(uploadedJson);
+      
+      // Check if the uploaded JSON is in versioned format
+      try {
+        const jsonData = JSON.parse(uploadedJson);
+        if (jsonData.versions && Array.isArray(jsonData.versions)) {
+          setVersionedLicenseData(jsonData);
+        } else {
+          setVersionedLicenseData(null);
+        }
+      } catch (error) {
+        console.error('Error parsing uploaded JSON:', error);
+        setVersionedLicenseData(null);
+      }
     }
   }, [uploadedJson, mode]);
 
@@ -484,6 +498,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
               handleBack={handleBack}
               showValidationErrors={showValidationErrors}
               setShowValidationErrors={setShowValidationErrors}
+              versionedLicenseData={versionedLicenseData}
             />
           );
         }
