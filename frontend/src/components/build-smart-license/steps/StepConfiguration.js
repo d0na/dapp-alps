@@ -543,43 +543,182 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
   );
 };
 
-// Version History Navigation Component
-const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selectedVersion, isNewLicense = false }) => {
-  // Always show the component, but with different content based on whether it's a new license or has versions
-  const hasVersions = versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0;
+// Revision Tabs View Component for Verification Mode
+const RevisionTabsView = ({ versionedLicenseData, onVersionSelect, selectedVersion }) => {
+  const [activeTab, setActiveTab] = useState('1');
+  
+  const handleTabChange = (tabId, versionNumber) => {
+    setActiveTab(tabId);
+    onVersionSelect(versionNumber);
+  };
 
   return (
     <Card style={{ marginBottom: '20px' }}>
       <CardHeader>
-        <CardTitle tag="h6">
-          {hasVersions ? 'Version History' : 'License Version Information'}
-        </CardTitle>
+        <CardTitle tag="h6">License Revisions</CardTitle>
         <p className="card-category">
-          {hasVersions 
-            ? 'Navigate through different versions of this license'
-            : 'Configure version details for this new license'
-          }
+          Review different versions and their revision history
         </p>
       </CardHeader>
       <CardBody>
-        {hasVersions ? (
-          // Existing version navigation
-          <Row>
-            <Col md="12">
-              <Nav tabs>
-                {versionedLicenseData.versions.map((version, index) => (
-                  <NavItem key={version.versionNumber}>
-                    <NavLink
-                      className={selectedVersion === version.versionNumber ? 'active' : ''}
-                      onClick={() => onVersionSelect(version.versionNumber)}
-                      style={{ cursor: 'pointer' }}
+        <Nav tabs>
+          {versionedLicenseData.versions.map((version, index) => (
+            <NavItem key={version.versionNumber}>
+              <NavLink
+                className={activeTab === `${index + 1}` ? 'active' : ''}
+                onClick={() => handleTabChange(`${index + 1}`, version.versionNumber)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                  <div><strong>V{version.versionNumber}</strong></div>
+                  <small style={{ fontSize: '0.7em' }}>
+                    {new Date(version.createdAt).toLocaleDateString()}
+                  </small>
+                  <div>
+                    <Badge 
+                      color={
+                        version.status === 'draft' ? 'secondary' :
+                        version.status === 'proposed' ? 'primary' :
+                        version.status === 'needs_revision' ? 'warning' :
+                        version.status === 'approved' ? 'success' :
+                        version.status === 'deployed' ? 'success' :
+                        version.status === 'superseded' ? 'light' : 'secondary'
+                      }
+                      style={{ fontSize: '0.6em' }}
                     >
-                      <div style={{ textAlign: 'center' }}>
-                        <div><strong>V{version.versionNumber}</strong></div>
-                        <small style={{ fontSize: '0.7em' }}>
-                          {new Date(version.createdAt).toLocaleDateString()}
-                        </small>
-                        <div>
+                      {version.status}
+                    </Badge>
+                  </div>
+                </div>
+              </NavLink>
+            </NavItem>
+          ))}
+        </Nav>
+        
+        <TabContent activeTab={activeTab}>
+          {versionedLicenseData.versions.map((version, index) => (
+            <TabPane tabId={`${index + 1}`} key={version.versionNumber}>
+              <Row style={{ marginTop: '20px' }}>
+                <Col md="12">
+                  <Card style={{ backgroundColor: '#f8f9fa' }}>
+                    <CardHeader>
+                      <CardTitle tag="h6">
+                        Version {version.versionNumber} Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                      <Row>
+                        <Col md="6">
+                          <strong>Created:</strong> {new Date(version.createdAt).toLocaleString()}<br />
+                          <strong>Created by:</strong> {version.createdBy}<br />
+                          <strong>Status:</strong> <Badge color={
+                            version.status === 'draft' ? 'secondary' :
+                            version.status === 'proposed' ? 'primary' :
+                            version.status === 'needs_revision' ? 'warning' :
+                            version.status === 'approved' ? 'success' :
+                            version.status === 'deployed' ? 'success' :
+                            version.status === 'superseded' ? 'light' : 'secondary'
+                          }>{version.status}</Badge>
+                        </Col>
+                        <Col md="6">
+                          {version.comment && (
+                            <div>
+                              <strong>Comment:</strong><br />
+                              <em>"{version.comment}"</em>
+                            </div>
+                          )}
+                        </Col>
+                      </Row>
+                      
+                      {version.feedback && (
+                        <Row style={{ marginTop: '15px' }}>
+                          <Col md="12">
+                            <Alert color="warning">
+                              <h6><strong>📝 Revision Feedback</strong></h6>
+                              <Row>
+                                <Col md="6">
+                                  <strong>From:</strong> {version.feedback.from}<br />
+                                  <strong>Date:</strong> {new Date(version.feedback.date).toLocaleString()}
+                                </Col>
+                                <Col md="6">
+                                  <strong>Status:</strong> <Badge color="warning">{version.status}</Badge>
+                                </Col>
+                              </Row>
+                              <hr />
+                              <div style={{ 
+                                backgroundColor: '#fff3cd', 
+                                padding: '10px', 
+                                borderRadius: '4px',
+                                border: '1px solid #ffeaa7',
+                                marginTop: '10px'
+                              }}>
+                                <strong>Feedback Message:</strong><br />
+                                <em>"{version.feedback.message}"</em>
+                              </div>
+                            </Alert>
+                          </Col>
+                        </Row>
+                      )}
+                      
+                      <Row style={{ marginTop: '15px' }}>
+                        <Col md="12">
+                          <h6>License Configuration:</h6>
+                          <div style={{ 
+                            backgroundColor: '#e9ecef', 
+                            padding: '10px', 
+                            borderRadius: '4px',
+                            fontSize: '12px'
+                          }}>
+                            <strong>Duration:</strong> {version.data?.duration || 'N/A'}<br />
+                            <strong>Intellectual Property:</strong> {version.data?.ips || 'N/A'}<br />
+                            <strong>Rules:</strong> {version.data?.rules?.length || 0} configured
+                          </div>
+                        </Col>
+                      </Row>
+                    </CardBody>
+                  </Card>
+                </Col>
+              </Row>
+            </TabPane>
+          ))}
+        </TabContent>
+      </CardBody>
+    </Card>
+  );
+};
+
+// Version History Navigation Component
+const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selectedVersion, isNewLicense = false }) => {
+  // Only show the component if there are versions
+  const hasVersions = versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0;
+
+  if (!hasVersions) return null;
+
+  return (
+    <Card style={{ marginBottom: '20px' }}>
+      <CardHeader>
+        <CardTitle tag="h6">Version History</CardTitle>
+        <p className="card-category">
+          Navigate through different versions of this license
+        </p>
+      </CardHeader>
+      <CardBody>
+        <Row>
+          <Col md="12">
+            <Nav tabs>
+              {versionedLicenseData.versions.map((version, index) => (
+                <NavItem key={version.versionNumber}>
+                  <NavLink
+                    className={selectedVersion === version.versionNumber ? 'active' : ''}
+                    onClick={() => onVersionSelect(version.versionNumber)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div style={{ textAlign: 'center' }}>
+                      <div><strong>V{version.versionNumber}</strong></div>
+                      <small style={{ fontSize: '0.7em' }}>
+                        {new Date(version.createdAt).toLocaleDateString()}
+                      </small>
+                      <div>
                         <Badge 
                           color={
                             version.status === 'draft' ? 'secondary' :
@@ -593,45 +732,16 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                         >
                           {version.status}
                         </Badge>
-                        </div>
                       </div>
-                    </NavLink>
-                  </NavItem>
-                ))}
-              </Nav>
-            </Col>
-          </Row>
-        ) : (
-          // New license version info
-          <Row>
-            <Col md="12">
-              <Alert color="info">
-                <Row>
-                  <Col md="6">
-                    <strong>Creating New License Version:</strong><br />
-                    <small>
-                      This will be version 1 of a new license.<br />
-                      You can add comments to describe this version's purpose.
-                    </small>
-                  </Col>
-                  <Col md="6">
-                    <div style={{ textAlign: 'right' }}>
-                      <Badge color="primary" style={{ fontSize: '0.8em' }}>
-                        Version 1 - New License
-                      </Badge><br />
-                      <small style={{ color: '#6c757d' }}>
-                        Status: Will be set to "draft"
-                      </small>
                     </div>
-                  </Col>
-                </Row>
-              </Alert>
-            </Col>
-          </Row>
-        )}
+                  </NavLink>
+                </NavItem>
+              ))}
+            </Nav>
+          </Col>
+        </Row>
         
-        {/* Version Details - only show if has versions */}
-        {hasVersions && selectedVersion && (
+        {selectedVersion && (
           <Row style={{ marginTop: '15px' }}>
             <Col md="12">
               {(() => {
@@ -1917,7 +2027,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null, isVerificationMode = false }) => {
   const { toast, showSuccess, showError, hideToast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
@@ -2089,12 +2199,23 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   return (
     <div>
       {/* Version History Navigation */}
-      <VersionHistoryNavigation 
-        versionedLicenseData={localVersionedData || versionedLicenseData}
-        onVersionSelect={handleVersionSelect}
-        selectedVersion={selectedVersion}
-        isNewLicense={!localVersionedData && (!versionedLicenseData || !versionedLicenseData.versions || versionedLicenseData.versions.length === 0)}
-      />
+      {!isVerificationMode && (
+        <VersionHistoryNavigation 
+          versionedLicenseData={localVersionedData || versionedLicenseData}
+          onVersionSelect={handleVersionSelect}
+          selectedVersion={selectedVersion}
+          isNewLicense={!localVersionedData && (!versionedLicenseData || !versionedLicenseData.versions || versionedLicenseData.versions.length === 0)}
+        />
+      )}
+
+      {/* Revision Tabs for Verification Mode */}
+      {isVerificationMode && versionedLicenseData && versionedLicenseData.versions && (
+        <RevisionTabsView 
+          versionedLicenseData={versionedLicenseData}
+          onVersionSelect={handleVersionSelect}
+          selectedVersion={selectedVersion}
+        />
+      )}
 
       {!isReadOnly && (
         <Row style={{ marginBottom: '15px' }}>
@@ -2404,7 +2525,8 @@ const StepConfiguration = ({
   showValidationErrors,
   setShowValidationErrors,
   isReadOnly = false,
-  versionedLicenseData = null
+  versionedLicenseData = null,
+  isVerificationMode = false
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -2519,6 +2641,7 @@ const StepConfiguration = ({
             setShowValidationErrors={setShowValidationErrors}
             isReadOnly={isReadOnly}
             versionedLicenseData={versionedLicenseData}
+            isVerificationMode={isVerificationMode}
           />
         ) : (
           <AIConfigurationForm 
@@ -2562,6 +2685,12 @@ RequiredField.propTypes = {
   isRequired: PropTypes.bool,
 };
 
+RevisionTabsView.propTypes = {
+  versionedLicenseData: PropTypes.object.isRequired,
+  onVersionSelect: PropTypes.func.isRequired,
+  selectedVersion: PropTypes.number,
+};
+
 VersionHistoryNavigation.propTypes = {
   versionedLicenseData: PropTypes.object,
   onVersionSelect: PropTypes.func.isRequired,
@@ -2585,6 +2714,7 @@ ManualConfigurationForm.propTypes = {
   setShowValidationErrors: PropTypes.func,
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
+  isVerificationMode: PropTypes.bool,
 };
 
 RulesConfiguration.propTypes = {
@@ -2644,6 +2774,7 @@ StepConfiguration.propTypes = {
   setShowValidationErrors: PropTypes.func,
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
+  isVerificationMode: PropTypes.bool,
 };
 
 export default StepConfiguration;

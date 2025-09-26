@@ -10,6 +10,7 @@ import {
   Button,
   FormGroup,
   Label,
+  Input,
   Nav,
   NavItem,
   NavLink,
@@ -17,7 +18,6 @@ import {
   TabPane,
   Alert,
   Badge,
-  Input,
 } from "reactstrap";
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import StepConfiguration from "./StepConfiguration";
@@ -88,6 +88,120 @@ const convertJsonToFormData = (jsonString) => {
   }
 };
 
+// Version History Navigation Component for Review Step
+const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selectedVersion }) => {
+  const hasVersions = versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0;
+
+  if (!hasVersions) return null;
+
+  return (
+    <Card style={{ marginBottom: '20px' }}>
+      <CardHeader>
+        <CardTitle tag="h6">Version History</CardTitle>
+        <p className="card-category">
+          Navigate through different versions of this license
+        </p>
+      </CardHeader>
+      <CardBody>
+        <Row>
+          <Col md="12">
+            <Nav tabs>
+              {versionedLicenseData.versions.map((version, index) => (
+                <NavItem key={version.versionNumber}>
+                  <NavLink
+                    className={selectedVersion === version.versionNumber ? 'active' : ''}
+                    onClick={() => onVersionSelect(version.versionNumber)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div style={{ textAlign: 'center' }}>
+                      <div><strong>V{version.versionNumber}</strong></div>
+                      <small style={{ fontSize: '0.7em' }}>
+                        {new Date(version.createdAt).toLocaleDateString()}
+                      </small>
+                      <div>
+                        <Badge 
+                          color={
+                            version.status === 'draft' ? 'secondary' :
+                            version.status === 'proposed' ? 'primary' :
+                            version.status === 'needs_revision' ? 'warning' :
+                            version.status === 'approved' ? 'success' :
+                            version.status === 'deployed' ? 'success' :
+                            version.status === 'superseded' ? 'light' : 'secondary'
+                          }
+                          style={{ fontSize: '0.6em' }}
+                        >
+                          {version.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </NavLink>
+                </NavItem>
+              ))}
+            </Nav>
+          </Col>
+        </Row>
+        {selectedVersion && (
+          <Row style={{ marginTop: '15px' }}>
+            <Col md="12">
+              {(() => {
+                const version = versionedLicenseData.versions.find(v => v.versionNumber === selectedVersion);
+                if (!version) return null;
+                
+                return (
+                  <Alert color="info">
+                    <Row>
+                      <Col md="6">
+                        <strong>Version {version.versionNumber} Details:</strong><br />
+                        <small>
+                          Created: {new Date(version.createdAt).toLocaleString()}<br />
+                          Created by: {version.createdBy}<br />
+                          Status: <Badge color={
+                            version.status === 'draft' ? 'secondary' :
+                            version.status === 'proposed' ? 'primary' :
+                            version.status === 'needs_revision' ? 'warning' :
+                            version.status === 'approved' ? 'success' :
+                            version.status === 'deployed' ? 'success' :
+                            version.status === 'superseded' ? 'light' : 'secondary'
+                          }>{version.status}</Badge>
+                        </small>
+                      </Col>
+                      <Col md="6">
+                        {version.comment && (
+                          <div>
+                            <strong>Comment:</strong><br />
+                            <em>"{version.comment}"</em>
+                          </div>
+                        )}
+                        {version.feedback && (
+                          <div style={{ marginTop: '10px' }}>
+                            <strong>Feedback:</strong><br />
+                            <div style={{ 
+                              backgroundColor: '#fff3cd', 
+                              padding: '8px', 
+                              borderRadius: '4px',
+                              border: '1px solid #ffeaa7'
+                            }}>
+                              <small>
+                                <strong>From:</strong> {version.feedback.from}<br />
+                                <strong>Date:</strong> {new Date(version.feedback.date).toLocaleString()}<br />
+                                <strong>Message:</strong> {version.feedback.message}
+                              </small>
+                            </div>
+                          </div>
+                        )}
+                      </Col>
+                    </Row>
+                  </Alert>
+                );
+              })()}
+            </Col>
+          </Row>
+        )}
+      </CardBody>
+    </Card>
+  );
+};
+
 const StepReviewGenerate = ({ 
   generatedJson, 
   generatedContract,
@@ -102,7 +216,119 @@ const StepReviewGenerate = ({
 }) => {
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
+  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [revisionComment, setRevisionComment] = useState('');
+  const [isRequestingRevision, setIsRequestingRevision] = useState(false);
   const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
+  
+  // Parse versioned license data
+  const versionedLicenseData = generatedJson ? (() => {
+    try {
+      const jsonData = JSON.parse(generatedJson);
+      return jsonData.versions && Array.isArray(jsonData.versions) ? jsonData : null;
+    } catch (error) {
+      return null;
+    }
+  })() : null;
+
+  // Handle version selection
+  const handleVersionSelect = (versionNumber) => {
+    setSelectedVersion(versionNumber);
+  };
+
+  // Initialize selected version when versionedLicenseData changes
+  useEffect(() => {
+    if (versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0) {
+      if (!selectedVersion) {
+        setSelectedVersion(versionedLicenseData.currentVersion || versionedLicenseData.versions[versionedLicenseData.versions.length - 1].versionNumber);
+      }
+    }
+  }, [versionedLicenseData, selectedVersion]);
+
+  // Function to update license status to needs_revision
+  const updateLicenseToNeedsRevision = (jsonString, comment, fromAddress) => {
+    try {
+      const jsonData = JSON.parse(jsonString);
+      const timestamp = new Date().toISOString();
+      
+      // Update overall status
+      jsonData.status = "needs_revision";
+      jsonData.lastModified = timestamp;
+      
+      // Update current version status and add feedback
+      const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion);
+      if (currentVersion) {
+        currentVersion.status = "needs_revision";
+        currentVersion.lastModified = timestamp;
+        currentVersion.feedback = {
+          from: fromAddress || "validator",
+          date: timestamp,
+          message: comment
+        };
+      }
+      
+      return JSON.stringify(jsonData, null, 2);
+    } catch (error) {
+      console.error('Error updating license status:', error);
+      return jsonString; // Return original if error
+    }
+  };
+
+  // Function to download JSON file
+  const handleDownloadJson = (jsonToDownload = null) => {
+    const jsonContent = jsonToDownload || generatedJson;
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `smart-license-revision-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Function to request revision
+  const handleRequestRevision = () => {
+    if (!recipientAddress.trim()) {
+      showError('Please enter recipient address');
+      return;
+    }
+    
+    if (!revisionComment.trim()) {
+      showError('Please enter revision comment');
+      return;
+    }
+    
+    if (!generatedJson) {
+      showError('No license data available to request revision');
+      return;
+    }
+    
+    setIsRequestingRevision(true);
+    
+    try {
+      // Update license status to needs_revision with feedback
+      const updatedJson = updateLicenseToNeedsRevision(generatedJson, revisionComment, recipientAddress);
+      setGeneratedJson(updatedJson);
+      
+      // Download the updated JSON immediately
+      handleDownloadJson(updatedJson);
+      
+      // Simulate sending notification
+      setTimeout(() => {
+        setIsRequestingRevision(false);
+        showSuccess('Revision requested! License status changed to "needs_revision". JSON file downloaded automatically.');
+        // Clear form
+        setRecipientAddress('');
+        setRevisionComment('');
+      }, 2000);
+    } catch (error) {
+      setIsRequestingRevision(false);
+      showError('Error requesting revision: ' + error.message);
+    }
+  };
   
   // Check if license is in proposed status (waiting for approval)
   const isProposedStatus = () => {
@@ -238,19 +464,6 @@ const StepReviewGenerate = ({
 
   // Contract is now generated automatically by the parent component
   // when transitioning from Step 2 to Step 3
-
-
-  const handleDownloadJson = () => {
-    const blob = new Blob([generatedJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `smart-license-${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
 
   const handleDownloadContract = () => {
     const blob = new Blob([generatedContract], { type: 'text/plain' });
@@ -530,9 +743,16 @@ const StepReviewGenerate = ({
           <Alert color="info" style={{ marginBottom: '20px' }}>
             <h5><strong>📤 Approval Process</strong></h5>
             <p><strong>License sent for approval.</strong> Waiting for recipient to review and approve.</p>
-            <p><small>Status: <Badge color="primary">proposed</Badge> | Files have been downloaded automatically.</small></p>
+            <p><small>Status: <Badge color="primary">proposed</Badge></small></p>
           </Alert>
         )}
+
+        {/* Version History Navigation */}
+        <VersionHistoryNavigation 
+          versionedLicenseData={versionedLicenseData}
+          onVersionSelect={handleVersionSelect}
+          selectedVersion={selectedVersion}
+        />
         
         {/* Tabs */}
         <Nav tabs>
@@ -881,6 +1101,76 @@ const StepReviewGenerate = ({
         </TabContent>
 
 
+        {/* Request Revision Section */}
+        {versionedLicenseData && (
+          <Card style={{ marginBottom: '20px', backgroundColor: '#fff3cd', borderColor: '#ffeaa7' }}>
+            <CardHeader>
+              <CardTitle tag="h6">Request Revision</CardTitle>
+              <p className="card-category">
+                Request changes to this license proposal
+              </p>
+            </CardHeader>
+            <CardBody>
+              <Row>
+                <Col md="6">
+                  <FormGroup>
+                    <Label for="recipientAddress">Recipient Address</Label>
+                    <Input
+                      type="text"
+                      id="recipientAddress"
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      placeholder="0x..."
+                      disabled={isRequestingRevision}
+                    />
+                    <small className="form-text text-muted">
+                      Address of the license creator to notify
+                    </small>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <Label for="revisionComment">Revision Comment</Label>
+                    <Input
+                      type="textarea"
+                      id="revisionComment"
+                      rows="3"
+                      value={revisionComment}
+                      onChange={(e) => setRevisionComment(e.target.value)}
+                      placeholder="Describe what needs to be changed..."
+                      disabled={isRequestingRevision}
+                    />
+                    <small className="form-text text-muted">
+                      Explain what modifications are required
+                    </small>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row>
+                <Col md="12" className="text-right">
+                  <Button
+                    color="warning"
+                    onClick={handleRequestRevision}
+                    disabled={!recipientAddress.trim() || !revisionComment.trim() || !generatedJson || isRequestingRevision}
+                    style={{ marginTop: '10px' }}
+                  >
+                    {isRequestingRevision ? 'Requesting Revision...' : 'Request Revision'}
+                  </Button>
+                </Col>
+              </Row>
+              <Row style={{ marginTop: '10px' }}>
+                <Col md="12">
+                  <Alert color="info" style={{ marginBottom: '0' }}>
+                    <small>
+                      <strong>Note:</strong> This will change the license status to "needs_revision" and download the updated JSON file automatically.
+                    </small>
+                  </Alert>
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        )}
+
         {/* Contract comparison info for verification mode */}
         {uploadedSolidity && (
           <Row style={{ marginTop: '20px' }}>
@@ -948,6 +1238,12 @@ const StepReviewGenerate = ({
       </CardBody>
     </Card>
   );
+};
+
+VersionHistoryNavigation.propTypes = {
+  versionedLicenseData: PropTypes.object,
+  onVersionSelect: PropTypes.func.isRequired,
+  selectedVersion: PropTypes.number,
 };
 
 StepReviewGenerate.propTypes = {

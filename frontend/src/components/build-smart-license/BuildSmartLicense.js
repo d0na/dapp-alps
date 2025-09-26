@@ -502,6 +502,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
               showValidationErrors={showValidationErrors}
               setShowValidationErrors={setShowValidationErrors}
               versionedLicenseData={versionedLicenseData}
+              isVerificationMode={isVerificationMode}
             />
           );
         }
