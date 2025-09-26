@@ -2,7 +2,7 @@
   "licenseId": "LIC-2024-001",
   "name": "Smartphone Components License - Camera & GPS",
   "currentVersion": 3,
-  "status": "approved",
+  "status": "deployed",
   "createdAt": "2024-01-15T10:30:00.000Z",
   "lastModified": "2024-01-17T14:20:00.000Z",
   
@@ -16,7 +16,7 @@
   "versions": [
     {
       "versionNumber": 1,
-      "status": "needs_revision",
+      "status": "superseded",
       "createdAt": "2024-01-15T10:30:00.000Z",
       "createdBy": "creator",
       "comment": "Initial smartphone components license with camera, GPS, sensor suite, and advanced custom calculation rules. This version includes comprehensive royalty structures for camera and GPS usage.",
@@ -82,12 +82,13 @@
       "feedback": {
         "from": "validator",
         "date": "2024-01-15T14:45:00.000Z",
-        "message": "The royalty rates are too high for the current market conditions. Please reduce the proportional values for camera and GPS usage by at least 30%. Also, the duration of 3 years is too long - consider reducing to 2 years maximum."
+        "message": "The royalty rates are too high for the current market conditions. Please reduce the proportional values for camera and GPS usage by at least 30%. Also, the duration of 3 years is too long - consider reducing to 2 years maximum.",
+        "action": "rejected"
       }
     },
     {
       "versionNumber": 2,
-      "status": "proposed",
+      "status": "superseded",
       "createdAt": "2024-01-16T09:15:00.000Z",
       "createdBy": "creator",
       "comment": "Revised license with reduced duration from 3 years to 1 year and optimized royalty rates based on validator feedback. Camera royalty reduced from 15% to 10%, GPS royalty reduced from 8% to 5%.",
@@ -150,11 +151,16 @@
           }
         ]
       },
-      "feedback": null
+      "feedback": {
+        "from": "validator",
+        "date": "2024-01-16T11:30:00.000Z",
+        "message": "Good improvements on duration and royalty rates. However, we need additional sensor suite integration to make this license more comprehensive. Please add accelerometer and gyroscope usage tracking.",
+        "action": "rejected"
+      }
     },
     {
       "versionNumber": 3,
-      "status": "approved",
+      "status": "deployed",
       "createdAt": "2024-01-17T14:20:00.000Z",
       "createdBy": "creator",
       "comment": "Final approved version with additional sensor suite integration and enhanced royalty calculation rules. Added accelerometer and gyroscope usage tracking with tiered royalty structure.",
@@ -243,7 +249,8 @@
       "feedback": {
         "from": "validator",
         "date": "2024-01-17T16:30:00.000Z",
-        "message": "Excellent improvements! The additional sensor suite integration and optimized royalty rates make this version very competitive. Approved for deployment."
+        "message": "Excellent improvements! The additional sensor suite integration and optimized royalty rates make this version very competitive. Approved for deployment.",
+        "action": "approved"
       }
     }
   ]

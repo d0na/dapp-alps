@@ -93,6 +93,7 @@ const StepReviewGenerate = ({
   generatedContract,
   uploadedSolidity,
   generateJson,
+  setGeneratedJson,
   isVerificationMode,
   contractComparisonValid,
   setContractComparisonValid,
@@ -102,6 +103,17 @@ const StepReviewGenerate = ({
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
   const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
+  
+  // Check if license is in proposed status (waiting for approval)
+  const isProposedStatus = () => {
+    if (!generatedJson) return false;
+    try {
+      const jsonData = JSON.parse(generatedJson);
+      return jsonData.status === 'proposed';
+    } catch (error) {
+      return false;
+    }
+  };
   // Removed approval and deployment logic - now handled in StepDeployment
   const [contractComparison, setContractComparison] = useState({
     isSimilar: false,
@@ -234,6 +246,18 @@ const StepReviewGenerate = ({
     const link = document.createElement('a');
     link.href = url;
     link.download = `smart-license-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadContract = () => {
+    const blob = new Blob([generatedContract], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `SmartLicense-${Date.now()}.sol`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -501,6 +525,15 @@ const StepReviewGenerate = ({
       </CardHeader>
       
       <CardBody>
+        {/* Approval Process Alert */}
+        {isProposedStatus() && (
+          <Alert color="info" style={{ marginBottom: '20px' }}>
+            <h5><strong>📤 Approval Process</strong></h5>
+            <p><strong>License sent for approval.</strong> Waiting for recipient to review and approve.</p>
+            <p><small>Status: <Badge color="primary">proposed</Badge> | Files have been downloaded automatically.</small></p>
+          </Alert>
+        )}
+        
         {/* Tabs */}
         <Nav tabs>
           <NavItem>
@@ -922,6 +955,7 @@ StepReviewGenerate.propTypes = {
   generatedContract: PropTypes.string.isRequired,
   uploadedSolidity: PropTypes.string, // Optional uploaded solidity contract
   generateJson: PropTypes.func.isRequired,
+  setGeneratedJson: PropTypes.func.isRequired,
   isVerificationMode: PropTypes.bool.isRequired,
   contractComparisonValid: PropTypes.bool.isRequired,
   setContractComparisonValid: PropTypes.func.isRequired,

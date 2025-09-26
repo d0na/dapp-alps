@@ -1,0 +1,90 @@
+{
+  "licenseId": "LIC-2024-001",
+  "name": "Smartphone Components License - Camera & GPS",
+  "currentVersion": 1,
+  "status": "deployed",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "lastModified": "2024-01-17T14:20:00.000Z",
+  
+  "parties": {
+  "licensor": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+  "licensee": "0x8ba1f109551bD432803012645Hac136c4c4c4c4c4",
+    "territory": "Global"
+  },
+  
+  
+  "versions": [
+    {
+      "versionNumber": 1,
+      "status": "draft",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "createdBy": "creator",
+      "comment": "Initial smartphone components license with camera, GPS, sensor suite, and advanced custom calculation rules. This version includes comprehensive royalty structures for camera and GPS usage.",
+      "data": {
+        "duration": "3Y 0M 0D",
+        "ips": "Proprietary smartphone component integration technology including advanced camera sensor algorithms, GPS positioning optimization, accelerometer calibration, gyroscope stabilization, and biometric sensor processing. This intellectual property covers hardware-software integration protocols, power management systems, and real-time data processing algorithms for mobile device components.",
+        "rules": [
+          {
+            "id": "rule-camera-001",
+            "name": "Camera Usage Royalty",
+            "validityStart": "2024-01-01",
+            "validityEnd": "2026-12-31",
+            "evaluationInterval": "1M 0D",
+            "royaltyBase": [
+              {
+                "id": "oracle-camera-001",
+                "oracleAddress": "0x1234567890123456789012345678901234567890",
+                "propertyName": "getCameraActivations",
+                "displayName": "Camera Activations per Month",
+                "intellectualProperty": "PAT-001 - Camera Activation Technology"
+              },
+              {
+                "id": "oracle-camera-002",
+                "oracleAddress": "0x2345678901234567890123456789012345678901",
+                "propertyName": "getPhotoCount",
+                "displayName": "Photos Taken",
+                "intellectualProperty": "PAT-002 - Photo Processing Algorithm"
+              }
+            ],
+            "royaltyRate": {
+              "type": "proportional",
+              "value": "0.15",
+              "base": "Photos Taken",
+              "min": "5",
+              "max": "1000"
+            }
+          },
+          {
+            "id": "rule-gps-001",
+            "name": "GPS Navigation Royalty",
+            "validityStart": "2024-01-01",
+            "validityEnd": "2026-12-31",
+            "evaluationInterval": "1M 0D",
+            "royaltyBase": [
+              {
+                "id": "oracle-gps-001",
+                "oracleAddress": "0x3456789012345678901234567890123456789012",
+                "propertyName": "getGPSDistance",
+                "displayName": "GPS Navigation Distance (km)",
+                "intellectualProperty": "PAT-003 - GPS Navigation Optimization"
+              }
+            ],
+            "royaltyRate": {
+              "type": "proportional",
+              "value": "0.08",
+              "base": "GPS Navigation Distance (km)",
+              "min": "1",
+              "max": "500"
+            }
+          }
+        ]
+      },
+      "feedback": {
+        "from": "validator",
+        "date": "2024-01-15T14:45:00.000Z",
+        "message": "The royalty rates are too high for the current market conditions. Please reduce the proportional values for camera and GPS usage by at least 30%. Also, the duration of 3 years is too long - consider reducing to 2 years maximum.",
+        "action": "rejected"
+      }
+    } 
+  ]
+}

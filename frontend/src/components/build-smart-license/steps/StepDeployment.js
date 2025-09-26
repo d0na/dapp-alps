@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   Card,
@@ -18,11 +18,13 @@ import {
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import Toast from "../../common/Toast";
 import useToast from "../../../hooks/useToast";
+import { sendForApproval as updateLicenseStatus } from '../utils/jsonGenerator';
 
 const StepDeployment = ({ 
   generatedJson, 
   generatedContract,
   uploadedSolidity,
+  setGeneratedJson,
   deploymentStatus,
   setDeploymentStatus,
   handleBack,
@@ -37,6 +39,71 @@ const StepDeployment = ({
   const [deploymentProgress, setDeploymentProgress] = useState(0);
   const [contractAddress, setContractAddress] = useState('');
   const [transactionHash, setTransactionHash] = useState('');
+  const [shouldDownloadAfterUpdate, setShouldDownloadAfterUpdate] = useState(false);
+
+  // Effect to handle download after state update
+  useEffect(() => {
+    if (shouldDownloadAfterUpdate && generatedJson) {
+      // Check if the JSON has the updated status
+      try {
+        const jsonData = JSON.parse(generatedJson);
+        if (jsonData.status === 'proposed') {
+          // State has been updated, now download
+          handleDownloadJson();
+          handleDownloadContract();
+          setShouldDownloadAfterUpdate(false);
+          
+          // Simulate sending for approval
+          setTimeout(() => {
+            setIsValidating(false);
+            setDeploymentStatus('sent');
+            showSuccess('License sent for approval! Status changed to "proposed". Files downloaded automatically.');
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        setShouldDownloadAfterUpdate(false);
+        setIsValidating(false);
+        showError('Error processing license data');
+      }
+    }
+  }, [generatedJson, shouldDownloadAfterUpdate]);
+
+  // Download functions
+  const handleDownloadJson = () => {
+    const blob = new Blob([generatedJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `smart-license-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadContract = () => {
+    const blob = new Blob([generatedContract], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `SmartLicense-${Date.now()}.sol`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Check if license is in draft status
+  const isDraftStatus = () => {
+    if (!generatedJson) return false;
+    try {
+      const jsonData = JSON.parse(generatedJson);
+      return jsonData.status === 'draft';
+    } catch (error) {
+      return false;
+    }
+  };
 
   // Send for approval
   const sendForApproval = () => {
@@ -45,13 +112,24 @@ const StepDeployment = ({
       return;
     }
     
+    if (!generatedJson) {
+      showError('No license data available to send for approval');
+      return;
+    }
+    
     setIsValidating(true);
-    // Simulate sending for approval
-    setTimeout(() => {
-      setDeploymentStatus('sent');
+    
+    try {
+      // Update license status to proposed
+      const updatedJson = updateLicenseStatus(generatedJson);
+      setGeneratedJson(updatedJson);
+      
+      // Set flag to download after state update
+      setShouldDownloadAfterUpdate(true);
+    } catch (error) {
       setIsValidating(false);
-      showSuccess('License sent for approval to ' + recipientAddress);
-    }, 2000);
+      showError('Error sending license for approval: ' + error.message);
+    }
   };
 
   // Approve license
@@ -79,30 +157,6 @@ const StepDeployment = ({
         return prev + 10;
       });
     }, 200);
-  };
-
-  const handleDownloadJson = () => {
-    const blob = new Blob([generatedJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `smart-license-${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadContract = () => {
-    const blob = new Blob([generatedContract], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `SmartLicense-${Date.now()}.sol`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -200,7 +254,7 @@ const StepDeployment = ({
                   <CardTitle tag="h5">Approval Process</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  {deploymentStatus === 'pending' && (
+                  {deploymentStatus === 'pending' && isDraftStatus() && (
                     <Row>
                       <Col md="8">
                         <FormGroup>
@@ -502,6 +556,7 @@ StepDeployment.propTypes = {
   generatedJson: PropTypes.string.isRequired,
   generatedContract: PropTypes.string.isRequired,
   uploadedSolidity: PropTypes.string, // Optional uploaded solidity contract
+  setGeneratedJson: PropTypes.func.isRequired,
   deploymentStatus: PropTypes.string.isRequired,
   setDeploymentStatus: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,

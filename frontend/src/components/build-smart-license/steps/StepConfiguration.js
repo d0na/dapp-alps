@@ -580,16 +580,19 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                           {new Date(version.createdAt).toLocaleDateString()}
                         </small>
                         <div>
-                          <Badge 
-                            color={
-                              version.status === 'proposed' ? 'primary' :
-                              version.status === 'needs_revision' ? 'warning' :
-                              version.status === 'approved' ? 'success' : 'secondary'
-                            }
-                            style={{ fontSize: '0.6em' }}
-                          >
-                            {version.status}
-                          </Badge>
+                        <Badge 
+                          color={
+                            version.status === 'draft' ? 'secondary' :
+                            version.status === 'proposed' ? 'primary' :
+                            version.status === 'needs_revision' ? 'warning' :
+                            version.status === 'approved' ? 'success' :
+                            version.status === 'deployed' ? 'success' :
+                            version.status === 'superseded' ? 'light' : 'secondary'
+                          }
+                          style={{ fontSize: '0.6em' }}
+                        >
+                          {version.status}
+                        </Badge>
                         </div>
                       </div>
                     </NavLink>
@@ -617,7 +620,7 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                         Version 1 - New License
                       </Badge><br />
                       <small style={{ color: '#6c757d' }}>
-                        Status: Will be set to "proposed"
+                        Status: Will be set to "draft"
                       </small>
                     </div>
                   </Col>
@@ -644,9 +647,12 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                           Created: {new Date(version.createdAt).toLocaleString()}<br />
                           Created by: {version.createdBy}<br />
                           Status: <Badge color={
+                            version.status === 'draft' ? 'secondary' :
                             version.status === 'proposed' ? 'primary' :
                             version.status === 'needs_revision' ? 'warning' :
-                            version.status === 'approved' ? 'success' : 'secondary'
+                            version.status === 'approved' ? 'success' :
+                            version.status === 'deployed' ? 'success' :
+                            version.status === 'superseded' ? 'light' : 'secondary'
                           }>{version.status}</Badge>
                         </small>
                       </Col>
@@ -2285,43 +2291,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         </Col>
       </Row>
 
-      {/* Revision Information - Show when in revision mode */}
-      {(localVersionedData || versionedLicenseData) && (localVersionedData || versionedLicenseData).versions && selectedVersion && (() => {
-        const versionedData = localVersionedData || versionedLicenseData;
-        const currentVersion = versionedData.versions.find(v => v.versionNumber === selectedVersion);
-        if (currentVersion && currentVersion.feedback) {
-          return (
-            <Row>
-              <Col md="12">
-                <Alert color="warning">
-                  <h6><strong>📝 Revision Feedback</strong></h6>
-                  <Row>
-                    <Col md="6">
-                      <strong>From:</strong> {currentVersion.feedback.from}<br />
-                      <strong>Date:</strong> {new Date(currentVersion.feedback.date).toLocaleString()}
-                    </Col>
-                    <Col md="6">
-                      <strong>Status:</strong> <Badge color="warning">{currentVersion.status}</Badge>
-                    </Col>
-                  </Row>
-                  <hr />
-                  <div style={{ 
-                    backgroundColor: '#fff3cd', 
-                    padding: '10px', 
-                    borderRadius: '4px',
-                    border: '1px solid #ffeaa7',
-                    marginTop: '10px'
-                  }}>
-                    <strong>Feedback Message:</strong><br />
-                    <em>"{currentVersion.feedback.message}"</em>
-                  </div>
-                </Alert>
-              </Col>
-            </Row>
-          );
-        }
-        return null;
-      })()}
 
       {/* Rules Configuration */}
       <RulesConfiguration 
@@ -2483,13 +2452,15 @@ const StepConfiguration = ({
   const validation = getValidation();
   const isNextDisabled = !validation.isValid;
 
-  // Check if we're in revision mode
-  const isRevisionMode = versionedLicenseData && 
-    versionedLicenseData._versioning && 
-    versionedLicenseData._versioning.status === 'needs_revision';
+  // Check if we're in edit mode
+  const isEditMode = versionedLicenseData && versionedLicenseData.licenseId;
   
-  const revisionDescription = isRevisionMode ? 
-    versionedLicenseData._versioning.revisionDescription : null;
+  // Check if we're in revision mode
+  const isRevisionMode = versionedLicenseData && versionedLicenseData.versions && 
+    versionedLicenseData.versions.some(v => v.status === 'needs_revision');
+  
+  const revisionDescription = isRevisionMode && versionedLicenseData.versions ? 
+    versionedLicenseData.versions.find(v => v.status === 'needs_revision')?.feedback?.message : null;
 
   return (
     <Card>
@@ -2497,12 +2468,16 @@ const StepConfiguration = ({
         <CardTitle tag="h4">
           {isRevisionMode 
             ? 'License Revision Required' 
+            : isEditMode
+            ? 'Edit License Configuration'
             : (mode === 'manual' ? 'License Configuration' : 'AI-Assisted Creation')
           }
         </CardTitle>
         <p className="card-category">
           {isRevisionMode 
             ? 'Please address the feedback below and modify the license accordingly'
+            : isEditMode
+            ? 'Edit existing license details. A new draft version will be created.'
             : (mode === 'manual' 
               ? 'Configure license details with royalty structures and usage bases' 
               : 'Provide text or upload a document for AI analysis')
@@ -2510,6 +2485,18 @@ const StepConfiguration = ({
         </p>
       </CardHeader>
       <CardBody>
+        {/* Edit Mode Alert */}
+        {isEditMode && !isRevisionMode && (
+          <Alert color="info" style={{ marginBottom: '20px' }}>
+            <h5><strong>📝 Editing Existing License</strong></h5>
+            <p><strong>License ID:</strong> {versionedLicenseData.licenseId}</p>
+            <p><strong>Current Version:</strong> {versionedLicenseData.currentVersion}</p>
+            <p><strong>Status:</strong> {versionedLicenseData.status}</p>
+            <hr />
+            <p><strong>⚠️ Important:</strong> When you save changes, a new draft version will be created. The previous version will be marked as superseded.</p>
+          </Alert>
+        )}
+        
         {/* Revision Description Alert */}
         {isRevisionMode && revisionDescription && (
           <Alert color="warning" style={{ marginBottom: '20px' }}>

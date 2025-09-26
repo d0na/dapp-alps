@@ -315,7 +315,10 @@ contract SmartLicense is Ownable, ReentrancyGuard {
   };
 
   const generateJson = () => {
-    const json = generateSmartLicenseJson(mode, manualData, aiText);
+    // Determine if we're editing an existing license
+    const isEditMode = versionedLicenseData && versionedLicenseData.licenseId;
+    
+    const json = generateSmartLicenseJson(mode, manualData, aiText, isEditMode ? versionedLicenseData : null);
     setGeneratedJson(json);
     
     // Generate mock smart contract
@@ -509,6 +512,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             generatedContract={generatedSmartContract}
             uploadedSolidity={uploadedSolidity}
             generateJson={generateJson}
+            setGeneratedJson={setGeneratedJson}
             isVerificationMode={isVerificationMode}
             contractComparisonValid={contractComparisonValid}
             setContractComparisonValid={setContractComparisonValid}
@@ -522,6 +526,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             generatedJson={generatedJson}
             generatedContract={generatedSmartContract}
             uploadedSolidity={uploadedSolidity}
+            setGeneratedJson={setGeneratedJson}
             deploymentStatus={deploymentStatus}
             setDeploymentStatus={setDeploymentStatus}
             handleBack={handleBack}
