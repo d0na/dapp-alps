@@ -214,6 +214,9 @@ const StepReviewGenerate = ({
   handleBack, 
   handleNext
 }) => {
+  // DEBUG: Track component renders
+  console.log('🔄 StepReviewGenerate RENDER - GeneratedJson:', !!generatedJson, 'GeneratedContract:', !!generatedContract, 'UploadedSolidity:', !!uploadedSolidity, 'IsVerificationMode:', isVerificationMode);
+  
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
   const [selectedVersion, setSelectedVersion] = useState(null);
@@ -239,12 +242,18 @@ const StepReviewGenerate = ({
 
   // Initialize selected version when versionedLicenseData changes
   useEffect(() => {
+    console.log('🔄 Review useEffect [versionedLicenseData, selectedVersion] TRIGGERED - Has data:', !!versionedLicenseData, 'Versions:', versionedLicenseData?.versions?.length || 0, 'Selected:', selectedVersion);
+    
     if (versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0) {
       if (!selectedVersion) {
-        setSelectedVersion(versionedLicenseData.currentVersion || versionedLicenseData.versions[versionedLicenseData.versions.length - 1].versionNumber);
+        const newVersion = versionedLicenseData.currentVersion || versionedLicenseData.versions[versionedLicenseData.versions.length - 1].versionNumber;
+        console.log('🎯 Setting selected version:', newVersion);
+        setSelectedVersion(newVersion);
+      } else {
+        console.log('⏭️ Selected version already set:', selectedVersion);
       }
     }
-  }, [versionedLicenseData, selectedVersion]);
+  }, [versionedLicenseData]); // Rimosso selectedVersion dalle dipendenze per evitare loop infiniti
 
   // Function to update license status to needs_revision
   const updateLicenseToNeedsRevision = (jsonString, comment, fromAddress) => {
@@ -483,13 +492,27 @@ const StepReviewGenerate = ({
 
   // Compare contracts when they change
   useEffect(() => {
+    console.log('🔧 Review useEffect [generatedContract, uploadedSolidity] TRIGGERED - Generated:', !!generatedContract, 'Uploaded:', !!uploadedSolidity);
+    
     if (generatedContract && uploadedSolidity) {
+      console.log('📋 Comparing contracts...');
       const comparison = compareContracts(generatedContract, uploadedSolidity);
+      console.log('✅ Contract comparison result:', comparison.isSimilar);
       setContractComparison(comparison);
       // Update parent component with comparison validity
       setContractComparisonValid(comparison.isSimilar);
+    } else {
+      console.log('⏭️ Skipping contract comparison - missing data');
     }
-  }, [generatedContract, uploadedSolidity, setContractComparisonValid]);
+  }, [generatedContract, uploadedSolidity]); // Rimosso setContractComparisonValid dalle dipendenze per evitare loop infiniti
+
+  // Debug: Track component lifecycle
+  useEffect(() => {
+    console.log('🚀 StepReviewGenerate MOUNTED');
+    return () => {
+      console.log('🛑 StepReviewGenerate UNMOUNTED');
+    };
+  }, []);
 
   // Approval and deployment logic moved to StepDeployment component
 
