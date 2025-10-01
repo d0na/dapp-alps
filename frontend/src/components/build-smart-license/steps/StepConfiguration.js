@@ -323,6 +323,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
 const SmartPolicyDependenciesReadOnly = ({ rules }) => {
   const [dependencies, setDependencies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Extract smart policy dependencies from rules
   const extractDependencies = async (rules) => {
@@ -362,10 +363,24 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
     return address.startsWith('0x1');
   };
 
-  // Mock function to fetch smart license data from blockchain
+  // Mock function to fetch smart license data from blockchain (cached)
   const fetchSmartLicenseData = async (address) => {
-    // Simulate blockchain call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Check if we already have this data cached
+    const cachedData = dependencies.find(dep => dep.smartLicenseAddress === address);
+    if (cachedData && cachedData.name !== 'Unknown Smart License') {
+      return {
+        name: cachedData.name,
+        version: cachedData.version,
+        licensor: cachedData.licensor,
+        territory: cachedData.territory,
+        status: cachedData.status,
+        createdAt: cachedData.createdAt,
+        royaltyRate: cachedData.royaltyRate
+      };
+    }
+
+    // Simulate blockchain call (reduced timeout)
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     // Mock data - in real implementation, this would call the blockchain
     const mockData = {
@@ -409,14 +424,25 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
     };
   };
 
-  // Update dependencies when rules change
+  // Update dependencies when rules change (with debouncing and caching)
   useEffect(() => {
     const updateDependencies = async () => {
+      // Skip if already initialized and rules haven't meaningfully changed
+      if (isInitialized && dependencies.length > 0) {
+        const currentDeps = await extractDependencies(rules);
+        const hasSignificantChanges = currentDeps.length !== dependencies.length || 
+          currentDeps.some(dep => !dependencies.find(existing => existing.smartLicenseAddress === dep.smartLicenseAddress));
+        
+        if (!hasSignificantChanges) {
+          return; // No need to reload
+        }
+      }
+
       setLoading(true);
       try {
         const extractedDeps = await extractDependencies(rules);
         
-        // Fetch additional data for each dependency
+        // Only fetch data for new dependencies
         const enrichedDeps = await Promise.all(
           extractedDeps.map(async (dep) => {
             const smartLicenseData = await fetchSmartLicenseData(dep.smartLicenseAddress);
@@ -428,6 +454,7 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
         );
         
         setDependencies(enrichedDeps);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error updating dependencies:', error);
       } finally {
@@ -435,8 +462,10 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
       }
     };
 
-    updateDependencies();
-  }, [rules]);
+    // Debounce the update to prevent excessive reloads
+    const timeoutId = setTimeout(updateDependencies, 500);
+    return () => clearTimeout(timeoutId);
+  }, [rules, dependencies, isInitialized]);
 
   return (
     <Card style={{ marginBottom: '20px' }}>
@@ -749,7 +778,7 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                 if (!version) return null;
                 
                 return (
-                  <Alert color="info">
+                  <Alert color="light" style={{ backgroundColor: '#f8f9fa', borderColor: '#dee2e6', color: '#495057' }}>
                     <Row>
                       <Col md="6">
                         <strong>Version {version.versionNumber} Details:</strong><br />

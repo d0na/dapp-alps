@@ -148,7 +148,7 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
                 if (!version) return null;
                 
                 return (
-                  <Alert color="info">
+                  <Alert color="light" style={{ backgroundColor: '#f8f9fa', borderColor: '#dee2e6', color: '#495057' }}>
                     <Row>
                       <Col md="6">
                         <strong>Version {version.versionNumber} Details:</strong><br />
@@ -252,21 +252,37 @@ const StepReviewGenerate = ({
       const jsonData = JSON.parse(jsonString);
       const timestamp = new Date().toISOString();
       
-      // Update overall status
-      jsonData.status = "needs_revision";
-      jsonData.lastModified = timestamp;
-      
-      // Update current version status and add feedback
+      // Find current version
       const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion);
-      if (currentVersion) {
-        currentVersion.status = "needs_revision";
-        currentVersion.lastModified = timestamp;
-        currentVersion.feedback = {
+      if (!currentVersion) {
+        throw new Error('Current version not found');
+      }
+      
+      // Create new version number
+      const newVersionNumber = jsonData.currentVersion + 1;
+      
+      // Create new version that copies the current one but with needs_revision status
+      const newVersion = {
+        versionNumber: newVersionNumber,
+        status: "needs_revision",
+        createdAt: timestamp,
+        createdBy: fromAddress || "validator",
+        comment: comment, // The revision request comment becomes the version comment
+        data: { ...currentVersion.data }, // Copy all data from current version
+        feedback: {
           from: fromAddress || "validator",
           date: timestamp,
           message: comment
-        };
-      }
+        }
+      };
+      
+      // Add new version to versions array
+      jsonData.versions.push(newVersion);
+      
+      // Update overall status and current version
+      jsonData.status = "needs_revision";
+      jsonData.currentVersion = newVersionNumber;
+      jsonData.lastModified = timestamp;
       
       return JSON.stringify(jsonData, null, 2);
     } catch (error) {
@@ -336,6 +352,21 @@ const StepReviewGenerate = ({
     try {
       const jsonData = JSON.parse(generatedJson);
       return jsonData.status === 'proposed';
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Check if license can be revised (not in final states)
+  const canRequestRevision = () => {
+    if (!versionedLicenseData) return false;
+    try {
+      const currentVersion = versionedLicenseData.versions.find(v => v.versionNumber === versionedLicenseData.currentVersion);
+      if (!currentVersion) return false;
+      
+      // Can only request revision if status is not in final states
+      const finalStates = ['approved', 'deployed', 'superseded'];
+      return !finalStates.includes(currentVersion.status);
     } catch (error) {
       return false;
     }
@@ -1102,7 +1133,7 @@ const StepReviewGenerate = ({
 
 
         {/* Request Revision Section */}
-        {versionedLicenseData && (
+        {isVerificationMode && versionedLicenseData && canRequestRevision() && (
           <Card style={{ marginBottom: '20px', backgroundColor: '#fff3cd', borderColor: '#ffeaa7' }}>
             <CardHeader>
               <CardTitle tag="h6">Request Revision</CardTitle>

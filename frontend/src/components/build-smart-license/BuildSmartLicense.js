@@ -38,6 +38,44 @@ const BuildSmartLicense = () => {
   const [contractComparisonValid, setContractComparisonValid] = useState(false);
   const [versionedLicenseData, setVersionedLicenseData] = useState(null);
 
+  // Reset component state when component mounts (for fresh start)
+  useEffect(() => {
+    // Check for revision data in localStorage first
+    const revisionData = localStorage.getItem('licenseRevisionData');
+    if (revisionData) {
+      try {
+        const parsedData = JSON.parse(revisionData);
+        // Pre-populate with revision data
+        setManualData(parsedData.originalLicense || {});
+        setRules(parsedData.originalLicense?.rules || []);
+        setMode('manual');
+        setCurrentStep(1); // Go directly to configuration step
+        setVersionedLicenseData(parsedData.originalLicense);
+        // Clear the revision data from localStorage
+        localStorage.removeItem('licenseRevisionData');
+      } catch (error) {
+        console.error('Error parsing revision data:', error);
+        localStorage.removeItem('licenseRevisionData');
+      }
+    } else {
+      // Reset all state to initial values when component mounts (fresh start)
+      setCurrentStep(0);
+      setMode('');
+      setManualData({});
+      setRules([]);
+      setAiText('');
+      setGeneratedJson('');
+      setGeneratedSmartContract('');
+      setUploadedJson('');
+      setUploadedSolidity('');
+      setShowValidationErrors(false);
+      setIsVerificationMode(false);
+      setDeploymentStatus('pending');
+      setContractComparisonValid(false);
+      setVersionedLicenseData(null);
+    }
+  }, []); // Empty dependency array means this runs only on mount
+
   // Update generatedJson when uploadedJson changes (for upload mode)
   useEffect(() => {
     if (mode === 'upload' && uploadedJson) {
