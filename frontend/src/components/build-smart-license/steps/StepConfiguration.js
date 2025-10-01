@@ -118,13 +118,9 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
                   type="number"
                   step="0.01"
                   min="0"
-                  value={royaltyRate.lumpsumValue || royaltyRate.proportionalValue || ''}
+                  value={royaltyRate.value || ''}
                   onChange={(e) => {
-                    if (royaltyRate.type === 'lumpsum') {
-                      updateRuleNested(rule.id, 'royaltyRate.lumpsumValue', e.target.value);
-                    } else if (royaltyRate.type === 'proportional') {
-                      updateRuleNested(rule.id, 'royaltyRate.proportionalValue', e.target.value);
-                    }
+                    updateRuleNested(rule.id, 'royaltyRate.value', e.target.value);
                   }}
                   readOnly={isReadOnly}
                   placeholder="Enter value"
@@ -133,7 +129,7 @@ const StepStructureComponent = ({ rule, royaltyRate, updateRuleNested, isReadOnl
             </Col>
             <Col md="6">
               <div style={{ padding: '20px', textAlign: 'center', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-                <h5>{royaltyRate.lumpsumValue || royaltyRate.proportionalValue || '0'} $</h5>
+                <h5>{royaltyRate.value || '0'} $</h5>
                 <small>Single value</small>
               </div>
             </Col>
@@ -909,8 +905,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
       ],
       royaltyRate: {
         type: 'lumpsum', // lumpsum, proportional, custom
-        lumpsumValue: '',
-        proportionalValue: '',
+        value: '',
         proportionalRB: '',
         customFunc: 'sum',
         customInputs: [],
@@ -996,8 +991,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
         }],
         royaltyRate: {
           type: 'lumpsum',
-          lumpsumValue: '',
-          proportionalValue: '',
+          value: '',
           proportionalRB: '',
           customFunc: 'sum',
           customInputs: [],
@@ -1017,12 +1011,23 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
   const generateRoyaltyRateSummary = (rule) => {
     const { royaltyRate } = rule;
     
+    if (!royaltyRate || !royaltyRate.type) {
+      return 'No royalty rate configured';
+    }
+    
     switch (royaltyRate.type) {
       case 'lumpsum':
-        return `Lumpsum: $${royaltyRate.lumpsumValue || '0'} (Fixed amount)`;
+        return `Lumpsum: $${royaltyRate.value || '0'} (Fixed amount)`;
       
       case 'proportional':
-        return `Proportional: $${royaltyRate.proportionalValue || '0'} × ${royaltyRate.proportionalRB || 'RB'} (Multiply by Royalty Base)`;
+        return `Proportional: $${royaltyRate.value || '0'} × ${royaltyRate.proportionalRB || 'RB'} (Multiply by Royalty Base)`;
+      
+      case 'step': {
+        const stepCount = royaltyRate.stepStructure?.steps?.length || 0;
+        const xAxis = royaltyRate.stepStructure?.xAxis || 'Unknown';
+        const infiniteValue = royaltyRate.stepStructure?.infiniteValue || '0';
+        return `Step-based: ${stepCount} steps on ${xAxis} (infinite: ${infiniteValue})`;
+      }
       
       case 'custom': {
         const inputCount = royaltyRate.customInputs?.length || 0;
@@ -1566,6 +1571,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
               >
                 <option value="lumpsum">Lumpsum</option>
                 <option value="proportional">Proportional</option>
+                <option value="step">Step-based</option>
                 <option value="custom">Custom</option>
               </Input>
             </FormGroup>
@@ -2106,13 +2112,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
     setLocalVersionedData(versionedLicenseData);
   }, [versionedLicenseData]);
 
-  // Debug: Track component lifecycle
-  React.useEffect(() => {
-    console.log('🚀 StepConfiguration MOUNTED');
-    return () => {
-      console.log('🛑 StepConfiguration UNMOUNTED');
-    };
-  }, []);
 
   // Function to handle JSON file upload and populate form
   const handleJsonUpload = (event) => {
@@ -2773,9 +2772,8 @@ RulesConfiguration.propTypes = {
       intellectualProperty: PropTypes.string.isRequired
     })),
     royaltyRate: PropTypes.shape({
-      type: PropTypes.oneOf(['lumpsum', 'proportional', 'custom']),
-      lumpsumValue: PropTypes.string,
-      proportionalValue: PropTypes.string,
+      type: PropTypes.oneOf(['lumpsum', 'proportional', 'step', 'custom']),
+      value: PropTypes.string,
       proportionalRB: PropTypes.string,
       customFunc: PropTypes.string,
       customInputs: PropTypes.array,

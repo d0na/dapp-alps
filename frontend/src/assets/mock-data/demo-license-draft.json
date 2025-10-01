@@ -46,13 +46,10 @@
                 "intellectualProperty": "PAT-002 - Photo Processing Algorithm"
               }
             ],
-            "royaltyRate": {
-              "type": "proportional",
-              "value": "0.15",
-              "base": "Photos Taken",
-              "min": "5",
-              "max": "1000"
-            }
+              "royaltyRate": {
+                "type": "lumpsum",
+                "value": "50.00"
+              }
           },
           {
             "id": "rb02",
@@ -70,11 +67,31 @@
               }
             ],
             "royaltyRate": {
-              "type": "proportional",
-              "value": "0.08",
-              "base": "GPS Navigation Distance (km)",
-              "min": "1",
-              "max": "500"
+              "type": "step",
+              "stepStructure": {
+                "xAxis": "GPS Navigation Distance (km)",
+                "steps": [
+                  {
+                    "id": 1,
+                    "threshold": 100,
+                    "rate": 0.02,
+                    "description": "First 100km: 2% royalty"
+                  },
+                  {
+                    "id": 2,
+                    "threshold": 500,
+                    "rate": 0.05,
+                    "description": "100-500km: 5% royalty"
+                  },
+                  {
+                    "id": 3,
+                    "threshold": 1000,
+                    "rate": 0.08,
+                    "description": "500-1000km: 8% royalty"
+                  }
+                ],
+                "infiniteValue": "0.10"
+              }
             }
           }
         ]
