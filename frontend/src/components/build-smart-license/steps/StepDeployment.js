@@ -34,12 +34,22 @@ const StepDeployment = ({
   const isVerificationMode = !!uploadedSolidity;
   const classes = useBuildSmartLicenseStyles();
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientType, setRecipientType] = useState('licensor'); // 'licensor' or 'licensee'
+  const [approvalComment, setApprovalComment] = useState('');
   const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const [deploymentProgress, setDeploymentProgress] = useState(0);
   const [contractAddress, setContractAddress] = useState('');
   const [transactionHash, setTransactionHash] = useState('');
   const [shouldDownloadAfterUpdate, setShouldDownloadAfterUpdate] = useState(false);
+
+  // Initialize recipient address when component mounts or JSON changes
+  useEffect(() => {
+    if (generatedJson && recipientType) {
+      const addresses = getAddressesFromJson();
+      setRecipientAddress(addresses[recipientType] || '');
+    }
+  }, [generatedJson, recipientType]);
 
   // Effect to handle download after state update
   useEffect(() => {
@@ -105,6 +115,29 @@ const StepDeployment = ({
     }
   };
 
+  // Get addresses from JSON
+  const getAddressesFromJson = () => {
+    if (!generatedJson) return { licensor: '', licensee: '' };
+    
+    try {
+      const jsonData = JSON.parse(generatedJson);
+      return {
+        licensor: jsonData.parties?.licensor || '',
+        licensee: jsonData.parties?.licensee || ''
+      };
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      return { licensor: '', licensee: '' };
+    }
+  };
+
+  // Update recipient address when type changes
+  const handleRecipientTypeChange = (type) => {
+    setRecipientType(type);
+    const addresses = getAddressesFromJson();
+    setRecipientAddress(addresses[type] || '');
+  };
+
   // Send for approval
   const sendForApproval = () => {
     if (!recipientAddress) {
@@ -126,6 +159,12 @@ const StepDeployment = ({
       
       // Set flag to download after state update
       setShouldDownloadAfterUpdate(true);
+      
+      setDeploymentStatus('sent');
+      const message = approvalComment 
+        ? `License sent for approval to ${recipientType}: ${recipientAddress}\nComment: ${approvalComment}`
+        : `License sent for approval to ${recipientType}: ${recipientAddress}`;
+      showSuccess(message);
     } catch (error) {
       setIsValidating(false);
       showError('Error sending license for approval: ' + error.message);
@@ -255,31 +294,69 @@ const StepDeployment = ({
                 </CardHeader>
                 <CardBody>
                   {deploymentStatus === 'pending' && isDraftStatus() && (
-                    <Row>
-                      <Col md="8">
-                        <FormGroup>
-                          <Label for="recipientAddress">Recipient Address (Licensor/Licensee)</Label>
-                          <Input
-                            type="text"
-                            id="recipientAddress"
-                            value={recipientAddress}
-                            onChange={(e) => setRecipientAddress(e.target.value)}
-                            placeholder="0x..."
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col md="4">
-                        <Button
-                          color="primary"
-                          onClick={sendForApproval}
-                          disabled={!recipientAddress || !generatedJson || isValidating}
-                          block
-                          style={{ marginTop: '30px' }}
-                        >
-                          {isValidating ? 'Sending...' : 'Send for Approval'}
-                        </Button>
-                      </Col>
-                    </Row>
+                    <div>
+                      <Row>
+                        <Col md="6">
+                          <FormGroup>
+                            <Label for="recipientType">Recipient Type</Label>
+                            <Input
+                              type="select"
+                              id="recipientType"
+                              value={recipientType}
+                              onChange={(e) => handleRecipientTypeChange(e.target.value)}
+                            >
+                              <option value="licensor">Licensor</option>
+                              <option value="licensee">Licensee</option>
+                            </Input>
+                          </FormGroup>
+                        </Col>
+                        <Col md="6">
+                          <FormGroup>
+                            <Label for="recipientAddress">Recipient Address</Label>
+                            <Input
+                              type="text"
+                              id="recipientAddress"
+                              value={recipientAddress}
+                              onChange={(e) => setRecipientAddress(e.target.value)}
+                              placeholder="0x..."
+                              readOnly={true}
+                              style={{ backgroundColor: '#f8f9fa' }}
+                            />
+                            <small className="text-muted">
+                              Address automatically filled from license data
+                            </small>
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col md="12">
+                          <FormGroup>
+                            <Label for="approvalComment">Approval Comment (Optional)</Label>
+                            <Input
+                              type="textarea"
+                              id="approvalComment"
+                              value={approvalComment}
+                              onChange={(e) => setApprovalComment(e.target.value)}
+                              placeholder="Add any comments or notes for the recipient..."
+                              rows="3"
+                            />
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col md="12">
+                          <Button
+                            color="primary"
+                            onClick={sendForApproval}
+                            disabled={!recipientAddress || !generatedJson || isValidating}
+                            size="lg"
+                            block
+                          >
+                            {isValidating ? 'Sending...' : 'Send for Approval'}
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
                   )}
                   
                   {deploymentStatus === 'sent' && (

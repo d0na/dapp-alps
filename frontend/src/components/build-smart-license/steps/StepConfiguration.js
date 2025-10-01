@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   Card,
@@ -21,6 +21,7 @@ import {
 } from "reactstrap";
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import { validateManualData, validateAiText } from "../utils/jsonGenerator";
+import { getEntityNameDebounced } from "utils/EntityResolver";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import Typography from "@material-ui/core/Typography";
 import Toast from "../../common/Toast";
@@ -2067,9 +2068,108 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
   
+  // States for entity names
+  const [licensorName, setLicensorName] = useState('');
+  const [licenseeName, setLicenseeName] = useState('');
+  const [isLoadingLicensorName, setIsLoadingLicensorName] = useState(false);
+  const [isLoadingLicenseeName, setIsLoadingLicenseeName] = useState(false);
+  const [licensorFromContract, setLicensorFromContract] = useState(false);
+  const [licenseeFromContract, setLicenseeFromContract] = useState(false);
+  
   const updateManualData = (field, value) => {
     setManualData({ ...manualData, [field]: value });
   };
+
+  // Function to resolve entity name from address
+  const resolveEntityName = useCallback(async (address, type) => {
+    if (!address || typeof address !== 'string' || !address.startsWith('0x')) {
+      return '';
+    }
+
+    // Set loading state
+    if (type === 'licensor') {
+      setIsLoadingLicensorName(true);
+    } else if (type === 'licensee') {
+      setIsLoadingLicenseeName(true);
+    }
+
+    // Set timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn(`Timeout resolving ${type} name for address:`, address);
+      if (type === 'licensor') {
+        setIsLoadingLicensorName(false);
+        setLicensorFromContract(false);
+        setLicensorName('Unknown Licensor');
+      } else if (type === 'licensee') {
+        setIsLoadingLicenseeName(false);
+        setLicenseeFromContract(false);
+        setLicenseeName('Unknown Licensee');
+      }
+    }, 10000); // 10 second timeout
+
+    try {
+      if (type === 'licensor') {
+        const result = await getEntityNameDebounced(address, 'licensor', 1000);
+        clearTimeout(timeoutId);
+        setLicensorName(result.name);
+        setLicensorFromContract(result.isFromContract);
+        setIsLoadingLicensorName(false);
+        return result.name;
+      } else if (type === 'licensee') {
+        const result = await getEntityNameDebounced(address, 'licensee', 1000);
+        clearTimeout(timeoutId);
+        setLicenseeName(result.name);
+        setLicenseeFromContract(result.isFromContract);
+        setIsLoadingLicenseeName(false);
+        return result.name;
+      }
+    } catch (error) {
+      console.error(`Failed to resolve ${type} name:`, error);
+      clearTimeout(timeoutId);
+      if (type === 'licensor') {
+        setIsLoadingLicensorName(false);
+        setLicensorFromContract(false);
+        setLicensorName('Unknown Licensor');
+      } else if (type === 'licensee') {
+        setIsLoadingLicenseeName(false);
+        setLicenseeFromContract(false);
+        setLicenseeName('Unknown Licensee');
+      }
+    }
+    return '';
+  }, []);
+
+  // Handle address change for licensor
+  const handleLicensorChange = (value) => {
+    updateManualData('licensor', value);
+    if (value && value.startsWith('0x') && value.length === 42) {
+      resolveEntityName(value, 'licensor');
+    } else {
+      setLicensorName('');
+      setLicensorFromContract(false);
+    }
+  };
+
+  // Handle address change for licensee
+  const handleLicenseeChange = (value) => {
+    updateManualData('licensee', value);
+    if (value && value.startsWith('0x') && value.length === 42) {
+      resolveEntityName(value, 'licensee');
+    } else {
+      setLicenseeName('');
+      setLicenseeFromContract(false);
+    }
+  };
+
+  // Resolve entity names when data is loaded
+  useEffect(() => {
+    if (manualData.licensor && manualData.licensor.startsWith('0x') && manualData.licensor.length === 42) {
+      resolveEntityName(manualData.licensor, 'licensor');
+    }
+    if (manualData.licensee && manualData.licensee.startsWith('0x') && manualData.licensee.length === 42) {
+      resolveEntityName(manualData.licensee, 'licensee');
+    }
+  }, [manualData.licensor, manualData.licensee]);
 
   // Handle version selection
   const handleVersionSelect = (versionNumber) => {
@@ -2203,6 +2303,14 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
           }
           
           setManualData(processedData);
+          
+          // Resolve entity names after loading data
+          if (processedData.licensor && processedData.licensor.startsWith('0x') && processedData.licensor.length === 42) {
+            resolveEntityName(processedData.licensor, 'licensor');
+          }
+          if (processedData.licensee && processedData.licensee.startsWith('0x') && processedData.licensee.length === 42) {
+            resolveEntityName(processedData.licensee, 'licensee');
+          }
           
           // If this is versioned data, set it locally for version navigation
           if (jsonData.versions && Array.isArray(jsonData.versions)) {
@@ -2350,14 +2458,22 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             <Input
               type="text"
               id="licensor"
-              placeholder="Enter blockchain address (0x...) or name"
+              placeholder="Enter blockchain address (0x...)"
               value={manualData.licensor || ''}
-              onChange={(e) => updateManualData('licensor', e.target.value)}
+              onChange={(e) => handleLicensorChange(e.target.value)}
               readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasLicensor}
             />
             <small className="form-text text-muted">
-              Enter blockchain address or name
+              {isLoadingLicensorName ? (
+                <span style={{ color: '#007bff' }}>Loading entity name...</span>
+              ) : licensorName ? (
+                <span style={{ color: licensorFromContract ? '#28a745' : '#ffc107', fontWeight: 'bold' }}>
+                  {licensorFromContract ? '✓' : '⚠'} {licensorName}
+                </span>
+              ) : (
+                'Enter blockchain address'
+              )}
             </small>
           </FormGroup>
         </Col>
@@ -2369,14 +2485,22 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             <Input
               type="text"
               id="licensee"
-              placeholder="Enter blockchain address (0x...) or name"
+              placeholder="Enter blockchain address (0x...)"
               value={manualData.licensee || ''}
-              onChange={(e) => updateManualData('licensee', e.target.value)}
+              onChange={(e) => handleLicenseeChange(e.target.value)}
               readOnly={isReadOnly}
               invalid={!validation.requiredFields?.hasLicensee}
             />
             <small className="form-text text-muted">
-              Enter blockchain address or name
+              {isLoadingLicenseeName ? (
+                <span style={{ color: '#007bff' }}>Loading entity name...</span>
+              ) : licenseeName ? (
+                <span style={{ color: licenseeFromContract ? '#28a745' : '#ffc107', fontWeight: 'bold' }}>
+                  {licenseeFromContract ? '✓' : '⚠'} {licenseeName}
+                </span>
+              ) : (
+                'Enter blockchain address'
+              )}
             </small>
           </FormGroup>
         </Col>
