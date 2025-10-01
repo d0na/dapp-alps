@@ -265,16 +265,35 @@ const StepDeployment = ({
                 {generatedJson && (
                   <div>
                     <h6>Configuration:</h6>
-                    <pre style={{ 
-                      backgroundColor: '#e9ecef', 
-                      padding: '10px', 
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      maxHeight: '200px',
-                      overflowY: 'auto'
-                    }}>
-                      {JSON.stringify(JSON.parse(generatedJson), null, 2)}
-                    </pre>
+                    <div style={{ position: 'relative' }}>
+                      <pre style={{ 
+                        backgroundColor: '#e9ecef', 
+                        padding: '15px', 
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        border: '1px solid #dee2e6',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                        marginBottom: '0'
+                      }}>
+                        {JSON.stringify(JSON.parse(generatedJson), null, 2)}
+                      </pre>
+                      <small className="text-muted" style={{ 
+                        position: 'absolute', 
+                        bottom: '5px', 
+                        right: '10px',
+                        backgroundColor: 'rgba(233, 236, 239, 0.9)',
+                        padding: '2px 6px',
+                        borderRadius: '3px',
+                        fontSize: '10px'
+                      }}>
+                        📜 Scrollable
+                      </small>
+                    </div>
                   </div>
                 )}
                 
