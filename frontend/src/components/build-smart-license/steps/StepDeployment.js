@@ -34,8 +34,15 @@ const StepDeployment = ({
   const isVerificationMode = !!uploadedSolidity;
   const classes = useBuildSmartLicenseStyles();
   const [recipientAddress, setRecipientAddress] = useState('');
-  const [recipientType, setRecipientType] = useState('licensor'); // 'licensor' or 'licensee'
+  const [recipientType, setRecipientType] = useState('licensor'); // 'licensor', 'licensee', or 'custom'
   const [approvalComment, setApprovalComment] = useState('');
+  const [isCustomAddress, setIsCustomAddress] = useState(false);
+  
+  // Validate custom address format
+  const isValidCustomAddress = () => {
+    if (!isCustomAddress) return true;
+    return recipientAddress.startsWith('0x') && recipientAddress.length === 42;
+  };
   const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const [deploymentProgress, setDeploymentProgress] = useState(0);
@@ -134,8 +141,15 @@ const StepDeployment = ({
   // Update recipient address when type changes
   const handleRecipientTypeChange = (type) => {
     setRecipientType(type);
-    const addresses = getAddressesFromJson();
-    setRecipientAddress(addresses[type] || '');
+    
+    if (type === 'custom') {
+      setIsCustomAddress(true);
+      setRecipientAddress(''); // Clear address for custom input
+    } else {
+      setIsCustomAddress(false);
+      const addresses = getAddressesFromJson();
+      setRecipientAddress(addresses[type] || '');
+    }
   };
 
   // Send for approval
@@ -150,6 +164,12 @@ const StepDeployment = ({
       return;
     }
     
+    // Validate custom address format
+    if (isCustomAddress && (!recipientAddress.startsWith('0x') || recipientAddress.length !== 42)) {
+      showError('Please enter a valid Ethereum address (0x followed by 40 characters)');
+      return;
+    }
+    
     setIsValidating(true);
     
     try {
@@ -161,9 +181,10 @@ const StepDeployment = ({
       setShouldDownloadAfterUpdate(true);
       
       setDeploymentStatus('sent');
+      const recipientLabel = recipientType === 'custom' ? 'Custom Address' : recipientType;
       const message = approvalComment 
-        ? `License sent for approval to ${recipientType}: ${recipientAddress}\nComment: ${approvalComment}`
-        : `License sent for approval to ${recipientType}: ${recipientAddress}`;
+        ? `License sent for approval to ${recipientLabel}: ${recipientAddress}\nComment: ${approvalComment}`
+        : `License sent for approval to ${recipientLabel}: ${recipientAddress}`;
       showSuccess(message);
     } catch (error) {
       setIsValidating(false);
@@ -307,6 +328,7 @@ const StepDeployment = ({
                             >
                               <option value="licensor">Licensor</option>
                               <option value="licensee">Licensee</option>
+                              <option value="custom">Custom Address</option>
                             </Input>
                           </FormGroup>
                         </Col>
@@ -319,12 +341,29 @@ const StepDeployment = ({
                               value={recipientAddress}
                               onChange={(e) => setRecipientAddress(e.target.value)}
                               placeholder="0x..."
-                              readOnly={true}
-                              style={{ backgroundColor: '#f8f9fa' }}
+                              readOnly={!isCustomAddress}
+                              style={{ 
+                                backgroundColor: isCustomAddress ? 'white' : '#f8f9fa',
+                                cursor: isCustomAddress ? 'text' : 'not-allowed',
+                                borderColor: isCustomAddress && recipientAddress && !isValidCustomAddress() ? '#dc3545' : undefined
+                              }}
                             />
                             <small className="text-muted">
-                              Address automatically filled from license data
+                              {isCustomAddress 
+                                ? 'Enter a custom recipient address' 
+                                : 'Address automatically filled from license data'
+                              }
                             </small>
+                            {isCustomAddress && recipientAddress && !isValidCustomAddress() && (
+                              <small className="text-danger d-block mt-1">
+                                ⚠️ Invalid Ethereum address format
+                              </small>
+                            )}
+                            {isCustomAddress && recipientAddress && isValidCustomAddress() && (
+                              <small className="text-success d-block mt-1">
+                                ✅ Valid Ethereum address
+                              </small>
+                            )}
                           </FormGroup>
                         </Col>
                       </Row>
@@ -348,7 +387,7 @@ const StepDeployment = ({
                           <Button
                             color="primary"
                             onClick={sendForApproval}
-                            disabled={!recipientAddress || !generatedJson || isValidating}
+                            disabled={!recipientAddress || !generatedJson || isValidating || (isCustomAddress && !isValidCustomAddress())}
                             size="lg"
                             block
                           >
