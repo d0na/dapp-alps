@@ -1161,7 +1161,7 @@ const StepReviewGenerate = ({
                 </Col>
                 <Col md="6">
                   <FormGroup>
-                    <Label for="revisionComment">Revision Comment</Label>
+                    <Label for="revisionComment">Revision feedback</Label>
                     <Input
                       type="textarea"
                       id="revisionComment"
