@@ -219,9 +219,19 @@ const StepReviewGenerate = ({
   const [activeTab, setActiveTab] = useState('1');
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientType, setRecipientType] = useState('licensor'); // 'licensor', 'licensee', or 'custom'
   const [revisionComment, setRevisionComment] = useState('');
+  const [isCustomAddress, setIsCustomAddress] = useState(false);
   const [isRequestingRevision, setIsRequestingRevision] = useState(false);
   const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
+  
+  // Initialize recipient address when component mounts or JSON changes
+  useEffect(() => {
+    if (generatedJson && recipientType) {
+      const addresses = getAddressesFromJson();
+      setRecipientAddress(addresses[recipientType] || '');
+    }
+  }, [generatedJson, recipientType]);
   
   // Parse versioned license data
   const versionedLicenseData = generatedJson ? (() => {
@@ -246,6 +256,42 @@ const StepReviewGenerate = ({
       }
     }
   }, [versionedLicenseData]); // Rimosso selectedVersion dalle dipendenze per evitare loop infiniti
+
+  // Get addresses from JSON
+  const getAddressesFromJson = () => {
+    if (!generatedJson) return { licensor: '', licensee: '' };
+    
+    try {
+      const jsonData = JSON.parse(generatedJson);
+      return {
+        licensor: jsonData.parties?.licensor || '',
+        licensee: jsonData.parties?.licensee || ''
+      };
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      return { licensor: '', licensee: '' };
+    }
+  };
+
+  // Update recipient address when type changes
+  const handleRecipientTypeChange = (type) => {
+    setRecipientType(type);
+    
+    if (type === 'custom') {
+      setIsCustomAddress(true);
+      setRecipientAddress(''); // Clear address for custom input
+    } else {
+      setIsCustomAddress(false);
+      const addresses = getAddressesFromJson();
+      setRecipientAddress(addresses[type] || '');
+    }
+  };
+
+  // Validate custom address format
+  const isValidCustomAddress = () => {
+    if (!isCustomAddress) return true;
+    return recipientAddress.startsWith('0x') && recipientAddress.length === 42;
+  };
 
   // Function to update license status to needs_revision
   const updateLicenseToNeedsRevision = (jsonString, comment, fromAddress) => {
@@ -323,6 +369,12 @@ const StepReviewGenerate = ({
       return;
     }
     
+    // Validate custom address format
+    if (isCustomAddress && (!recipientAddress.startsWith('0x') || recipientAddress.length !== 42)) {
+      showError('Please enter a valid Ethereum address (0x followed by 40 characters)');
+      return;
+    }
+    
     setIsRequestingRevision(true);
     
     try {
@@ -336,7 +388,9 @@ const StepReviewGenerate = ({
       // Simulate sending notification
       setTimeout(() => {
         setIsRequestingRevision(false);
-        showSuccess('Revision requested! License status changed to "needs_revision". JSON file downloaded automatically.');
+        const recipientLabel = recipientType === 'custom' ? 'Custom Address' : recipientType;
+        const message = `Revision requested to ${recipientLabel}: ${recipientAddress}\nComment: ${revisionComment}\nLicense status changed to "needs_revision". JSON file downloaded automatically.`;
+        showSuccess(message);
         // Clear form
         setRecipientAddress('');
         setRevisionComment('');
@@ -1138,72 +1192,118 @@ const StepReviewGenerate = ({
 
         {/* Request Revision Section */}
         {isVerificationMode && versionedLicenseData && canRequestRevision() && (
-          <Card style={{ marginBottom: '20px', backgroundColor: '#fff3cd', borderColor: '#ffeaa7' }}>
-            <CardHeader>
-              <CardTitle tag="h6">Request Revision</CardTitle>
-              <p className="card-category">
-                Request changes to this license proposal
-              </p>
-            </CardHeader>
-            <CardBody>
-              <Row>
-                <Col md="6">
-                  <FormGroup>
-                    <Label for="recipientAddress">Recipient Address</Label>
-                    <Input
-                      type="text"
-                      id="recipientAddress"
-                      value={recipientAddress}
-                      onChange={(e) => setRecipientAddress(e.target.value)}
-                      placeholder="0x..."
-                      disabled={isRequestingRevision}
-                    />
-                    <small className="form-text text-muted">
-                      Address of the license creator to notify
-                    </small>
-                  </FormGroup>
-                </Col>
-                <Col md="6">
-                  <FormGroup>
-                    <Label for="revisionComment">Revision feedback</Label>
-                    <Input
-                      type="textarea"
-                      id="revisionComment"
-                      rows="3"
-                      value={revisionComment}
-                      onChange={(e) => setRevisionComment(e.target.value)}
-                      placeholder="Describe what needs to be changed..."
-                      disabled={isRequestingRevision}
-                    />
-                    <small className="form-text text-muted">
-                      Explain what modifications are required
-                    </small>
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row>
-                <Col md="12" className="text-right">
-                  <Button
-                    color="warning"
-                    onClick={handleRequestRevision}
-                    disabled={!recipientAddress.trim() || !revisionComment.trim() || !generatedJson || isRequestingRevision}
-                    style={{ marginTop: '10px' }}
-                  >
-                    {isRequestingRevision ? 'Requesting Revision...' : 'Request Revision'}
-                  </Button>
-                </Col>
-              </Row>
-              <Row style={{ marginTop: '10px' }}>
-                <Col md="12">
-                  <Alert color="info" style={{ marginBottom: '0' }}>
+          <Row style={{ marginTop: '20px' }}>
+            <Col md="12">
+              <Card style={{ 
+                backgroundColor: '#fff3cd',
+                borderColor: '#ffeaa7'
+              }}>
+                <CardHeader>
+                  <CardTitle tag="h5">
+                    ⚠️ Request Revision
+                  </CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <Alert color="warning">
+                    <strong>
+                      Request changes to this license proposal
+                    </strong>
+                  </Alert>
+                  
+                  <Row>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label for="recipientType">Recipient Type</Label>
+                        <Input
+                          type="select"
+                          id="recipientType"
+                          value={recipientType}
+                          onChange={(e) => handleRecipientTypeChange(e.target.value)}
+                          disabled={isRequestingRevision}
+                        >
+                          <option value="licensor">Licensor</option>
+                          <option value="licensee">Licensee</option>
+                          <option value="custom">Custom Address</option>
+                        </Input>
+                      </FormGroup>
+                    </Col>
+                    <Col md="6">
+                      <FormGroup>
+                        <Label for="recipientAddress">Recipient Address</Label>
+                        <Input
+                          type="text"
+                          id="recipientAddress"
+                          value={recipientAddress}
+                          onChange={(e) => setRecipientAddress(e.target.value)}
+                          placeholder="0x..."
+                          readOnly={!isCustomAddress}
+                          disabled={isRequestingRevision}
+                          style={{ 
+                            backgroundColor: isCustomAddress ? 'white' : '#f8f9fa',
+                            cursor: isCustomAddress ? 'text' : 'not-allowed',
+                            borderColor: isCustomAddress && recipientAddress && !isValidCustomAddress() ? '#dc3545' : undefined
+                          }}
+                        />
+                        <small className="text-muted">
+                          {isCustomAddress 
+                            ? 'Enter a custom recipient address' 
+                            : 'Address automatically filled from license data'
+                          }
+                        </small>
+                        {isCustomAddress && recipientAddress && !isValidCustomAddress() && (
+                          <small className="text-danger d-block mt-1">
+                            ⚠️ Invalid Ethereum address format
+                          </small>
+                        )}
+                        {isCustomAddress && recipientAddress && isValidCustomAddress() && (
+                          <small className="text-success d-block mt-1">
+                            ✅ Valid Ethereum address
+                          </small>
+                        )}
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  
+                  <Row>
+                    <Col md="12">
+                      <FormGroup>
+                        <Label for="revisionComment">Revision Feedback</Label>
+                        <Input
+                          type="textarea"
+                          id="revisionComment"
+                          rows="3"
+                          value={revisionComment}
+                          onChange={(e) => setRevisionComment(e.target.value)}
+                          placeholder="Describe what needs to be changed..."
+                          disabled={isRequestingRevision}
+                        />
+                        <small className="form-text text-muted">
+                          Explain what modifications are required
+                        </small>
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                  
+                  <div className="text-center">
+                    <Button
+                      color="warning"
+                      onClick={handleRequestRevision}
+                      disabled={!recipientAddress.trim() || !revisionComment.trim() || !generatedJson || isRequestingRevision || (isCustomAddress && !isValidCustomAddress())}
+                      size="lg"
+                    >
+                      {isRequestingRevision ? 'Requesting Revision...' : 'Request Revision'}
+                    </Button>
+                  </div>
+                  
+                  <Alert color="info" style={{ marginTop: '15px', marginBottom: '0' }}>
                     <small>
                       <strong>Note:</strong> This will change the license status to "needs_revision" and download the updated JSON file automatically.
                     </small>
                   </Alert>
-                </Col>
-              </Row>
-            </CardBody>
-          </Card>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         )}
 
         {/* Contract comparison info for verification mode */}
@@ -1211,8 +1311,8 @@ const StepReviewGenerate = ({
           <Row style={{ marginTop: '20px' }}>
             <Col md="12">
               <Card style={{ 
-                backgroundColor: contractComparison.isSimilar ? '#d4edda' : '#fff3cd',
-                borderColor: contractComparison.isSimilar ? '#c3e6cb' : '#ffeaa7'
+                backgroundColor: contractComparison.isSimilar ? '#d1ecf1' : '#ffeaa7',
+                borderColor: contractComparison.isSimilar ? '#bee5eb' : '#fdcb6e'
               }}>
                 <CardHeader>
                   <CardTitle tag="h5">
@@ -1220,7 +1320,7 @@ const StepReviewGenerate = ({
                   </CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <Alert color={contractComparison.isSimilar ? 'success' : 'warning'}>
+                  <Alert color={contractComparison.isSimilar ? 'info' : 'warning'}>
                     <strong>
                       {contractComparison.isSimilar 
                         ? 'Contracts are similar! Ready to proceed to deployment.'

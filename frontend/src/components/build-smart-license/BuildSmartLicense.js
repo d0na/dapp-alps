@@ -83,6 +83,32 @@ const BuildSmartLicense = () => {
     }
   }, []); // Empty dependency array means this runs only on mount
 
+  // Add listeners for navigation to reset component when clicking "Create License"
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/create-smart-license') {
+        handleResetToStep0();
+      }
+    };
+
+    const handleClick = (event) => {
+      const target = event.target.closest('a');
+      if (target && target.getAttribute('href') === '/create-smart-license') {
+        handleResetToStep0();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleClick);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleClick);
+    };
+  }, []);
+
   // Update generatedJson when uploadedJson changes (for upload mode)
   useEffect(() => {
     if (mode === 'upload' && uploadedJson) {
