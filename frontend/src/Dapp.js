@@ -327,7 +327,7 @@ export class Dapp extends React.Component {
           </Switch>
           {/* <PrivateRoute path="/active-licenses" component={Dashboard} /> */}
           {/* <Redirect exact from="/" to="/" /> */}
-          <Footer fluid />
+          <Footer />
         </div>
         {/* </BrowserRouter> */}
       </div>
