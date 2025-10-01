@@ -426,18 +426,26 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
 
   // Update dependencies when rules change (with debouncing and caching)
   useEffect(() => {
+    console.log('🔧 useEffect [rules] TRIGGERED - Rules count:', rules?.length || 0, 'IsInitialized:', isInitialized, 'Dependencies:', dependencies.length);
+    
     const updateDependencies = async () => {
+      console.log('📋 updateDependencies called - Rules:', rules?.length || 0);
+      
       // Skip if already initialized and rules haven't meaningfully changed
       if (isInitialized && dependencies.length > 0) {
         const currentDeps = await extractDependencies(rules);
         const hasSignificantChanges = currentDeps.length !== dependencies.length || 
           currentDeps.some(dep => !dependencies.find(existing => existing.smartLicenseAddress === dep.smartLicenseAddress));
         
+        console.log('🔍 Checking changes - Current deps:', currentDeps.length, 'Existing deps:', dependencies.length, 'Has changes:', hasSignificantChanges);
+        
         if (!hasSignificantChanges) {
+          console.log('⏭️ No significant changes, skipping reload');
           return; // No need to reload
         }
       }
 
+      console.log('🔄 Starting dependency update...');
       setLoading(true);
       try {
         const extractedDeps = await extractDependencies(rules);
@@ -455,17 +463,23 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
         
         setDependencies(enrichedDeps);
         setIsInitialized(true);
+        console.log('✅ Dependencies updated successfully - Count:', enrichedDeps.length);
       } catch (error) {
-        console.error('Error updating dependencies:', error);
+        console.error('❌ Error updating dependencies:', error);
       } finally {
         setLoading(false);
+        console.log('🏁 Dependency update completed');
       }
     };
 
     // Debounce the update to prevent excessive reloads
     const timeoutId = setTimeout(updateDependencies, 500);
-    return () => clearTimeout(timeoutId);
-  }, [rules, dependencies, isInitialized]);
+    console.log('⏰ Setting timeout for dependency update:', timeoutId);
+    return () => {
+      console.log('🧹 Cleaning up timeout:', timeoutId);
+      clearTimeout(timeoutId);
+    };
+  }, [rules]); // SOLO rules come dipendenza per evitare loop infiniti
 
   return (
     <Card style={{ marginBottom: '20px' }}>
@@ -896,6 +910,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
   const [activeRuleIndex, setActiveRuleIndex] = useState(0);
 
   const addRule = () => {
+    console.log('➕ addRule called - Current rules count:', rules.length);
     const newRule = {
       id: Date.now(),
       name: `Rule ${rules.length + 1}`,
@@ -923,15 +938,18 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
         max: ''
       }
     };
+    console.log('📝 Adding new rule:', newRule.name, 'ID:', newRule.id);
     setRules([...rules, newRule]);
   };
 
   const removeRule = (ruleId) => {
+    console.log('🗑️ removeRule called - Rule ID:', ruleId, 'Current rules count:', rules.length);
     // Remove the rule and clean up any references
     const updatedRules = rules.filter(rule => rule.id !== ruleId);
     
     // If no rules remain, set empty array
     if (updatedRules.length === 0) {
+      console.log('📭 No rules left, clearing all rules');
       setRules([]);
       return;
     }
@@ -972,6 +990,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
       return cleanedRule;
     });
     
+    console.log('✅ Rule removed and cleaned, final rules count:', cleanedRules.length);
     setRules(cleanedRules);
   };
 
@@ -1056,12 +1075,14 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
   };
 
   const updateRule = (ruleId, field, value) => {
+    console.log('🔄 updateRule called - Rule ID:', ruleId, 'Field:', field, 'Value:', value);
     setRules(rules.map(rule => 
       rule.id === ruleId ? { ...rule, [field]: value } : rule
     ));
   };
 
   const updateRuleNested = (ruleId, path, value) => {
+    console.log('🔄 updateRuleNested called - Rule ID:', ruleId, 'Path:', path, 'Value:', value);
     setRules(rules.map(rule => {
       if (rule.id === ruleId) {
         const newRule = { ...rule };
@@ -2062,17 +2083,20 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
   
   const updateManualData = (field, value) => {
+    console.log('📝 updateManualData called - Field:', field, 'Value:', value, 'Current manualData keys:', Object.keys(manualData || {}));
     setManualData({ ...manualData, [field]: value });
   };
 
   // Handle version selection
   const handleVersionSelect = (versionNumber) => {
+    console.log('🎯 handleVersionSelect called - Version:', versionNumber, 'Local data exists:', !!localVersionedData, 'Prop data exists:', !!versionedLicenseData);
     setSelectedVersion(versionNumber);
     
     const versionedData = localVersionedData || versionedLicenseData;
     if (versionedData && versionedData.versions) {
       const version = versionedData.versions.find(v => v.versionNumber === versionNumber);
       if (version && version.data) {
+        console.log('📋 Loading version data - Version:', versionNumber, 'Has data:', !!version.data);
         // Load the selected version's data into the form
         const versionData = {
           name: versionedData.name,
@@ -2084,6 +2108,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
           comment: version.comment || '',
           rules: version.data.rules || []
         };
+        console.log('💾 Setting manual data from version:', versionNumber, 'Data keys:', Object.keys(versionData));
         setManualData(versionData);
         showSuccess(`Loaded version ${versionNumber} data`);
       }
@@ -2092,10 +2117,13 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
   // Initialize selected version when versionedLicenseData changes
   React.useEffect(() => {
+    console.log('📊 useEffect [versionedLicenseData] TRIGGERED - Has data:', !!versionedLicenseData, 'Versions count:', versionedLicenseData?.versions?.length || 0);
+    
     if (versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0) {
       const currentVersion = versionedLicenseData.versions.find(v => v.versionNumber === versionedLicenseData.currentVersion) || 
                            versionedLicenseData.versions[versionedLicenseData.versions.length - 1];
       if (currentVersion) {
+        console.log('🎯 Setting selected version:', currentVersion.versionNumber);
         setSelectedVersion(currentVersion.versionNumber);
       }
     }
@@ -2103,18 +2131,30 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
   // Sync local versioned data with prop changes
   React.useEffect(() => {
+    console.log('🔄 useEffect [versionedLicenseData] SYNC TRIGGERED - Setting local versioned data');
     setLocalVersionedData(versionedLicenseData);
   }, [versionedLicenseData]);
 
+  // Debug: Track component lifecycle
+  React.useEffect(() => {
+    console.log('🚀 StepConfiguration MOUNTED');
+    return () => {
+      console.log('🛑 StepConfiguration UNMOUNTED');
+    };
+  }, []);
+
   // Function to handle JSON file upload and populate form
   const handleJsonUpload = (event) => {
+    console.log('📁 handleJsonUpload called - File:', event.target.files[0]?.name);
     const file = event.target.files[0];
     
     if (file && file.type === 'application/json') {
+      console.log('📄 Processing JSON file:', file.name, 'Size:', file.size);
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const jsonData = JSON.parse(e.target.result);
+          console.log('📊 JSON parsed successfully - Keys:', Object.keys(jsonData), 'Has versions:', !!jsonData.versions);
           
           // Check if this is the new versioned format or legacy format
           let processedData;
@@ -2195,18 +2235,22 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             }
           }
           
+          console.log('💾 Setting manual data from JSON - Data keys:', Object.keys(processedData), 'Rules count:', processedData.rules?.length || 0);
           setManualData(processedData);
           
           // If this is versioned data, set it locally for version navigation
           if (jsonData.versions && Array.isArray(jsonData.versions)) {
+            console.log('📚 Setting versioned data - Versions count:', jsonData.versions.length);
             setLocalVersionedData(jsonData);
             const currentVersion = jsonData.versions.find(v => v.versionNumber === jsonData.currentVersion) || 
                                  jsonData.versions[jsonData.versions.length - 1];
             if (currentVersion) {
+              console.log('🎯 Setting selected version from JSON:', currentVersion.versionNumber);
               setSelectedVersion(currentVersion.versionNumber);
             }
             showSuccess(`Versioned license data loaded successfully! Found ${jsonData.versions.length} versions. Currently viewing version ${currentVersion?.versionNumber || 'latest'}.`);
           } else {
+            console.log('📄 Setting non-versioned data');
             setLocalVersionedData(null);
             setSelectedVersion(null);
             showSuccess('License data loaded successfully! All fields have been populated.');
@@ -2445,7 +2489,10 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
       {/* Rules Configuration */}
       <RulesConfiguration 
         rules={manualData.rules || []}
-        setRules={(rules) => updateManualData('rules', rules)}
+        setRules={(rules) => {
+          console.log('📋 Rules updated - New rules count:', rules.length, 'Rules IDs:', rules.map(r => r.id));
+          updateManualData('rules', rules);
+        }}
         isReadOnly={isReadOnly}
       />
 
@@ -2557,6 +2604,9 @@ const StepConfiguration = ({
   versionedLicenseData = null,
   isVerificationMode = false
 }) => {
+  // DEBUG: Track component renders
+  console.log('🔄 StepConfiguration RENDER - Mode:', mode, 'ManualData keys:', Object.keys(manualData || {}), 'AI Text length:', aiText?.length || 0);
+  
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
     if (mode === 'ai') {
