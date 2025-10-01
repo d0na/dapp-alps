@@ -78,12 +78,6 @@
             }
           }
         ]
-      },
-      "feedback": {
-        "from": "validator",
-        "date": "2025-01-15T14:45:00.000Z",
-        "message": "The royalty rates are too high for the current market conditions. Please reduce the proportional values for camera and GPS usage by at least 30%. Also, the duration of 3 years is too long - consider reducing to 2 years maximum."
-
       }
     } 
   ]

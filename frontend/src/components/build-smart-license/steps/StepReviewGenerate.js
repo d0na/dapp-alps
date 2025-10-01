@@ -212,11 +212,9 @@ const StepReviewGenerate = ({
   contractComparisonValid,
   setContractComparisonValid,
   handleBack, 
-  handleNext
+  handleNext,
+  handleResetToStep0
 }) => {
-  // DEBUG: Track component renders
-  console.log('🔄 StepReviewGenerate RENDER - GeneratedJson:', !!generatedJson, 'GeneratedContract:', !!generatedContract, 'UploadedSolidity:', !!uploadedSolidity, 'IsVerificationMode:', isVerificationMode);
-  
   const classes = useBuildSmartLicenseStyles();
   const [activeTab, setActiveTab] = useState('1');
   const [selectedVersion, setSelectedVersion] = useState(null);
@@ -242,15 +240,9 @@ const StepReviewGenerate = ({
 
   // Initialize selected version when versionedLicenseData changes
   useEffect(() => {
-    console.log('🔄 Review useEffect [versionedLicenseData, selectedVersion] TRIGGERED - Has data:', !!versionedLicenseData, 'Versions:', versionedLicenseData?.versions?.length || 0, 'Selected:', selectedVersion);
-    
     if (versionedLicenseData && versionedLicenseData.versions && versionedLicenseData.versions.length > 0) {
       if (!selectedVersion) {
-        const newVersion = versionedLicenseData.currentVersion || versionedLicenseData.versions[versionedLicenseData.versions.length - 1].versionNumber;
-        console.log('🎯 Setting selected version:', newVersion);
-        setSelectedVersion(newVersion);
-      } else {
-        console.log('⏭️ Selected version already set:', selectedVersion);
+        setSelectedVersion(versionedLicenseData.currentVersion || versionedLicenseData.versions[versionedLicenseData.versions.length - 1].versionNumber);
       }
     }
   }, [versionedLicenseData]); // Rimosso selectedVersion dalle dipendenze per evitare loop infiniti
@@ -348,6 +340,9 @@ const StepReviewGenerate = ({
         // Clear form
         setRecipientAddress('');
         setRevisionComment('');
+        
+        // Reset to step 0 after successful revision request
+        handleResetToStep0();
       }, 2000);
     } catch (error) {
       setIsRequestingRevision(false);
@@ -492,27 +487,13 @@ const StepReviewGenerate = ({
 
   // Compare contracts when they change
   useEffect(() => {
-    console.log('🔧 Review useEffect [generatedContract, uploadedSolidity] TRIGGERED - Generated:', !!generatedContract, 'Uploaded:', !!uploadedSolidity);
-    
     if (generatedContract && uploadedSolidity) {
-      console.log('📋 Comparing contracts...');
       const comparison = compareContracts(generatedContract, uploadedSolidity);
-      console.log('✅ Contract comparison result:', comparison.isSimilar);
       setContractComparison(comparison);
       // Update parent component with comparison validity
       setContractComparisonValid(comparison.isSimilar);
-    } else {
-      console.log('⏭️ Skipping contract comparison - missing data');
     }
   }, [generatedContract, uploadedSolidity]); // Rimosso setContractComparisonValid dalle dipendenze per evitare loop infiniti
-
-  // Debug: Track component lifecycle
-  useEffect(() => {
-    console.log('🚀 StepReviewGenerate MOUNTED');
-    return () => {
-      console.log('🛑 StepReviewGenerate UNMOUNTED');
-    };
-  }, []);
 
   // Approval and deployment logic moved to StepDeployment component
 
@@ -1311,6 +1292,7 @@ StepReviewGenerate.propTypes = {
   setContractComparisonValid: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
   handleNext: PropTypes.func.isRequired,
+  handleResetToStep0: PropTypes.func.isRequired,
 };
 
 export default StepReviewGenerate;

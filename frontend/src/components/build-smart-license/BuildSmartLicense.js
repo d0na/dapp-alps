@@ -59,6 +59,13 @@ const BuildSmartLicense = () => {
       }
     } else {
       // Reset all state to initial values when component mounts (fresh start)
+      // Clear any residual data from localStorage to ensure clean start
+      localStorage.removeItem('licenseRevisionData');
+      localStorage.removeItem('currentStep');
+      localStorage.removeItem('manualData');
+      localStorage.removeItem('rules');
+      localStorage.removeItem('mode');
+      
       setCurrentStep(0);
       setMode('');
       setManualData({});
@@ -224,6 +231,30 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleResetToStep0 = () => {
+    setCurrentStep(0);
+    setMode('');
+    setManualData({});
+    setRules([]);
+    setAiText('');
+    setGeneratedJson('');
+    setGeneratedSmartContract('');
+    setUploadedJson('');
+    setUploadedSolidity('');
+    setShowValidationErrors(false);
+    setIsVerificationMode(false);
+    setDeploymentStatus('pending');
+    setContractComparisonValid(false);
+    setVersionedLicenseData(null);
+    
+    // Clear localStorage
+    localStorage.removeItem('licenseRevisionData');
+    localStorage.removeItem('currentStep');
+    localStorage.removeItem('manualData');
+    localStorage.removeItem('rules');
+    localStorage.removeItem('mode');
   };
 
   const handleStepClick = (stepIndex) => {
@@ -557,6 +588,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
             setContractComparisonValid={setContractComparisonValid}
             handleBack={handleBack}
             handleNext={handleNext}
+            handleResetToStep0={handleResetToStep0}
           />
         );
       case 3:
