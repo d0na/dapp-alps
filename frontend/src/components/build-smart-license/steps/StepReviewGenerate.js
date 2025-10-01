@@ -1308,31 +1308,32 @@ const StepReviewGenerate = ({
 
         {/* Contract comparison info for verification mode */}
         {uploadedSolidity && (
-          <Row style={{ marginTop: '20px' }}>
+          <Row style={{ marginTop: '10px' }}>
             <Col md="12">
               <Card style={{ 
-                backgroundColor: contractComparison.isSimilar ? '#d1ecf1' : '#ffeaa7',
-                borderColor: contractComparison.isSimilar ? '#bee5eb' : '#fdcb6e'
+                backgroundColor: contractComparison.isSimilar ? '#f8f9fa' : '#fff8e1',
+                borderColor: contractComparison.isSimilar ? '#e9ecef' : '#ffecb3',
+                marginBottom: '10px'
               }}>
-                <CardHeader>
-                  <CardTitle tag="h5">
+                <CardHeader style={{ padding: '10px 15px' }}>
+                  <CardTitle tag="h6" style={{ fontSize: '14px', marginBottom: '0' }}>
                     {contractComparison.isSimilar ? '✅' : '⚠️'} Contract Comparison Status
                   </CardTitle>
                 </CardHeader>
-                <CardBody>
-                  <Alert color={contractComparison.isSimilar ? 'info' : 'warning'}>
-                    <strong>
+                <CardBody style={{ padding: '10px 15px' }}>
+                  <Alert color={contractComparison.isSimilar ? 'info' : 'warning'} style={{ marginBottom: '0', padding: '8px 12px' }}>
+                    <small>
                       {contractComparison.isSimilar 
                         ? 'Contracts are similar! Ready to proceed to deployment.'
                         : 'Contracts have differences. Please review the comparison above.'
                       }
-                    </strong>
+                    </small>
                   </Alert>
-                  <div className="text-center">
+                  <div className="text-center" style={{ marginTop: '8px' }}>
                     <Button
                       color="info"
                       onClick={() => setActiveTab('4')}
-                      size="lg"
+                      size="sm"
                     >
                       Review Contract Comparison
                     </Button>
