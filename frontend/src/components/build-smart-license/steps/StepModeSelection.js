@@ -23,7 +23,7 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle tag="h4">Choose Creation Mode</CardTitle>
+        <CardTitle tag="h4">Choose Smart License™ Creation Mode</CardTitle>
         <p className="card-category">
           Select how you want to create your smart license
         </p>
@@ -84,7 +84,7 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
               color="textSecondary" 
               style={{ marginLeft: 32 }}
             >
-              Upload existing JSON and Solidity files to review and proceed with deployment
+              Upload existing, e.g., JSON and Solidity files to review and proceed with deployment
             </Typography>
           </RadioGroup>
         </FormControl>

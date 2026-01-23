@@ -86,7 +86,7 @@ const StepFinalOutput = ({
       <CardHeader>
         <CardTitle tag="h4">Final Output - Smart License Generated</CardTitle>
         <p className="card-category">
-          Review your generated JSON, Smart Contract, and summary
+          Review your generated JSON, Smart license, and summary
         </p>
       </CardHeader>
       <CardBody>
@@ -106,7 +106,7 @@ const StepFinalOutput = ({
                   className={activeTab === '2' ? 'active' : ''}
                   onClick={() => setActiveTab('2')}
                 >
-                  Smart Contract
+                  Smart license
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -170,7 +170,7 @@ const StepFinalOutput = ({
                 </div>
               </TabPane>
 
-              {/* Smart Contract Tab */}
+              {/* Smart license Tab */}
               <TabPane tabId="2">
                 <div style={{ padding: '20px 0' }}>
                   <Row>
@@ -181,12 +181,12 @@ const StepFinalOutput = ({
                         alignItems: 'center',
                         marginBottom: '15px'
                       }}>
-                        <h5>Generated Smart Contract</h5>
+                        <h5>Generated Smart License™</h5>
                         <div>
                           <Button
                             color="info"
                             size="sm"
-                            onClick={() => handleCopyToClipboard(generatedSmartContract, 'Smart Contract')}
+                            onClick={() => handleCopyToClipboard(generatedSmartContract, 'Smart License')}
                             style={{ marginRight: '10px' }}
                           >
                             Copy
@@ -326,7 +326,7 @@ const StepFinalOutput = ({
               color="primary"
               onClick={handleDeployContract}
             >
-              Deploy Smart Contract
+              Deploy Smart License™
             </Button>
           </Col>
         </Row>

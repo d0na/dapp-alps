@@ -76,7 +76,7 @@ const StepFileUpload = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle tag="h4">Upload Existing Files</CardTitle>
+        <CardTitle tag="h4">Upload Existing Files to create Smart License™</CardTitle>
         <p className="card-category">
           Upload JSON and Solidity files to review and proceed with deployment
         </p>

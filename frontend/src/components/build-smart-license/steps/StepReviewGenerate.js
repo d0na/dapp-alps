@@ -822,7 +822,7 @@ const StepReviewGenerate = ({
       <CardHeader>
         <CardTitle tag="h4">Review & Generate Smart License</CardTitle>
         <p className="card-category">
-          Review configuration and generated smart contract
+          Review configuration and generated smart license™
         </p>
       </CardHeader>
       
@@ -874,7 +874,7 @@ const StepReviewGenerate = ({
               className={activeTab === '4' ? 'active' : ''}
               onClick={() => setActiveTab('4')}
             >
-              Smart Contract
+              Smart License™
             </NavLink>
           </NavItem>
         </Nav>
@@ -976,12 +976,12 @@ const StepReviewGenerate = ({
             </Row>
           </TabPane>
 
-          {/* Tab 4: Smart Contract */}
+          {/* Tab 4: Smart License */}
           <TabPane tabId="4">
             <Row>
               <Col md="12">
                 <FormGroup>
-                  <Label for="generatedContract">Generated Smart Contract (Solidity)</Label>
+                  <Label for="generatedContract">Generated Smart License™ (Solidity)</Label>
                   <textarea
                     id="generatedContract"
                     rows="25"

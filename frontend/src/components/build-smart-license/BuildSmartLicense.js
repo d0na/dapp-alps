@@ -150,12 +150,12 @@ const BuildSmartLicense = () => {
     'Deploy'
   ];
 
-  // Generate smart contract from JSON
+  // Generate smart license from JSON
   const generateSmartContract = (jsonData) => {
     try {
       const config = JSON.parse(jsonData);
       
-      // Mock smart contract generation
+      // Mock smart license generation
       const contract = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
@@ -232,7 +232,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
       
       return contract;
     } catch (error) {
-      console.error('Error generating smart contract:', error);
+      console.error('Error generating smart license:', error);
       return '// Error generating contract: ' + error.message;
     }
   };
@@ -245,7 +245,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
       
-      // Generate smart contract when moving to Step 3
+      // Generate smart license when moving to Step 3
       if (currentStep === 1 && generatedJson) {
         const contract = generateSmartContract(generatedJson);
         setGeneratedSmartContract(contract);
@@ -416,7 +416,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     const json = generateSmartLicenseJson(mode, manualData, aiText, isEditMode ? versionedLicenseData : null);
     setGeneratedJson(json);
     
-    // Generate mock smart contract
+    // Generate mock smart license
     const smartContract = generateMockSmartContract(json);
     setGeneratedSmartContract(smartContract);
   };
@@ -540,7 +540,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     document.body.removeChild(jsonLink);
     URL.revokeObjectURL(jsonUrl);
 
-    // Download Smart Contract
+    // Download Smart license
     const contractBlob = new Blob([generatedSmartContract], { type: 'text/plain' });
     const contractUrl = URL.createObjectURL(contractBlob);
     const contractLink = document.createElement('a');
@@ -553,9 +553,9 @@ contract SmartLicense is Ownable, ReentrancyGuard {
   };
 
   const handleDeployContract = () => {
-    // Here you would typically deploy the smart contract to the blockchain
-    console.log('Deploying smart contract...');
-    showSuccess('Smart Contract deployment initiated! Check the console for details.');
+    // Here you would typically deploy the smart license to the blockchain
+    console.log('Deploying smart license...');
+    showSuccess('Smart license deployment initiated! Check the console for details.');
   };
 
   const renderCurrentStep = () => {
@@ -642,12 +642,12 @@ contract SmartLicense is Ownable, ReentrancyGuard {
           <Card>
             <CardHeader>
               <CardTitle tag="h4">
-                {isVerificationMode ? 'Verify Smart License Proposal' : 'Create Smart License'}
+                {isVerificationMode ? 'Verify Smart License™ Proposal' : 'Create Smart License™'}
               </CardTitle>
               <p className="card-category">
                 {isVerificationMode 
-                  ? 'Review and verify existing smart license proposals for deployment'
-                  : 'Build and deploy smart licenses for intellectual property management'
+                  ? 'Review and verify existing smart license™ proposals for deployment'
+                  : 'Build and deploy smart licenses™ for intellectual property management'
                 }
               </p>
             </CardHeader>
