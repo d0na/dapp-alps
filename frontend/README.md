@@ -37,3 +37,21 @@ Feel free to reach us through this repository or
 Also you can [follow us on Twitter](https://twitter.com/HardhatHQ).
 
 **Happy _building_!**
+
+
+# NOTE
+
+Before run the dApp
+
+Make sure Hardhat node is running: 
+`npx hardhat node`
+
+Deploy contracts: 
+
+`npx hardhat run scripts/deploy.js --network localhost``
+
+Select the correct network in the configuration dialog
+Contract addresses will be loaded automatically after deployment
+
+Current network: *Hardhat Local*
+
