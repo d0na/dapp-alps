@@ -74,14 +74,14 @@ const StepDeployment = ({
           setTimeout(() => {
             setIsValidating(false);
             setDeploymentStatus('sent');
-            showSuccess('License sent for approval! Status changed to "proposed". Files downloaded automatically.');
+            showSuccess('Smart License™ sent for approval! Status changed to "proposed". Files downloaded automatically.');
           }, 2000);
         }
       } catch (error) {
         console.error('Error parsing JSON:', error);
         setShouldDownloadAfterUpdate(false);
         setIsValidating(false);
-        showError('Error processing license data');
+        showError('Error processing smart license™ data');
       }
     }
   }, [generatedJson, shouldDownloadAfterUpdate]);
@@ -160,7 +160,7 @@ const StepDeployment = ({
     }
     
     if (!generatedJson) {
-      showError('No license data available to send for approval');
+      showError('No smart license™ data available to send for approval');
       return;
     }
     
@@ -183,19 +183,19 @@ const StepDeployment = ({
       setDeploymentStatus('sent');
       const recipientLabel = recipientType === 'custom' ? 'Custom Address' : recipientType;
       const message = approvalComment 
-        ? `License sent for approval to ${recipientLabel}: ${recipientAddress}\nComment: ${approvalComment}`
-        : `License sent for approval to ${recipientLabel}: ${recipientAddress}`;
+        ? `Smart License™ sent for approval to ${recipientLabel}: ${recipientAddress}\nComment: ${approvalComment}`
+        : `Smart License™ sent for approval to ${recipientLabel}: ${recipientAddress}`;
       showSuccess(message);
     } catch (error) {
       setIsValidating(false);
-      showError('Error sending license for approval: ' + error.message);
+      showError('Error sending smart license™ for approval: ' + error.message);
     }
   };
 
   // Approve license
   const approveLicense = () => {
     setDeploymentStatus('approved');
-    showSuccess('License approved! Ready for deployment.');
+    showSuccess('Smart License™ approved! Ready for deployment.');
   };
 
   // Deploy license
@@ -211,7 +211,7 @@ const StepDeployment = ({
           setDeploymentStatus('deployed');
           setContractAddress('0x' + Math.random().toString(16).substr(2, 40));
           setTransactionHash('0x' + Math.random().toString(16).substr(2, 64));
-          showSuccess('Smart License deployed successfully!');
+          showSuccess('Smart License™ deployed successfully!');
           return 100;
         }
         return prev + 10;
@@ -222,11 +222,11 @@ const StepDeployment = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle tag="h4">Deploy Smart License</CardTitle>
+        <CardTitle tag="h4">Deploy Smart License™</CardTitle>
         <p className="card-category">
           {isVerificationMode 
-            ? 'Deploy the verified smart license to the blockchain'
-            : 'Approve and deploy your smart license to the blockchain'
+            ? 'Deploy the verified smart license™ to the blockchain'
+            : 'Approve and deploy your smart license™ to the blockchain'
           }
         </p>
         
@@ -259,7 +259,7 @@ const StepDeployment = ({
           <Col md="12">
             <Card style={{ backgroundColor: '#f8f9fa' }}>
               <CardHeader>
-                <CardTitle tag="h5">License Summary</CardTitle>
+                <CardTitle tag="h5">Smart License™ Summary</CardTitle>
               </CardHeader>
               <CardBody>
                 {generatedJson && (
@@ -370,7 +370,7 @@ const StepDeployment = ({
                             <small className="text-muted">
                               {isCustomAddress 
                                 ? 'Enter a custom recipient address' 
-                                : 'Address automatically filled from license data'
+                                : 'Address automatically filled from smart license™ data'
                               }
                             </small>
                             {isCustomAddress && recipientAddress && !isValidCustomAddress() && (
@@ -419,21 +419,21 @@ const StepDeployment = ({
                   
                   {deploymentStatus === 'sent' && (
                     <Alert color="warning">
-                      License sent for approval. Waiting for recipient to review and approve.
+                      Smart License™ sent for approval. Waiting for recipient to review and approve.
                     </Alert>
                   )}
                   
                   {deploymentStatus === 'approved' && (
                     <div>
                       <Alert color="success">
-                        License approved by both parties! Ready for deployment.
+                        Smart License™ approved by both parties! Ready for deployment.
                       </Alert>
                       <Button
                         color="success"
                         onClick={deployLicense}
                         size="lg"
                       >
-                        Deploy Smart License
+                        Deploy Smart License™
                       </Button>
                     </div>
                   )}
@@ -441,7 +441,7 @@ const StepDeployment = ({
                   {deploymentStatus === 'deploying' && (
                     <div>
                       <Alert color="info">
-                        Deploying smart license to blockchain...
+                        Deploying smart license™ to blockchain...
                       </Alert>
                       <Progress value={deploymentProgress} color="success" style={{ height: '20px' }}>
                         {deploymentProgress}%
@@ -452,8 +452,8 @@ const StepDeployment = ({
                   {deploymentStatus === 'deployed' && (
                     <div>
                       <Alert color="success">
-                        <h5>Smart License Deployed Successfully!</h5>
-                        <p>Your smart license is now active on the blockchain.</p>
+                        <h5>Smart License™ Deployed Successfully!</h5>
+                        <p>Your smart license™ is now active on the blockchain.</p>
                       </Alert>
                       
                       <Row>
@@ -518,10 +518,10 @@ const StepDeployment = ({
                             color="success"
                             size="lg"
                             onClick={() => {
-                              showInfo('License management dashboard would open here');
+                              showInfo('Smart License™ management dashboard would open here');
                             }}
                           >
-                            Manage License
+                            Manage Smart License™
                           </Button>
                         </Col>
                       </Row>
@@ -543,7 +543,7 @@ const StepDeployment = ({
                 </CardHeader>
                 <CardBody>
                   <Alert color="info">
-                    <strong>Verification Mode:</strong> Since you're reviewing an existing license proposal, you can deploy directly without approval process.
+                    <strong>Verification Mode:</strong> Since you're reviewing an existing smart license™ proposal, you can deploy directly without approval process.
                   </Alert>
                   
                   {deploymentStatus === 'pending' && (
@@ -553,7 +553,7 @@ const StepDeployment = ({
                         onClick={deployLicense}
                         size="lg"
                       >
-                        Deploy Smart License
+                        Deploy Smart License™
                       </Button>
                     </div>
                   )}
@@ -561,7 +561,7 @@ const StepDeployment = ({
                   {deploymentStatus === 'deploying' && (
                     <div>
                       <Alert color="info">
-                        Deploying smart license to blockchain...
+                        Deploying smart license™ to blockchain...
                       </Alert>
                       <Progress value={deploymentProgress} color="success" style={{ height: '20px' }}>
                         {deploymentProgress}%
@@ -572,8 +572,8 @@ const StepDeployment = ({
                   {deploymentStatus === 'deployed' && (
                     <div>
                       <Alert color="success">
-                        <h5>Smart License Deployed Successfully!</h5>
-                        <p>Your smart license is now active on the blockchain.</p>
+                        <h5>Smart License™ Deployed Successfully!</h5>
+                        <p>Your smart license™ is now active on the blockchain.</p>
                       </Alert>
                       
                       <Row>
@@ -638,10 +638,10 @@ const StepDeployment = ({
                             color="success"
                             size="lg"
                             onClick={() => {
-                              showInfo('License management dashboard would open here');
+                              showInfo('Smart License™ management dashboard would open here');
                             }}
                           >
-                            Manage License
+                            Manage Smart License™
                           </Button>
                         </Col>
                       </Row>

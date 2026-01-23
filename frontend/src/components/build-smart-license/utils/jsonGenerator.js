@@ -87,8 +87,8 @@ export const generateSmartLicenseJson = (mode, manualData, aiText, existingLicen
       createdAt: timestamp,
       createdBy: "creator",
       comment: mode === 'manual' 
-        ? (manualData.comment || `Editing license: ${manualData.name || existingLicenseData.name}`)
-        : `AI-generated license based on provided text`,
+        ? (manualData.comment || `Editing smart license™: ${manualData.name || existingLicenseData.name}`)
+        : `AI-generated smart license™ based on provided text`,
       data: versionData,
       feedback: null
     };
@@ -110,7 +110,7 @@ export const generateSmartLicenseJson = (mode, manualData, aiText, existingLicen
     // New license mode
     jsonData = {
       licenseId: licenseId,
-      name: manualData.name || "Smart License",
+      name: manualData.name || "Smart License™",
       currentVersion: 1,
       status: "draft",
       createdAt: timestamp,
@@ -127,8 +127,8 @@ export const generateSmartLicenseJson = (mode, manualData, aiText, existingLicen
           createdAt: timestamp,
           createdBy: "creator",
           comment: mode === 'manual' 
-            ? (manualData.comment || `Initial license configuration: ${manualData.name || 'Smart License'}`)
-            : `AI-generated license based on provided text`,
+            ? (manualData.comment || `Initial smart license™ configuration: ${manualData.name || 'Smart License™'}`)
+            : `AI-generated smart license™ based on provided text`,
           data: versionData,
           feedback: null
         }
@@ -180,7 +180,7 @@ export const sendForApproval = (jsonString) => {
     
     return JSON.stringify(jsonData, null, 2);
   } catch (error) {
-    console.error('Error updating license status:', error);
+    console.error('Error updating smart license™ status:', error);
     return jsonString; // Return original if error
   }
 };

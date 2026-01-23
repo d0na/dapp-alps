@@ -25,7 +25,7 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
       <CardHeader>
         <CardTitle tag="h4">Choose Smart License™ Creation Mode</CardTitle>
         <p className="card-category">
-          Select how you want to create your smart license
+          Select how you want to create your smart license™
         </p>
       </CardHeader>
       <CardBody>
@@ -47,7 +47,7 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
               color="textSecondary" 
               style={{ marginLeft: 32, marginBottom: 16 }}
             >
-              Use a structured form to manually configure all license parameters
+              Use a structured form to manually configure all smart license™ parameters
             </Typography>
             
             <FormControlLabel
@@ -60,7 +60,7 @@ const StepModeSelection = ({ mode, setMode, handleNext }) => {
               color="textSecondary" 
               style={{ marginLeft: 32, marginBottom: 20 }}
             >
-              Upload a document or provide text for AI to analyze and generate the license
+              Upload a document or provide text for AI to analyze and generate the smart license™
             </Typography>
           </RadioGroup>
         </FormControl>

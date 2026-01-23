@@ -218,7 +218,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     }
     
     function deployLicense() external onlyOwner {
-        require(isApproved, "License not approved by both parties");
+        require(isApproved, "Smart License™ not approved by both parties");
         require(!isDeployed, "Already deployed");
         
         isDeployed = true;
@@ -232,7 +232,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
       
       return contract;
     } catch (error) {
-      console.error('Error generating smart license:', error);
+      console.error('Error generating smart license™:', error);
       return '// Error generating contract: ' + error.message;
     }
   };
@@ -494,7 +494,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
     }
     
     function payRoyalty() external payable nonReentrant {
-        require(licenseInfo.isActive, "License not active");
+        require(licenseInfo.isActive, "Smart License™ not active");
         require(msg.value > 0, "Payment amount must be greater than 0");
         
         // Transfer royalty to licensor
@@ -554,8 +554,8 @@ contract SmartLicense is Ownable, ReentrancyGuard {
 
   const handleDeployContract = () => {
     // Here you would typically deploy the smart license to the blockchain
-    console.log('Deploying smart license...');
-    showSuccess('Smart license deployment initiated! Check the console for details.');
+    console.log('Deploying smart license™...');
+    showSuccess('Smart license™ deployment initiated! Check the console for details.');
   };
 
   const renderCurrentStep = () => {

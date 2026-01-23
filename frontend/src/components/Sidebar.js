@@ -107,7 +107,7 @@ class Sidebar extends React.Component {
               activeClassName="active"
             >
               <i className="nc-icon nc-vector"/>
-              <p>Smart Licenses</p>
+              <p>Smart Licenses™</p>
             </NavLink>
             </li>
             <li className={this.activeRoute + ""} key={4}>
@@ -117,7 +117,7 @@ class Sidebar extends React.Component {
               activeClassName="active"
             >
               <i className="nc-icon nc-simple-add"/>
-              <p>Create License</p>
+              <p>Create Smart License™</p>
             </NavLink>
             </li>
           </Nav>

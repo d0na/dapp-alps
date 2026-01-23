@@ -354,17 +354,17 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
     return uniqueDeps;
   };
 
-  // Mock function to check if address is a smart license (in real implementation, this would check the blockchain)
+  // Mock function to check if address is a smart license™ (in real implementation, this would check the blockchain)
   const isSmartLicenseAddress = (address) => {
-    // Mock logic: addresses starting with 0x1 are smart licenses, 0x2 are oracles
+    // Mock logic: addresses starting with 0x1 are smart licenses™, 0x2 are oracles
     return address.startsWith('0x1');
   };
 
-  // Mock function to fetch smart license data from blockchain (cached)
+  // Mock function to fetch smart license™ data from blockchain (cached)
   const fetchSmartLicenseData = async (address) => {
     // Check if we already have this data cached
     const cachedData = dependencies.find(dep => dep.smartLicenseAddress === address);
-    if (cachedData && cachedData.name !== 'Unknown Smart License') {
+    if (cachedData && cachedData.name !== 'Unknown Smart License™') {
       return {
         name: cachedData.name,
         version: cachedData.version,
@@ -411,7 +411,7 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
     };
 
     return mockData[address] || {
-      name: 'Unknown Smart License',
+      name: 'Unknown Smart License™',
       version: 'N/A',
       licensor: 'Unknown',
       territory: 'N/A',
@@ -480,7 +480,7 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
             <div className="spinner-border text-primary" role="status">
               <span className="sr-only">Loading dependencies...</span>
             </div>
-            <p style={{ marginTop: '10px', color: '#6c757d' }}>Loading smart license data from blockchain...</p>
+            <p style={{ marginTop: '10px', color: '#6c757d' }}>Loading smart license™ data from blockchain...</p>
           </div>
         ) : dependencies.length > 0 ? (
           <div>
@@ -507,7 +507,7 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
                 <Row>
                   <Col md="6">
                     <div style={{ marginBottom: '8px' }}>
-                      <strong>Smart License Address:</strong>
+                      <strong>Smart License™ Address:</strong>
                       <br />
                       <code style={{ fontSize: '12px', color: '#666' }}>{dep.smartLicenseAddress}</code>
                     </div>
@@ -560,7 +560,7 @@ const SmartPolicyDependenciesReadOnly = ({ rules }) => {
             border: '1px solid #dee2e6'
           }}>
             <p style={{ color: '#6c757d', margin: 0 }}>
-              No smart policy dependencies detected. Add smart license addresses in Rules Configuration to see dependencies.
+              No smart policy dependencies detected. Add smart license™ addresses in Rules Configuration to see dependencies.
             </p>
           </div>
         )}
@@ -581,7 +581,7 @@ const RevisionTabsView = ({ versionedLicenseData, onVersionSelect, selectedVersi
   return (
     <Card style={{ marginBottom: '20px' }}>
       <CardHeader>
-        <CardTitle tag="h6">License Revisions</CardTitle>
+        <CardTitle tag="h6">Smart License™ Revisions</CardTitle>
         <p className="card-category">
           Review different versions and their revision history
         </p>
@@ -688,7 +688,7 @@ const RevisionTabsView = ({ versionedLicenseData, onVersionSelect, selectedVersi
                       
                       <Row style={{ marginTop: '15px' }}>
                         <Col md="12">
-                          <h6>License Configuration:</h6>
+                          <h6>Smart License™ Configuration:</h6>
                           <div style={{ 
                             backgroundColor: '#e9ecef', 
                             padding: '10px', 
@@ -725,7 +725,7 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
       <CardHeader>
         <CardTitle tag="h6">Version History</CardTitle>
         <p className="card-category">
-          Navigate through different versions of this license
+          Navigate through different versions of this smart license™
         </p>
       </CardHeader>
       <CardBody>
@@ -1937,7 +1937,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
                                       color: '#6c757d',
                                       fontWeight: '500'
                                     }}>
-                                      Oracle Address / Smart License Address
+                                      Oracle Address / Smart License™ Address
                                     </Label>
                                     <Input
                                       type="text"
@@ -2320,11 +2320,11 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
             if (currentVersion) {
               setSelectedVersion(currentVersion.versionNumber);
             }
-            showSuccess(`Versioned license data loaded successfully! Found ${jsonData.versions.length} versions. Currently viewing version ${currentVersion?.versionNumber || 'latest'}.`);
+            showSuccess(`Versioned smart license™ data loaded successfully! Found ${jsonData.versions.length} versions. Currently viewing version ${currentVersion?.versionNumber || 'latest'}.`);
           } else {
             setLocalVersionedData(null);
             setSelectedVersion(null);
-            showSuccess('License data loaded successfully! All fields have been populated.');
+            showSuccess('Smart License™ data loaded successfully! All fields have been populated.');
           }
         } catch (error) {
           showError('Error parsing JSON file: ' + error.message);
@@ -2418,12 +2418,12 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         <Col md="6">
           <FormGroup>
             <Label for="licenseName">
-              <RequiredField>License Name</RequiredField>
+              <RequiredField>Smart License™ Name</RequiredField>
             </Label>
             <Input
               type="text"
               id="licenseName"
-              placeholder="Enter license name"
+              placeholder="Enter Smart License™ name"
               value={manualData.name || ''}
               onChange={(e) => updateManualData('name', e.target.value)}
               readOnly={isReadOnly}
@@ -2560,13 +2560,13 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
               type="textarea"
               id="comment"
               rows="3"
-              placeholder="Add a comment describing this version of the license..."
+              placeholder="Add a comment describing this version of the smart license™..."
               value={manualData.comment || ''}
               onChange={(e) => updateManualData('comment', e.target.value)}
               readOnly={isReadOnly}
             />
             <small className="form-text text-muted">
-              Optional: Describe the changes or purpose of this license version
+              Optional: Describe the changes or purpose of this smart license™ version
             </small>
           </FormGroup>
         </Col>
@@ -2662,7 +2662,7 @@ const AIConfigurationForm = ({ aiText, setAiText, validation, showValidationErro
               type="textarea"
               id="aiTextInput"
               rows="10"
-              placeholder="Paste license agreement text, contract details, or requirements for AI analysis..."
+              placeholder="Paste smart license™ agreement text, contract details, or requirements for AI analysis..."
               value={aiText}
               onChange={(e) => setAiText(e.target.value)}
               readOnly={isReadOnly}
@@ -2712,7 +2712,7 @@ const StepConfiguration = ({
     const isValid = hasName && hasLicensor && hasLicensee && hasDuration && hasTerritory && hasIPs;
     const warnings = [];
     
-    if (!hasName) warnings.push("License name is required");
+    if (!hasName) warnings.push("Smart License™ name is required");
     if (!hasLicensor) warnings.push("Licensor is required");
     if (!hasLicensee) warnings.push("Licensee is required");
     if (!hasDuration) warnings.push("Duration is required");
@@ -2751,19 +2751,19 @@ const StepConfiguration = ({
       <CardHeader>
         <CardTitle tag="h4">
           {isRevisionMode 
-            ? 'License Revision Required' 
+            ? 'Smart License™ Revision Required' 
             : isEditMode
-            ? 'Edit License Configuration'
-            : (mode === 'manual' ? 'License Configuration' : 'AI-Assisted Creation')
+            ? 'Edit Smart License™ Configuration'
+            : (mode === 'manual' ? 'Smart License™ Configuration' : 'AI-Assisted Creation')
           }
         </CardTitle>
         <p className="card-category">
           {isRevisionMode 
-            ? 'Please address the feedback below and modify the license accordingly'
+            ? 'Please address the feedback below and modify the smart license™ accordingly'
             : isEditMode
-            ? 'Edit existing license details. A new draft version will be created.'
+            ? 'Edit existing smart license™ details. A new draft version will be created.'
             : (mode === 'manual' 
-              ? 'Configure license details with royalty structures and usage bases' 
+              ? 'Configure smart license™ details with royalty structures and usage bases' 
               : 'Provide text or upload a document for AI analysis')
             }
         </p>
@@ -2772,8 +2772,8 @@ const StepConfiguration = ({
         {/* Edit Mode Alert */}
         {isEditMode && !isRevisionMode && (
           <Alert color="info" style={{ marginBottom: '20px' }}>
-            <h5><strong>📝 Editing Existing License</strong></h5>
-            <p><strong>License ID:</strong> {versionedLicenseData.licenseId}</p>
+            <h5><strong>📝 Editing Existing Smart License™</strong></h5>
+            <p><strong>Smart License™ ID:</strong> {versionedLicenseData.licenseId}</p>
             <p><strong>Current Version:</strong> {versionedLicenseData.currentVersion}</p>
             <p><strong>Status:</strong> {versionedLicenseData.status}</p>
             <hr />
@@ -2790,7 +2790,7 @@ const StepConfiguration = ({
               "{revisionDescription}"
             </p>
             <hr />
-            <p><strong>Please modify the license parameters below to address these concerns.</strong></p>
+            <p><strong>Please modify the smart license™ parameters below to address these concerns.</strong></p>
           </Alert>
         )}
         

@@ -84,9 +84,9 @@ const StepFinalOutput = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle tag="h4">Final Output - Smart License Generated</CardTitle>
+        <CardTitle tag="h4">Final Output - Smart License™ Generated</CardTitle>
         <p className="card-category">
-          Review your generated JSON, Smart license, and summary
+          Review your generated JSON, Smart license™, and summary
         </p>
       </CardHeader>
       <CardBody>
@@ -106,7 +106,7 @@ const StepFinalOutput = ({
                   className={activeTab === '2' ? 'active' : ''}
                   onClick={() => setActiveTab('2')}
                 >
-                  Smart license
+                  Smart license™
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -114,7 +114,7 @@ const StepFinalOutput = ({
                   className={activeTab === '3' ? 'active' : ''}
                   onClick={() => setActiveTab('3')}
                 >
-                  License Summary
+                  Smart License™ Summary
                 </NavLink>
               </NavItem>
             </Nav>
@@ -186,7 +186,7 @@ const StepFinalOutput = ({
                           <Button
                             color="info"
                             size="sm"
-                            onClick={() => handleCopyToClipboard(generatedSmartContract, 'Smart License')}
+                            onClick={() => handleCopyToClipboard(generatedSmartContract, 'Smart License™')}
                             style={{ marginRight: '10px' }}
                           >
                             Copy
@@ -241,13 +241,13 @@ const StepFinalOutput = ({
                       <Col md="12">
                         <Card style={{ marginBottom: '20px' }}>
                           <CardHeader>
-                            <CardTitle tag="h6">License Summary</CardTitle>
+                            <CardTitle tag="h6">Smart License™ Summary</CardTitle>
                           </CardHeader>
                           <CardBody>
                             <Row>
                               <Col md="3">
                                 <div style={{ textAlign: 'center', padding: '10px' }}>
-                                  <h6>License Name</h6>
+                                  <h6>Smart License™ Name</h6>
                                   <Badge color="primary" style={{ fontSize: '14px' }}>
                                     {jsonData.smartLicense?.title || 'N/A'}
                                   </Badge>

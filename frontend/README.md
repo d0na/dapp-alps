@@ -48,7 +48,7 @@ Make sure Hardhat node is running:
 
 Deploy contracts: 
 
-`npx hardhat run scripts/deploy.js --network localhost`
+`npx hardhat run scripts/deploy.js --network localhost``
 
 Select the correct network in the configuration dialog
 Contract addresses will be loaded automatically after deployment

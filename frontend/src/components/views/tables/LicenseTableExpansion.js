@@ -59,7 +59,7 @@ class LicenseTableExtension extends React.Component {
               <CardHeader>
                 <CardTitle tag="h5">
                   {" "}
-                  Smart License - {managerAddress}{" "}
+                  Smart License™ - {managerAddress}{" "}
                 </CardTitle>
               </CardHeader>
               <CardBody>

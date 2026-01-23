@@ -99,7 +99,7 @@ const VersionHistoryNavigation = ({ versionedLicenseData, onVersionSelect, selec
       <CardHeader>
         <CardTitle tag="h6">Version History</CardTitle>
         <p className="card-category">
-          Navigate through different versions of this license
+          Navigate through different versions of this smart license™
         </p>
       </CardHeader>
       <CardBody>
@@ -333,7 +333,7 @@ const StepReviewGenerate = ({
       
       return JSON.stringify(jsonData, null, 2);
     } catch (error) {
-      console.error('Error updating license status:', error);
+      console.error('Error updating smart license™ status:', error);
       return jsonString; // Return original if error
     }
   };
@@ -365,7 +365,7 @@ const StepReviewGenerate = ({
     }
     
     if (!generatedJson) {
-      showError('No license data available to request revision');
+      showError('No smart license™ data available to request revision');
       return;
     }
     
@@ -642,8 +642,8 @@ const StepReviewGenerate = ({
           <Row>
             <Col md="12">
               <Alert color="info">
-                <strong>License Information:</strong><br />
-                License ID: {displayData.licenseId}<br />
+                <strong>Smart License™ Information:</strong><br />
+                Smart License™ ID: {displayData.licenseId}<br />
                 Current Version: {displayData.currentVersion}<br />
                 Status: <Badge color="primary">{displayData.status}</Badge><br />
                 Created: {new Date(displayData.createdAt).toLocaleDateString()}<br />
@@ -656,7 +656,7 @@ const StepReviewGenerate = ({
         <Row>
           <Col md="6">
             <FormGroup>
-              <Label><strong>License Name</strong></Label>
+              <Label><strong>Smart License™ Name</strong></Label>
               <Input type="text" value={displayData.name || ''} readOnly />
             </FormGroup>
           </Col>
@@ -808,7 +808,7 @@ const StepReviewGenerate = ({
               ))
             ) : (
               <Alert color="warning">
-                No rules configured in this license.
+                No rules configured in this smart license™.
               </Alert>
             )}
           </Col>
@@ -820,7 +820,7 @@ const StepReviewGenerate = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle tag="h4">Review & Generate Smart License</CardTitle>
+        <CardTitle tag="h4">Review & Generate Smart License™</CardTitle>
         <p className="card-category">
           Review configuration and generated smart license™
         </p>
@@ -831,7 +831,7 @@ const StepReviewGenerate = ({
         {isProposedStatus() && (
           <Alert color="info" style={{ marginBottom: '20px' }}>
             <h5><strong>📤 Approval Process</strong></h5>
-            <p><strong>License sent for approval.</strong> Waiting for recipient to review and approve.</p>
+            <p><strong>Smart License™ sent for approval.</strong> Waiting for recipient to review and approve.</p>
             <p><small>Status: <Badge color="primary">proposed</Badge></small></p>
           </Alert>
         )}
@@ -927,7 +927,7 @@ const StepReviewGenerate = ({
             <Row>
               <Col md="12">
                 <FormGroup>
-                  <Label for="generatedJson">Generated Smart License JSON</Label>
+                  <Label for="generatedJson">Generated Smart License™ JSON</Label>
                   <textarea
                     id="generatedJson"
                     rows="25"
@@ -1206,7 +1206,7 @@ const StepReviewGenerate = ({
                 <CardBody>
                   <Alert color="warning">
                     <strong>
-                      Request changes to this license proposal
+                      Request changes to this smart license™ proposal
                     </strong>
                   </Alert>
                   
@@ -1247,7 +1247,7 @@ const StepReviewGenerate = ({
                         <small className="text-muted">
                           {isCustomAddress 
                             ? 'Enter a custom recipient address' 
-                            : 'Address automatically filled from license data'
+                            : 'Address automatically filled from smart license™ data'
                           }
                         </small>
                         {isCustomAddress && recipientAddress && !isValidCustomAddress() && (
@@ -1297,7 +1297,7 @@ const StepReviewGenerate = ({
                   
                   <Alert color="info" style={{ marginTop: '15px', marginBottom: '0' }}>
                     <small>
-                      <strong>Note:</strong> This will change the license status to "needs_revision" and download the updated JSON file automatically.
+                      <strong>Note:</strong> This will change the smart license™ status to "needs_revision" and download the updated JSON file automatically.
                     </small>
                   </Alert>
                 </CardBody>

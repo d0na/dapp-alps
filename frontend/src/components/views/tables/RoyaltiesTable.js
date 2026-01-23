@@ -43,7 +43,7 @@ class RoyaltiesTable extends React.Component {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Associated Smart License</th>
+                <th>Associated Smart License™</th>
                 <th>Royalty Value</th>
                 <th>Issue Date</th>
                 <th>Payment Status</th>

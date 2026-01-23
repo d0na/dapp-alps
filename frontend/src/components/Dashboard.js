@@ -117,7 +117,7 @@ export class Dashboard extends React.Component {
                     </Col>
                     <Col md="8" xs="7">
                       <div className="numbers">
-                        <p className="card-category">Active Smart Licenses</p>
+                        <p className="card-category">Active Smart Licenses™</p>
                         <CardTitle tag="p">
                           {this.props.managerData.length}
                         </CardTitle>
@@ -129,7 +129,7 @@ export class Dashboard extends React.Component {
                 <CardFooter>
                   <hr />
                   <div className="stats">
-                    <i className="fas fa-sync-alt" /> See Related Smart Licenses
+                    <i className="fas fa-sync-alt" /> See Related Smart Licenses™
                   </div>
                 </CardFooter>
               </Card>
@@ -143,7 +143,7 @@ export class Dashboard extends React.Component {
                   <CardHeader>
                     <CardTitle tag="h5">Unpaid Royalties</CardTitle>
                     <p className="card-category">
-                      Grouped by Active Smart Licenses (values in $)
+                      Grouped by Active Smart Licenses™ (values in $)
                     </p>
                   </CardHeader>
                   <CardBody style={{ height: 400 }}>
@@ -158,7 +158,7 @@ export class Dashboard extends React.Component {
                   <CardHeader>
                     <CardTitle tag="h5">Royalties Timeline</CardTitle>
                     <p className="card-category">
-                      Paid and Unpaid Royalties by Active Smart Licenses
+                      Paid and Unpaid Royalties by Active Smart Licenses™
                     </p>
                   </CardHeader>
                   <CardBody style={{ height: 400 }}>
