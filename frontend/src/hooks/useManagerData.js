@@ -10,18 +10,28 @@ import {
 import ManagerArtifact from "contracts/ManagerContract.json";
 import EntityArtifact from "contracts/EntityContract.json";
 import activeLicensesMock from "assets/mock-data/activeLicensesTable-data.json";
+import { getEntityNameDebounced } from "utils/EntityResolver";
 
 const DEFAULT_POLL_INTERVAL_MS = 15000;
 const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK_DATA === "true";
 
 const buildMockManagerData = () =>
-  activeLicensesMock.map((item, index) => ({
-    managerAddress: `0x${(index + 1).toString(16).padStart(40, "0")}`,
-    licensee: item.Licensee,
-    licensor: item.Licensor,
-    isActive: true,
-    royaltyData: [],
-  }));
+  activeLicensesMock.map((item, index) => {
+    const managerAddress = `0x${(index + 1).toString(16).padStart(40, "0")}`;
+    const licenseeAddress = `0x${(index + 1001).toString(16).padStart(40, "0")}`;
+    const licensorAddress = `0x${(index + 2001).toString(16).padStart(40, "0")}`;
+    return {
+      managerAddress,
+      licensee: item.Licensee,
+      licensor: item.Licensor,
+      licenseeAddress,
+      licensorAddress,
+      licenseeName: item.Licensee,
+      licensorName: item.Licensor,
+      isActive: true,
+      royaltyData: [],
+    };
+  });
 
 const transformManagerLegacyData = (data) => {
   const transformedData = [];
@@ -66,6 +76,10 @@ export const useManagerData = (options = {}) => {
   const [isMockData, setIsMockData] = useState(false);
   const pollRef = useRef(null);
   const isMountedRef = useRef(true);
+  const defaultNameRef = useRef({
+    licensor: "Unknown Licensor",
+    licensee: "Unknown Licensee",
+  });
 
   const loadManagerData = useCallback(async () => {
     try {
@@ -111,6 +125,8 @@ export const useManagerData = (options = {}) => {
           managerAddress,
           licensee,
           licensor,
+          licenseeAddress: licensee,
+          licensorAddress: licensor,
           isActive,
           royaltyData,
         });
@@ -156,5 +172,26 @@ export const useManagerData = (options = {}) => {
     };
   }, [loadManagerData, pollIntervalMs]);
 
-  return { managerData, error, isMockData, reload: loadManagerData };
+  const resolveEntityName = useCallback(
+    async (address, type) => {
+      if (!address || typeof address !== "string") {
+        return { name: "", isFromContract: false };
+      }
+      if (isMockData) {
+        const addressKey = type === "licensor" ? "licensorAddress" : "licenseeAddress";
+        const nameKey = type === "licensor" ? "licensorName" : "licenseeName";
+        const fallbackKey = type === "licensor" ? "licensor" : "licensee";
+        const match = managerData.find((item) => item[addressKey] === address);
+        const name =
+          (match && (match[nameKey] || match[fallbackKey])) ||
+          defaultNameRef.current[type] ||
+          "";
+        return { name, isFromContract: false };
+      }
+      return getEntityNameDebounced(address, type, 1000);
+    },
+    [isMockData, managerData]
+  );
+
+  return { managerData, error, isMockData, reload: loadManagerData, resolveEntityName };
 };

@@ -2063,7 +2063,7 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null, isVerificationMode = false }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null, isVerificationMode = false, resolveEntityName }) => {
   const { toast, showSuccess, showError, hideToast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
@@ -2081,10 +2081,12 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   };
 
   // Function to resolve entity name from address
-  const resolveEntityName = useCallback(async (address, type) => {
+  const resolveEntityNameForAddress = useCallback(async (address, type) => {
     if (!address || typeof address !== 'string' || !address.startsWith('0x')) {
       return '';
     }
+
+    const resolveFn = resolveEntityName || getEntityNameDebounced;
 
     // Set loading state
     if (type === 'licensor') {
@@ -2109,14 +2111,14 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
 
     try {
       if (type === 'licensor') {
-        const result = await getEntityNameDebounced(address, 'licensor', 1000);
+        const result = await resolveFn(address, 'licensor', 1000);
         clearTimeout(timeoutId);
         setLicensorName(result.name);
         setLicensorFromContract(result.isFromContract);
         setIsLoadingLicensorName(false);
         return result.name;
       } else if (type === 'licensee') {
-        const result = await getEntityNameDebounced(address, 'licensee', 1000);
+        const result = await resolveFn(address, 'licensee', 1000);
         clearTimeout(timeoutId);
         setLicenseeName(result.name);
         setLicenseeFromContract(result.isFromContract);
@@ -2137,13 +2139,13 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
       }
     }
     return '';
-  }, []);
+  }, [resolveEntityName]);
 
   // Handle address change for licensor
   const handleLicensorChange = (value) => {
     updateManualData('licensor', value);
     if (value && value.startsWith('0x') && value.length === 42) {
-      resolveEntityName(value, 'licensor');
+      resolveEntityNameForAddress(value, 'licensor');
     } else {
       setLicensorName('');
       setLicensorFromContract(false);
@@ -2154,7 +2156,7 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   const handleLicenseeChange = (value) => {
     updateManualData('licensee', value);
     if (value && value.startsWith('0x') && value.length === 42) {
-      resolveEntityName(value, 'licensee');
+      resolveEntityNameForAddress(value, 'licensee');
     } else {
       setLicenseeName('');
       setLicenseeFromContract(false);
@@ -2164,12 +2166,12 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
   // Resolve entity names when data is loaded
   useEffect(() => {
     if (manualData.licensor && manualData.licensor.startsWith('0x') && manualData.licensor.length === 42) {
-      resolveEntityName(manualData.licensor, 'licensor');
+      resolveEntityNameForAddress(manualData.licensor, 'licensor');
     }
     if (manualData.licensee && manualData.licensee.startsWith('0x') && manualData.licensee.length === 42) {
-      resolveEntityName(manualData.licensee, 'licensee');
+      resolveEntityNameForAddress(manualData.licensee, 'licensee');
     }
-  }, [manualData.licensor, manualData.licensee]);
+  }, [manualData.licensor, manualData.licensee, resolveEntityNameForAddress]);
 
   // Handle version selection
   const handleVersionSelect = (versionNumber) => {
@@ -2688,7 +2690,8 @@ const StepConfiguration = ({
   setShowValidationErrors,
   isReadOnly = false,
   versionedLicenseData = null,
-  isVerificationMode = false
+  isVerificationMode = false,
+  resolveEntityName
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -2804,6 +2807,7 @@ const StepConfiguration = ({
             isReadOnly={isReadOnly}
             versionedLicenseData={versionedLicenseData}
             isVerificationMode={isVerificationMode}
+            resolveEntityName={resolveEntityName}
           />
         ) : (
           <AIConfigurationForm 
@@ -2877,6 +2881,7 @@ ManualConfigurationForm.propTypes = {
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
   isVerificationMode: PropTypes.bool,
+  resolveEntityName: PropTypes.func,
 };
 
 RulesConfiguration.propTypes = {
@@ -2936,6 +2941,7 @@ StepConfiguration.propTypes = {
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
   isVerificationMode: PropTypes.bool,
+  resolveEntityName: PropTypes.func,
 };
 
 export default StepConfiguration;

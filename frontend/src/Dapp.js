@@ -129,6 +129,7 @@ export class DappLayout extends React.Component {
                 <BuildSmartLicense
                   {...this.props}
                   key={3}
+                  resolveEntityName={this.props.resolveEntityName}
                 />
               
             </Route>
@@ -144,13 +145,14 @@ export class DappLayout extends React.Component {
 }
 
 export const Dapp = (props) => {
-  const { managerData, error, isMockData } = useManagerData();
+  const { managerData, error, isMockData, resolveEntityName } = useManagerData();
   return (
     <DappLayout
       {...props}
       managerData={managerData}
       dataError={error}
       isMockData={isMockData}
+      resolveEntityName={resolveEntityName}
     />
   );
 };
