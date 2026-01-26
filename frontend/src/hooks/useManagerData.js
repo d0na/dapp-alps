@@ -1,0 +1,160 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ethers } from "ethers";
+import { getToken } from "utils/Common";
+import {
+  getCurrentNetworkConfig,
+  getContractAddress,
+  loadContractAddresses,
+  setContractAddress,
+} from "config/network";
+import ManagerArtifact from "contracts/ManagerContract.json";
+import EntityArtifact from "contracts/EntityContract.json";
+import activeLicensesMock from "assets/mock-data/activeLicensesTable-data.json";
+
+const DEFAULT_POLL_INTERVAL_MS = 15000;
+const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK_DATA === "true";
+
+const buildMockManagerData = () =>
+  activeLicensesMock.map((item, index) => ({
+    managerAddress: `0x${(index + 1).toString(16).padStart(40, "0")}`,
+    licensee: item.Licensee,
+    licensor: item.Licensor,
+    isActive: true,
+    royaltyData: [],
+  }));
+
+const transformManagerLegacyData = (data) => {
+  const transformedData = [];
+  if (!Array.isArray(data) || data.length % 3 !== 0) {
+    console.log("Invalid array input for legacy data transform.");
+    return transformedData;
+  }
+  for (let i = 0; i < data.length; i++) {
+    transformedData.push(parseInt(data[i]._hex, 16));
+  }
+  return transformedData;
+};
+
+const loadAndSetContractAddresses = async () => {
+  try {
+    const addresses = await loadContractAddresses();
+    if (addresses) {
+      if (addresses.Token) {
+        setContractAddress("token", addresses.Token);
+      }
+      if (addresses.Entity) {
+        setContractAddress("entity", addresses.Entity);
+      }
+      if (addresses.Manager) {
+        setContractAddress("manager", addresses.Manager);
+      }
+    }
+  } catch (error) {
+    console.log("Could not load contract addresses:", error);
+  }
+};
+
+const buildErrorMessage = (error) => {
+  const message = error?.message ? error.message : String(error);
+  return `Failed to load blockchain data. Error: ${message}`;
+};
+
+export const useManagerData = (options = {}) => {
+  const { pollIntervalMs = DEFAULT_POLL_INTERVAL_MS } = options;
+  const [managerData, setManagerData] = useState([]);
+  const [error, setError] = useState(null);
+  const [isMockData, setIsMockData] = useState(false);
+  const pollRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  const loadManagerData = useCallback(async () => {
+    try {
+      const networkConfig = getCurrentNetworkConfig();
+      let provider = new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
+
+      try {
+        await provider.getBlockNumber();
+      } catch (connectError) {
+        if (networkConfig.rpcUrl !== "http://localhost:8545") {
+          provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+          await provider.getBlockNumber();
+        } else {
+          throw connectError;
+        }
+      }
+
+      await loadAndSetContractAddresses();
+
+      const entityAddress = getContractAddress("entity") || getToken();
+      if (!entityAddress) {
+        throw new Error("No entity contract address found.");
+      }
+
+      const signer = provider.getSigner(0);
+      const entity = new ethers.Contract(entityAddress, EntityArtifact.abi, signer);
+      const contractsArr = await entity.getActiveLicenseeSLs();
+
+      const managerContracts = contractsArr.map(
+        (address) => new ethers.Contract(address, ManagerArtifact.abi, signer)
+      );
+
+      const data = [];
+      for (const manager of managerContracts) {
+        const managerAddress = manager.address;
+        const licensee = await manager.getLicensee();
+        const licensor = await manager.getLicensor();
+        const isActive = await manager.isActive();
+        const royaltyData = transformManagerLegacyData(
+          await manager.getRoyaltyHistoryLegacyDapp()
+        );
+        data.push({
+          managerAddress,
+          licensee,
+          licensor,
+          isActive,
+          royaltyData,
+        });
+      }
+
+      if (isMountedRef.current) {
+        setManagerData(data);
+        setError(null);
+        setIsMockData(false);
+      }
+    } catch (loadError) {
+      console.error("Failed to load manager data:", loadError);
+      if (USE_MOCK_DATA) {
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+        if (isMountedRef.current) {
+          setManagerData(buildMockManagerData());
+          setError(null);
+          setIsMockData(true);
+        }
+      } else if (isMountedRef.current) {
+        setError(buildErrorMessage(loadError));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    loadManagerData();
+
+    if (pollIntervalMs > 0) {
+      pollRef.current = setInterval(loadManagerData, pollIntervalMs);
+    }
+
+    return () => {
+      isMountedRef.current = false;
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [loadManagerData, pollIntervalMs]);
+
+  return { managerData, error, isMockData, reload: loadManagerData };
+};

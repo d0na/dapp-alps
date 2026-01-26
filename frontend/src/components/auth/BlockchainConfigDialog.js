@@ -12,7 +12,7 @@ import Dialog from "@material-ui/core/Dialog";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import { setNetworkConfig, NETWORK_CONFIG, getContractAddress } from "../../config/network";
+import { setNetworkConfig, getContractAddress } from "../../config/network";
 
 const options = [
   { value: "development", label: "Development (localhost:8545)" },
