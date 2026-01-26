@@ -39,8 +39,12 @@ async function main() {
     console.log("Entity Address: ", entityContract1.address);
 
 
-    // save the contract's artifacts in the frontend directory
-    saveFrontendFiles(token);
+    // save the contract's artifacts and addresses in the frontend directories
+    saveFrontendFiles(token, {
+        token: token.address,
+        entity: entityContract1.address,
+        manager: manager1.address,
+    });
     // saveFrontendFiles(manager);
     const fs = require("fs");
     const contractsDir = __dirname + "/../frontend/src/contracts";
@@ -61,23 +65,39 @@ async function main() {
     );
 }
 
-function saveFrontendFiles(token) {
+function saveFrontendFiles(token, addresses) {
     const fs = require("fs");
-    const contractsDir = __dirname + "/../frontend/src/contracts";
+    const path = require("path");
+    const contractsDir = path.join(__dirname, "..", "frontend", "src", "contracts");
+    const publicContractsDir = path.join(__dirname, "..", "frontend", "public", "contracts");
 
     if (!fs.existsSync(contractsDir)) {
         fs.mkdirSync(contractsDir);
     }
 
+    if (!fs.existsSync(publicContractsDir)) {
+        fs.mkdirSync(publicContractsDir, { recursive: true });
+    }
+
+    const addressPayload = {
+        Token: addresses.token,
+        Entity: addresses.entity,
+        Manager: addresses.manager,
+    };
+
     fs.writeFileSync(
-        contractsDir + "/contract-address.json",
-        JSON.stringify({ Token: token.address }, undefined, 2)
+        path.join(contractsDir, "contract-address.json"),
+        JSON.stringify(addressPayload, undefined, 2)
+    );
+    fs.writeFileSync(
+        path.join(publicContractsDir, "contract-address.json"),
+        JSON.stringify(addressPayload, undefined, 2)
     );
 
     const TokenArtifact = artifacts.readArtifactSync("Token");
 
     fs.writeFileSync(
-        contractsDir + "/Token.json",
+        path.join(contractsDir, "Token.json"),
         JSON.stringify(TokenArtifact, null, 2)
     );
 }
