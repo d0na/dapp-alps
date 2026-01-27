@@ -45,6 +45,11 @@ async function main() {
         entity: entityContract1.address,
         manager: manager1.address,
     });
+    saveFrontendDevEnv({
+        token: token.address,
+        entity: entityContract1.address,
+        manager: manager1.address,
+    });
     // saveFrontendFiles(manager);
     const fs = require("fs");
     const contractsDir = __dirname + "/../frontend/src/contracts";
@@ -100,6 +105,46 @@ function saveFrontendFiles(token, addresses) {
         path.join(contractsDir, "Token.json"),
         JSON.stringify(TokenArtifact, null, 2)
     );
+}
+
+function saveFrontendDevEnv(addresses) {
+    const fs = require("fs");
+    const path = require("path");
+    const envPath = path.join(__dirname, "..", "frontend", ".env.development");
+    const entries = {
+        REACT_APP_DEV_TOKEN_ADDRESS: addresses.token,
+        REACT_APP_DEV_ENTITY_ADDRESS: addresses.entity,
+        REACT_APP_DEV_MANAGER_ADDRESS: addresses.manager,
+    };
+
+    let content = "";
+    if (fs.existsSync(envPath)) {
+        content = fs.readFileSync(envPath, "utf8");
+    }
+
+    const lines = content.split(/\r?\n/);
+    const updated = new Set();
+    const nextLines = lines.map((line) => {
+        const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+        if (!match) {
+            return line;
+        }
+        const key = match[1];
+        if (Object.prototype.hasOwnProperty.call(entries, key)) {
+            updated.add(key);
+            return `${key}=${entries[key]}`;
+        }
+        return line;
+    });
+
+    for (const [key, value] of Object.entries(entries)) {
+        if (!updated.has(key)) {
+            nextLines.push(`${key}=${value}`);
+        }
+    }
+
+    const output = nextLines.join("\n").replace(/\n+$/, "\n");
+    fs.writeFileSync(envPath, output, "utf8");
 }
 
 function saveFrontendFilesDapp(contract, contractName) {
