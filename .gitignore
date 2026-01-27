@@ -4,3 +4,12 @@ node_modules
 #Hardhat files
 cache
 artifacts
+
+# Logs
+*.log
+*.log.*
+logs/
+
+# Local dev outputs
+frontend/public/contracts/contract-address.json
+frontend/.env.development

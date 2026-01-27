@@ -3,6 +3,14 @@
 This directory has a sample Dapp to interact with your contracts, built using
 React.
 
+## Docs
+
+- Dapp contracts overview: [docs/README-DAPP.md](docs/README-DAPP.md)
+- Mocked data usage: [docs/README-MOCKS.md](docs/README-MOCKS.md)
+- Environment variables: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
+- Setup instructions: [docs/SETUP_INSTRUCTIONS.md](docs/SETUP_INSTRUCTIONS.md)
+- Smart License version flow: [docs/VERSION_STATUS_FLOW.md](docs/VERSION_STATUS_FLOW.md)
+
 ## Running the Dapp
 
 This project uses [`create-react-app`](https://create-react-app.dev/), so most
@@ -29,29 +37,13 @@ You can use the `Dapp` component as a starting point for your project. It has
 comments explaining each part of its code, and indicating what's specific to
 this project, and what can be reused.
 
-## Feedback, help and news
+## Note
 
-Feel free to reach us through this repository or
-[our Discord server](https://invite.gg/HardhatSupport).
+Before running the dApp:
 
-Also you can [follow us on Twitter](https://twitter.com/HardhatHQ).
-
-**Happy _building_!**
-
-
-# NOTE
-
-Before run the dApp
-
-Make sure Hardhat node is running: 
-`npx hardhat node`
-
-Deploy contracts: 
-
-`npx hardhat run scripts/deploy.js --network localhost`
-
-Select the correct network in the configuration dialog
-Contract addresses will be loaded automatically after deployment
+- Ensure the Hardhat node is running: `npx hardhat node`
+- Deploy contracts: `npx hardhat run scripts/deploy.js --network localhost`
+- Select the correct network in the configuration dialog
+- Contract addresses are loaded automatically after deployment
 
 Current network: *Hardhat Local*
-
