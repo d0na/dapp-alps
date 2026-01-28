@@ -21,7 +21,7 @@ import {
 import Toast from "../common/Toast";
 import useToast from "../../hooks/useToast";
 
-const BuildSmartLicense = () => {
+const BuildSmartLicense = ({ resolveEntityName }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState('');
   const [manualData, setManualData] = useState({});
@@ -598,6 +598,7 @@ contract SmartLicense is Ownable, ReentrancyGuard {
               setShowValidationErrors={setShowValidationErrors}
               versionedLicenseData={versionedLicenseData}
               isVerificationMode={isVerificationMode}
+              resolveEntityName={resolveEntityName}
             />
           );
         }
