@@ -21,7 +21,7 @@ const options = [
 ];
 
 function ConfirmationDialogRaw(props) {
-  const { onClose, value: valueProp, open, ...other } = props;
+  const { onClose, value: valueProp, open, contractAddresses, ...other } = props;
   const [value, setValue] = React.useState(valueProp);
   const radioGroupRef = React.useRef(null);
 
@@ -84,7 +84,7 @@ function ConfirmationDialogRaw(props) {
                   <div>{option.label}</div>
                   {option.value === 'development' && (
                     <div style={{ fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
-                      Contract addresses will be loaded automatically after deployment
+                      Contract addresses are read from environment variables
                     </div>
                   )}
                   {option.value === 'alps' && (
@@ -107,9 +107,9 @@ function ConfirmationDialogRaw(props) {
         <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
           <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Current Contract Addresses:</h4>
           <div style={{ fontSize: '12px' }}>
-            <div><strong>Entity:</strong> {getContractAddress('entity') || 'Not set'}</div>
-            <div><strong>Token:</strong> {getContractAddress('token') || 'Not set'}</div>
-            <div><strong>Manager:</strong> {getContractAddress('manager') || 'Not set'}</div>
+            <div><strong>Entity:</strong> {contractAddresses?.entity || 'Not set'}</div>
+            <div><strong>Token:</strong> {contractAddresses?.token || 'Not set'}</div>
+            <div><strong>Manager:</strong> {contractAddresses?.manager || 'Not set'}</div>
           </div>
         </div>
       </DialogContent>
@@ -129,6 +129,11 @@ ConfirmationDialogRaw.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
   value: PropTypes.string.isRequired,
+  contractAddresses: PropTypes.shape({
+    entity: PropTypes.string,
+    token: PropTypes.string,
+    manager: PropTypes.string,
+  }),
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -147,6 +152,11 @@ export default function BlockchainConfigDialog() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("development");
+  const [contractAddresses] = React.useState({
+    entity: getContractAddress("entity"),
+    token: getContractAddress("token"),
+    manager: getContractAddress("manager"),
+  });
 
   const handleClickListItem = () => {
     setOpen(true);
@@ -193,6 +203,7 @@ export default function BlockchainConfigDialog() {
           open={open}
           onClose={handleClose}
           value={value}
+          contractAddresses={contractAddresses}
         />
       </List>
     </div>

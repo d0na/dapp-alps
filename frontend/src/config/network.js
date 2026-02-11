@@ -1,6 +1,7 @@
 // Network configuration - uses environment variables with fallback defaults
 export const NETWORK_CONFIG = {
   development: {
+    // Fallback values are used if env vars are missing.
     rpcUrl: process.env.REACT_APP_DEV_RPC_URL || "http://localhost:8545",
     chainId: parseInt(process.env.REACT_APP_DEV_CHAIN_ID) || 31337,
     name: process.env.REACT_APP_DEV_NETWORK_NAME || "Hardhat Local",
@@ -12,6 +13,7 @@ export const NETWORK_CONFIG = {
     }
   },
   alps: {
+    // Fallback values are used if env vars are missing.
     rpcUrl: process.env.REACT_APP_ALPS_RPC_URL ,
     chainId: parseInt(process.env.REACT_APP_ALPS_CHAIN_ID) || 1337,
     name: process.env.REACT_APP_ALPS_NETWORK_NAME || "ALPS Network",
@@ -23,6 +25,7 @@ export const NETWORK_CONFIG = {
     }
   },
   custom: {
+    // Fallback values are used if env vars are missing.
     rpcUrl: process.env.REACT_APP_CUSTOM_RPC_URL || "http://localhost:8545",
     chainId: parseInt(process.env.REACT_APP_CUSTOM_CHAIN_ID) || 31337,
     name: process.env.REACT_APP_CUSTOM_NETWORK_NAME || "Custom Network",
@@ -48,20 +51,6 @@ export const setNetworkConfig = (networkType) => {
 };
 
 // Load contract addresses from deployment
-export const loadContractAddresses = async () => {
-  try {
-    const response = await fetch('/contracts/contract-address.json');
-    if (response.ok) {
-      const addresses = await response.json();
-      console.log('Loaded contract addresses:', addresses);
-      return addresses;
-    }
-  } catch (error) {
-    console.log('Could not load contract addresses from file:', error);
-  }
-  return null;
-};
-
 // Get contract address for current network
 export const getContractAddress = (contractType) => {
   const networkConfig = getCurrentNetworkConfig();

@@ -39,13 +39,13 @@ async function main() {
     console.log("Entity Address: ", entityContract1.address);
 
 
-    // save the contract's artifacts and addresses in the frontend directories
-    saveFrontendFiles(token, {
+    // save the contract's artifacts and addresses in the frontend directory
+    saveFrontendArtifacts(token);
+    saveFrontendDevEnv({
         token: token.address,
         entity: entityContract1.address,
         manager: manager1.address,
     });
-    // saveFrontendFiles(manager);
     const fs = require("fs");
     const contractsDir = __dirname + "/../frontend/src/contracts";
 
@@ -65,34 +65,14 @@ async function main() {
     );
 }
 
-function saveFrontendFiles(token, addresses) {
+function saveFrontendArtifacts(token) {
     const fs = require("fs");
     const path = require("path");
     const contractsDir = path.join(__dirname, "..", "frontend", "src", "contracts");
-    const publicContractsDir = path.join(__dirname, "..", "frontend", "public", "contracts");
 
     if (!fs.existsSync(contractsDir)) {
-        fs.mkdirSync(contractsDir);
+        fs.mkdirSync(contractsDir, { recursive: true });
     }
-
-    if (!fs.existsSync(publicContractsDir)) {
-        fs.mkdirSync(publicContractsDir, { recursive: true });
-    }
-
-    const addressPayload = {
-        Token: addresses.token,
-        Entity: addresses.entity,
-        Manager: addresses.manager,
-    };
-
-    fs.writeFileSync(
-        path.join(contractsDir, "contract-address.json"),
-        JSON.stringify(addressPayload, undefined, 2)
-    );
-    fs.writeFileSync(
-        path.join(publicContractsDir, "contract-address.json"),
-        JSON.stringify(addressPayload, undefined, 2)
-    );
 
     const TokenArtifact = artifacts.readArtifactSync("Token");
 
@@ -102,25 +82,45 @@ function saveFrontendFiles(token, addresses) {
     );
 }
 
-function saveFrontendFilesDapp(contract, contractName) {
+function saveFrontendDevEnv(addresses) {
     const fs = require("fs");
-    const contractsDir = __dirname + "/../frontend/src/contracts";
+    const path = require("path");
+    const envPath = path.join(__dirname, "..", "frontend", ".env.development");
+    const entries = {
+        REACT_APP_DEV_TOKEN_ADDRESS: addresses.token,
+        REACT_APP_DEV_ENTITY_ADDRESS: addresses.entity,
+        REACT_APP_DEV_MANAGER_ADDRESS: addresses.manager,
+    };
 
-    if (!fs.existsSync(contractsDir)) {
-        fs.mkdirSync(contractsDir);
+    let content = "";
+    if (fs.existsSync(envPath)) {
+        content = fs.readFileSync(envPath, "utf8");
     }
 
-    fs.writeFileSync(
-        contractsDir + "/contract-address.json",
-        JSON.stringify({ Token: token.address }, undefined, 2)
-    );
+    const lines = content.split(/\r?\n/);
+    const updated = new Set();
+    const nextLines = lines.map((line) => {
+        const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+        if (!match) {
+            return line;
+        }
+        const key = match[1];
+        if (Object.prototype.hasOwnProperty.call(entries, key)) {
+            updated.add(key);
+            return `${key}=${entries[key]}`;
+        }
+        return line;
+    });
 
-    const TokenArtifact = artifacts.readArtifactSync("Token");
+    for (const [key, value] of Object.entries(entries)) {
+        if (!updated.has(key)) {
+            nextLines.push(`${key}=${value}`);
+        }
+    }
 
-    fs.writeFileSync(
-        contractsDir + "/Token.json",
-        JSON.stringify(TokenArtifact, null, 2)
-    );
+    const output = nextLines.join("\n").replace(/\n+$/, "\n");
+    fs.writeFileSync(envPath, output, "utf8");
+    console.log(`Updated frontend env file: ${envPath}`);
 }
 
 main()

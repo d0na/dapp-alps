@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ethers } from "ethers";
 import { getToken } from "utils/Common";
-import {
-  getCurrentNetworkConfig,
-  getContractAddress,
-  loadContractAddresses,
-  setContractAddress,
-} from "config/network";
+import { getCurrentNetworkConfig, getContractAddress } from "config/network";
 import ManagerArtifact from "contracts/ManagerContract.json";
 import EntityArtifact from "contracts/EntityContract.json";
 import activeLicensesMock from "assets/mock-data/activeLicensesTable-data.json";
@@ -35,25 +30,6 @@ const transformManagerLegacyData = (data) => {
   return transformedData;
 };
 
-const loadAndSetContractAddresses = async () => {
-  try {
-    const addresses = await loadContractAddresses();
-    if (addresses) {
-      if (addresses.Token) {
-        setContractAddress("token", addresses.Token);
-      }
-      if (addresses.Entity) {
-        setContractAddress("entity", addresses.Entity);
-      }
-      if (addresses.Manager) {
-        setContractAddress("manager", addresses.Manager);
-      }
-    }
-  } catch (error) {
-    console.log("Could not load contract addresses:", error);
-  }
-};
-
 const buildErrorMessage = (error) => {
   const message = error?.message ? error.message : String(error);
   return `Failed to load blockchain data. Error: ${message}`;
@@ -75,6 +51,7 @@ export const useManagerData = (options = {}) => {
       try {
         await provider.getBlockNumber();
       } catch (connectError) {
+        // Fallback to localhost if the configured RPC is not reachable.
         if (networkConfig.rpcUrl !== "http://localhost:8545") {
           provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
           await provider.getBlockNumber();
@@ -83,9 +60,8 @@ export const useManagerData = (options = {}) => {
         }
       }
 
-      await loadAndSetContractAddresses();
-
       const entityAddress = getContractAddress("entity") || getToken();
+      // Fallback to stored token if the env-provided contract address is missing.
       if (!entityAddress) {
         throw new Error("No entity contract address found.");
       }
