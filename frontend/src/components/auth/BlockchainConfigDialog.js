@@ -152,11 +152,11 @@ export default function BlockchainConfigDialog() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("development");
-  const [contractAddresses] = React.useState({
+  const contractAddresses = {
     entity: getContractAddress("entity"),
     token: getContractAddress("token"),
     manager: getContractAddress("manager"),
-  });
+  };
 
   const handleClickListItem = () => {
     setOpen(true);
