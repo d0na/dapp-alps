@@ -14,6 +14,16 @@ import Radio from "@material-ui/core/Radio";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 const options = ["Development", "ALPS", "Custom Configuration"];
+const OPTION_TO_KEY = {
+  Development: "development",
+  ALPS: "alps",
+  "Custom Configuration": "custom",
+};
+const KEY_TO_OPTION = {
+  development: "Development",
+  alps: "ALPS",
+  custom: "Custom Configuration",
+};
 
 function ConfirmationDialogRaw(props) {
   const { onClose, value: valueProp, open, ...other } = props;
@@ -112,7 +122,12 @@ const useStyles = makeStyles((theme) => ({
 export default function BlockchainConfigDialog() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("Development");
+  const [value, setValue] = React.useState(() => {
+    const stored = window.localStorage
+      ? window.localStorage.getItem("networkType")
+      : null;
+    return KEY_TO_OPTION[stored] || "Development";
+  });
 
   const handleClickListItem = () => {
     setOpen(true);
@@ -123,6 +138,15 @@ export default function BlockchainConfigDialog() {
 
     if (newValue) {
       setValue(newValue);
+      const networkKey = OPTION_TO_KEY[newValue];
+      if (networkKey) {
+        window.localStorage.setItem("networkType", networkKey);
+        console.log(
+          `[RPC] selected network=${networkKey} (label=${newValue})`
+        );
+      } else {
+        console.warn(`[RPC] unknown network label: ${newValue}`);
+      }
     }
   };
 

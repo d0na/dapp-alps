@@ -10,6 +10,7 @@ import Sidebar from "./components/Sidebar.js";
 import DemoNavbar from "./components/DemoNavbar.js";
 import { ethers } from "ethers";
 import { getToken } from "utils/Common";
+import { getProvider } from "utils/provider";
 
 import ManagerArtifact from "contracts/ManagerContract.json";
 import EntityArtifact from "contracts/EntityContract.json";
@@ -19,7 +20,6 @@ import { Redirect } from "react-router-dom";
 import { Route, Switch } from "react-router-dom";
 import ActiveLicenses from "components/views/ActiveLicenses";
 import BuildSmartLicense from "components/build-smart-license/BuildSmartLicense";
-import { getEntityNameDebounced } from "utils/EntityResolver";
 
 var ps;
 export class Dapp extends React.Component {
@@ -71,8 +71,7 @@ export class Dapp extends React.Component {
 
   async _initializeEthers() {
     // We first initialize ethers by creating a provider
-    let url = "http://131.114.2.151:8545";
-    this._provider = new ethers.providers.JsonRpcProvider(url);
+    this._provider = getProvider();
     // this._provider = new ethers.providers.JsonRpcProvider();
     this._provider.getBlockNumber().then((result) => {
       console.log("Current block number: " + result);
@@ -218,7 +217,6 @@ export class Dapp extends React.Component {
                 <BuildSmartLicense
                   {...this.props}
                   key={3}
-                  resolveEntityName={getEntityNameDebounced}
                 />
               
             </Route>
