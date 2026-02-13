@@ -19,13 +19,81 @@ import {
   TabPane,
   Badge,
 } from "reactstrap";
+import { ethers } from "ethers";
 import { useBuildSmartLicenseStyles } from "../styles/buildSmartLicenseStyles";
 import { validateManualData, validateAiText } from "../utils/jsonGenerator";
-import { getEntityNameDebounced } from "utils/EntityResolver";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import Typography from "@material-ui/core/Typography";
 import Toast from "../../common/Toast";
 import useToast from "../../../hooks/useToast";
+import { getProvider } from "utils/provider";
+import EntityArtifact from "contracts/EntityContract.json";
+
+const entityNameCache = new Map();
+const DEFAULT_NAMES = {
+  licensor: "Unknown Licensor",
+  licensee: "Unknown Licensee"
+};
+
+const getEntityName = async (address, type = "licensor") => {
+  if (!address || typeof address !== "string") {
+    return { name: DEFAULT_NAMES[type] || DEFAULT_NAMES.licensor, isFromContract: false };
+  }
+
+  const normalizedAddress = address.toLowerCase().trim();
+  if (entityNameCache.has(normalizedAddress)) {
+    return entityNameCache.get(normalizedAddress);
+  }
+
+  try {
+    const provider = getProvider();
+    const entityContract = new ethers.Contract(
+      normalizedAddress,
+      EntityArtifact.abi,
+      provider
+    );
+
+    const name = await entityContract.name();
+    if (name && typeof name === "string" && name.trim().length > 0) {
+      const cleanName = name.trim();
+      const result = { name: cleanName, isFromContract: true };
+      entityNameCache.set(normalizedAddress, result);
+      return result;
+    }
+    throw new Error("Empty or invalid name returned from contract");
+  } catch (error) {
+    const result = { name: DEFAULT_NAMES[type] || DEFAULT_NAMES.licensor, isFromContract: false };
+    entityNameCache.set(normalizedAddress, result);
+    return result;
+  }
+};
+
+const getEntityNameDebounced = (() => {
+  const timeouts = new Map();
+
+  return (address, type = "licensor", delay = 1000) => {
+    return new Promise((resolve) => {
+      const key = `${address}-${type}`;
+
+      if (timeouts.has(key)) {
+        clearTimeout(timeouts.get(key));
+      }
+
+      const timeoutId = setTimeout(async () => {
+        try {
+          const result = await getEntityName(address, type);
+          resolve(result);
+        } catch (error) {
+          resolve({ name: DEFAULT_NAMES[type] || DEFAULT_NAMES.licensor, isFromContract: false });
+        } finally {
+          timeouts.delete(key);
+        }
+      }, delay);
+
+      timeouts.set(key, timeoutId);
+    });
+  };
+})();
 
 // Utility function to parse duration string (e.g., "5Y 10M 2D")
 const parseDuration = (durationStr) => {
@@ -2063,12 +2131,11 @@ const RulesConfiguration = ({ rules, setRules, isReadOnly = false }) => {
 };
 
 // Manual Configuration Form
-const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null, isVerificationMode = false, resolveEntityName }) => {
+const ManualConfigurationForm = ({ manualData, setManualData, validation, showValidationErrors, setShowValidationErrors, isReadOnly = false, versionedLicenseData = null, isVerificationMode = false }) => {
   const { toast, showSuccess, showError, hideToast } = useToast();
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [localVersionedData, setLocalVersionedData] = useState(versionedLicenseData);
-  
-  // States for entity names
+
   const [licensorName, setLicensorName] = useState('');
   const [licenseeName, setLicenseeName] = useState('');
   const [isLoadingLicensorName, setIsLoadingLicensorName] = useState(false);
@@ -2080,24 +2147,18 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
     setManualData({ ...manualData, [field]: value });
   };
 
-  // Function to resolve entity name from address
   const resolveEntityNameForAddress = useCallback(async (address, type) => {
     if (!address || typeof address !== 'string' || !address.startsWith('0x')) {
       return '';
     }
 
-    const resolveFn = resolveEntityName || getEntityNameDebounced;
-
-    // Set loading state
     if (type === 'licensor') {
       setIsLoadingLicensorName(true);
     } else if (type === 'licensee') {
       setIsLoadingLicenseeName(true);
     }
 
-    // Set timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      console.warn(`Timeout resolving ${type} name for address:`, address);
       if (type === 'licensor') {
         setIsLoadingLicensorName(false);
         setLicensorFromContract(false);
@@ -2107,18 +2168,19 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         setLicenseeFromContract(false);
         setLicenseeName('Unknown Licensee');
       }
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     try {
       if (type === 'licensor') {
-        const result = await resolveFn(address, 'licensor', 1000);
+        const result = await getEntityNameDebounced(address, 'licensor', 1000);
         clearTimeout(timeoutId);
         setLicensorName(result.name);
         setLicensorFromContract(result.isFromContract);
         setIsLoadingLicensorName(false);
         return result.name;
-      } else if (type === 'licensee') {
-        const result = await resolveFn(address, 'licensee', 1000);
+      }
+      if (type === 'licensee') {
+        const result = await getEntityNameDebounced(address, 'licensee', 1000);
         clearTimeout(timeoutId);
         setLicenseeName(result.name);
         setLicenseeFromContract(result.isFromContract);
@@ -2126,7 +2188,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
         return result.name;
       }
     } catch (error) {
-      console.error(`Failed to resolve ${type} name:`, error);
       clearTimeout(timeoutId);
       if (type === 'licensor') {
         setIsLoadingLicensorName(false);
@@ -2139,9 +2200,8 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
       }
     }
     return '';
-  }, [resolveEntityName]);
+  }, []);
 
-  // Handle address change for licensor
   const handleLicensorChange = (value) => {
     updateManualData('licensor', value);
     if (value && value.startsWith('0x') && value.length === 42) {
@@ -2152,7 +2212,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
     }
   };
 
-  // Handle address change for licensee
   const handleLicenseeChange = (value) => {
     updateManualData('licensee', value);
     if (value && value.startsWith('0x') && value.length === 42) {
@@ -2163,7 +2222,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
     }
   };
 
-  // Resolve entity names when data is loaded
   useEffect(() => {
     if (manualData.licensor && manualData.licensor.startsWith('0x') && manualData.licensor.length === 42) {
       resolveEntityNameForAddress(manualData.licensor, 'licensor');
@@ -2172,7 +2230,6 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
       resolveEntityNameForAddress(manualData.licensee, 'licensee');
     }
   }, [manualData.licensor, manualData.licensee, resolveEntityNameForAddress]);
-
   // Handle version selection
   const handleVersionSelect = (versionNumber) => {
     setSelectedVersion(versionNumber);
@@ -2306,14 +2363,13 @@ const ManualConfigurationForm = ({ manualData, setManualData, validation, showVa
           
           setManualData(processedData);
           
-          // Resolve entity names after loading data
           if (processedData.licensor && processedData.licensor.startsWith('0x') && processedData.licensor.length === 42) {
-            resolveEntityName(processedData.licensor, 'licensor');
+            resolveEntityNameForAddress(processedData.licensor, 'licensor');
           }
           if (processedData.licensee && processedData.licensee.startsWith('0x') && processedData.licensee.length === 42) {
-            resolveEntityName(processedData.licensee, 'licensee');
+            resolveEntityNameForAddress(processedData.licensee, 'licensee');
           }
-          
+
           // If this is versioned data, set it locally for version navigation
           if (jsonData.versions && Array.isArray(jsonData.versions)) {
             setLocalVersionedData(jsonData);
@@ -2690,8 +2746,7 @@ const StepConfiguration = ({
   setShowValidationErrors,
   isReadOnly = false,
   versionedLicenseData = null,
-  isVerificationMode = false,
-  resolveEntityName
+  isVerificationMode = false
 }) => {
   // Enhanced validation logic with detailed feedback
   const getValidation = () => {
@@ -2807,7 +2862,6 @@ const StepConfiguration = ({
             isReadOnly={isReadOnly}
             versionedLicenseData={versionedLicenseData}
             isVerificationMode={isVerificationMode}
-            resolveEntityName={resolveEntityName}
           />
         ) : (
           <AIConfigurationForm 
@@ -2881,7 +2935,6 @@ ManualConfigurationForm.propTypes = {
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
   isVerificationMode: PropTypes.bool,
-  resolveEntityName: PropTypes.func,
 };
 
 RulesConfiguration.propTypes = {
@@ -2941,7 +2994,6 @@ StepConfiguration.propTypes = {
   isReadOnly: PropTypes.bool,
   versionedLicenseData: PropTypes.object,
   isVerificationMode: PropTypes.bool,
-  resolveEntityName: PropTypes.func,
 };
 
 export default StepConfiguration;
